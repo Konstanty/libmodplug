@@ -1,6 +1,9 @@
 XMMS plugin:
   Kenton Varda <temporal@gauge3d.org>
 
+General Maintainence:
+  Konstanty Bialkowski <konstanty@ieee.org>
+
 Sound Engine:
   Olivier Lapicque <olivierl@jps.net>
 
@@ -10,3 +13,5 @@ Spline and Fir resamplers:
   Markus Fick <marf@gmx.net>
 Endianness Fix (made it work on big endian platforms like PPC):
   Adam Goode <adam@evdebs.org>
+AMD64 Fix (long long vs long vs int)
+  Tyler Montbriand <tsm@accesscomm.ca>
