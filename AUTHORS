@@ -1,0 +1,12 @@
+XMMS plugin:
+  Kenton Varda <temporal@gauge3d.org>
+
+Sound Engine:
+  Olivier Lapicque <olivierl@jps.net>
+
+BZip2 support:
+  Colin DeVilbiss <crdevilb@mtu.edu>
+Spline and Fir resamplers:
+  Markus Fick <marf@gmx.net>
+Endianness Fix (made it work on big endian platforms like PPC):
+  Adam Goode <adam@evdebs.org>
