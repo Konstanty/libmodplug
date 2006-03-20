@@ -1,8 +1,11 @@
 /*
- * This source code is public domain.
+ * This program is  free software; you can redistribute it  and modify it
+ * under the terms of the GNU  General Public License as published by the
+ * Free Software Foundation; either version 2  of the license or (at your
+ * option) any later version.
  *
  * Authors: Olivier Lapicque <olivierl@jps.net>
- */
+*/
 
 ///////////////////////////////////////////////////
 //
@@ -350,7 +353,8 @@ BOOL CSoundFile::ReadAMF(LPCBYTE lpStream, DWORD dwMemLength)
 		if ((psh->type) && (bswapLE32(psh->offset) < dwMemLength-1))
 		{
 			sampleseekpos[iIns] = bswapLE32(psh->offset);
-			if (bswapLE32(psh->offset) > maxsampleseekpos) maxsampleseekpos = bswapLE32(psh->offset);
+			if (bswapLE32(psh->offset) > maxsampleseekpos) 
+				maxsampleseekpos = bswapLE32(psh->offset);
 			if ((pins->nLoopEnd > pins->nLoopStart + 2)
 			 && (pins->nLoopEnd <= pins->nLength)) pins->uFlags |= CHN_LOOP;
 		}
@@ -414,5 +418,3 @@ BOOL CSoundFile::ReadAMF(LPCBYTE lpStream, DWORD dwMemLength)
 	}
 	return TRUE;
 }
-
-

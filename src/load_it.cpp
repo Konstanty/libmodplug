@@ -2,7 +2,9 @@
  * This source code is public domain.
  *
  * Authors: Olivier Lapicque <olivierl@jps.net>,
- *          Adam Goode       <adam@evdebs.org> (endian and char fixes for PPC)
+ *          Adam Goode       <adam@evdebs.org> (Endian and char fixes for PPC)
+ *          Marco Trillo     <toad@arsystel.com> (Endian fixes for SaveIT, XM->IT Sample Converter)
+ *
 */
 
 #include "stdafx.h"
@@ -20,8 +22,11 @@ BYTE autovibxm2it[8] =
 { 0, 2, 4, 1, 3, 0, 0, 0 };
 
 //////////////////////////////////////////////////////////
-// Impulse Tracker IT file support (import only)
+// Impulse Tracker IT file support
 
+// for conversion of XM samples
+extern WORD XMPeriodTable[96+8];
+extern UINT XMLinearTable[768];
 
 static inline UINT ConvertVolParam(UINT value)
 //--------------------------------------------
@@ -593,8 +598,8 @@ BOOL CSoundFile::SaveIT(LPCSTR lpszFileName, UINT nPacking)
 //---------------------------------------------------------
 {
 	DWORD dwPatNamLen, dwChnNamLen;
-	ITFILEHEADER header;
-	ITINSTRUMENT iti;
+	ITFILEHEADER header, writeheader;
+	ITINSTRUMENT iti, writeiti;
 	ITSAMPLESTRUCT itss;
 	BYTE smpcount[MAX_SAMPLES];
 	DWORD inspos[MAX_INSTRUMENTS];
@@ -616,8 +621,8 @@ BOOL CSoundFile::SaveIT(LPCSTR lpszFileName, UINT nPacking)
 	memset(&header, 0, sizeof(header));
 	dwPatNamLen = 0;
 	dwChnNamLen = 0;
-	header.id = 0x4D504D49;
-	lstrcpyn(header.songname, m_szNames[0], 27);
+	header.id = 0x4D504D49; // IMPM
+	lstrcpyn((char *)header.songname, m_szNames[0], 27);
 	header.reserved1 = 0x1004;
 	header.ordnum = 0;
 	while ((header.ordnum < MAX_ORDERS) && (Order[header.ordnum] < 0xFF)) header.ordnum++;
@@ -637,11 +642,12 @@ BOOL CSoundFile::SaveIT(LPCSTR lpszFileName, UINT nPacking)
 	if (m_dwSongFlags & SONG_EXFILTERRANGE) header.flags |= 0x1000;
 	header.globalvol = m_nDefaultGlobalVolume >> 1;
 	header.mv = m_nSongPreAmp;
+	// clip song pre-amp values (between 0x20 and 0x7f)
 	if (header.mv < 0x20) header.mv = 0x20;
 	if (header.mv > 0x7F) header.mv = 0x7F;
 	header.speed = m_nDefaultSpeed;
 	header.tempo = m_nDefaultTempo;
-	header.sep = 128;
+	header.sep = m_nStereoSeparation;
 	dwHdrPos = sizeof(header) + header.ordnum;
 	// Channel Pan and Volume
 	memset(header.chnpan, 0xFF, 64);
@@ -685,7 +691,25 @@ BOOL CSoundFile::SaveIT(LPCSTR lpszFileName, UINT nPacking)
 		header.msgoffset = dwHdrPos + dwExtra + header.insnum*4 + header.patnum*4 + header.smpnum*4;
 	}
 	// Write file header
-	fwrite(&header, 1, sizeof(header), f);
+	memcpy(writeheader, header, sizeof(header));
+
+	// Byteswap header information
+	writeheader.id = bswapLE32(writeheader.id);
+	writeheader.reserved1 = bswapLE16(writeheader.reserved1);
+	writeheader.ordnum = bswapLE16(writeheader.ordnum);
+	writeheader.insnum = bswapLE16(writeheader.insnum);
+	writeheader.smpnum = bswapLE16(writeheader.smpnum);
+	writeheader.patnum = bswapLE16(writeheader.patnum);
+	writeheader.cwtv = bswapLE16(writeheader.cwtv);
+	writeheader.cmwt = bswapLE16(writeheader.cmwt);
+	writeheader.flags = bswapLE16(writeheader.flags);
+	writeheader.special = bswapLE16(writeheader.special);
+	writeheader.msglength = bswapLE16(writeheader.msglength);
+	writeheader.msgoffset = bswapLE32(writeheader.msgoffset);
+	writeheader.reserved2 = bswapLE32(writeheader.reserved2);
+
+	fwrite(&writeheader, 1, sizeof(writeheader), f);
+
 	fwrite(Order, 1, header.ordnum, f);
 	if (header.insnum) fwrite(inspos, 4, header.insnum, f);
 	if (header.smpnum) fwrite(smppos, 4, header.smpnum, f);
@@ -716,17 +740,19 @@ BOOL CSoundFile::SaveIT(LPCSTR lpszFileName, UINT nPacking)
 	// Writing pattern names
 	if (dwPatNamLen)
 	{
-		DWORD d = 0x4d414e50;
+		DWORD d = bswapLE32(0x4d414e50);
+		UINT len= bswapLE32(dwPatNamLen);
 		fwrite(&d, 1, 4, f);
-		fwrite(&dwPatNamLen, 1, 4, f);
+		write(&len, 1, 4, f);
 		fwrite(m_lpszPatternNames, 1, dwPatNamLen, f);
 	}
 	// Writing channel Names
 	if (dwChnNamLen)
 	{
-		DWORD d = 0x4d414e43;
+		DWORD d = bswapLE32(0x4d414e43);
+		UINT len= bswapLE32(dwChnNamLen);
 		fwrite(&d, 1, 4, f);
-		fwrite(&dwChnNamLen, 1, 4, f);
+		fwrite(&len, 1, 4, f);
 		UINT nChnNames = dwChnNamLen / MAX_CHANNELNAME;
 		for (UINT inam=0; inam<nChnNames; inam++)
 		{
@@ -839,7 +865,15 @@ BOOL CSoundFile::SaveIT(LPCSTR lpszFileName, UINT nPacking)
 		// Writing instrument
 		inspos[nins-1] = dwPos;
 		dwPos += sizeof(ITINSTRUMENT);
-		fwrite(&iti, 1, sizeof(ITINSTRUMENT), f);
+
+		memcpy(&writeiti, &iti, sizeof(ITINSTRUMENT));
+
+		writeiti.fadeout = bswapLE16(writeiti.fadeout);
+		writeiti.id = bswapLE32(writeiti.id);
+		writeiti.trkvers = bswapLE16(writeiti.trkvers);
+		writeiti.mbank = bswapLE16(writeiti.mbank);
+
+		fwrite(&writeiti, 1, sizeof(ITINSTRUMENT), f);
 	}
 	// Writing sample headers
 	memset(&itss, 0, sizeof(itss));
@@ -857,7 +891,7 @@ BOOL CSoundFile::SaveIT(LPCSTR lpszFileName, UINT nPacking)
 		if (!Patterns[npat]) continue;
 		patpos[npat] = dwPos;
 		patinfo[0] = 0;
-		patinfo[1] = PatternSize[npat];
+		patinfo[1] = bswapLE16(PatternSize[npat]);
 		patinfo[2] = 0;
 		patinfo[3] = 0;
 		// Check for empty pattern
@@ -892,7 +926,7 @@ BOOL CSoundFile::SaveIT(LPCSTR lpszFileName, UINT nPacking)
 				UINT vol = 0xFF;
 				UINT note = m->note;
 				if (note) b |= 1;
-				if ((note) && (note < 0xFE)) note--;
+				if ((note) && (note < 0x80)) note--; // 0xfe->0x80 --Toad
 				if (m->instr) b |= 2;
 				if (m->volcmd)
 				{
@@ -905,8 +939,8 @@ BOOL CSoundFile::SaveIT(LPCSTR lpszFileName, UINT nPacking)
 					case VOLCMD_VOLSLIDEDOWN:	vol = 95 + ConvertVolParam(m->vol); break;
 					case VOLCMD_FINEVOLUP:		vol = 65 + ConvertVolParam(m->vol); break;
 					case VOLCMD_FINEVOLDOWN:	vol = 75 + ConvertVolParam(m->vol); break;
-					case VOLCMD_VIBRATO:		vol = 203; break;
 					case VOLCMD_VIBRATOSPEED:	vol = 203 + ConvertVolParam(m->vol); break;
+					case VOLCMD_VIBRATO:		vol = 203; break;
 					case VOLCMD_TONEPORTAMENTO:	vol = 193 + ConvertVolParam(m->vol); break;
 					case VOLCMD_PORTADOWN:		vol = 105 + ConvertVolParam(m->vol); break;
 					case VOLCMD_PORTAUP:		vol = 115 + ConvertVolParam(m->vol); break;
@@ -1000,6 +1034,7 @@ BOOL CSoundFile::SaveIT(LPCSTR lpszFileName, UINT nPacking)
 			fwrite(buf, 1, len, f);
 		}
 		fseek(f, dwPatPos, SEEK_SET);
+		patinfo[0] = bswapLE16(patinfo[0]); // byteswap -- Toad
 		fwrite(patinfo, 8, 1, f);
 		fseek(f, dwPos, SEEK_SET);
 	}
@@ -1032,7 +1067,25 @@ BOOL CSoundFile::SaveIT(LPCSTR lpszFileName, UINT nPacking)
 		if (psmp->uFlags & CHN_PINGPONGLOOP) itss.flags |= 0x40;
 		if (psmp->uFlags & CHN_PINGPONGSUSTAIN) itss.flags |= 0x80;
 		itss.C5Speed = psmp->nC4Speed;
-		if (!itss.C5Speed) itss.C5Speed = 8363;
+		if (!itss.C5Speed) // if no C5Speed assume it is XM Sample
+		{ 
+			UINT period;
+
+			/**
+			 * C5 note => number 61, but in XM samples:
+			 * RealNote = Note + RelativeTone
+			 */
+			period = GetPeriodFromNote(61+psmp->RelativeTone, psmp->nFineTune, 0);
+						
+			if (period)
+				itss.C5Speed = GetFreqFromPeriod(period, 0, 0);
+			/**
+			 * If it didn`t work, it may not be a XM file;
+			 * so put the default C5Speed, 8363Hz.
+			 */
+	 		if (!itss.C5Speed) itss.C5Speed = 8363;
+		}
+
 		itss.length = psmp->nLength;
 		itss.loopbegin = psmp->nLoopStart;
 		itss.loopend = psmp->nLoopEnd;
@@ -1051,7 +1104,7 @@ BOOL CSoundFile::SaveIT(LPCSTR lpszFileName, UINT nPacking)
 		if (nPacking)
 		{
 			if ((!(psmp->uFlags & (CHN_16BIT|CHN_STEREO)))
-			 && (CanPackSample(psmp->pSample, psmp->nLength, nPacking)))
+			 && (CanPackSample((char *)psmp->pSample, psmp->nLength, nPacking)))
 			{
 				flags = RS_ADPCM4;
 				itss.cvt = 0xFF;
@@ -1072,6 +1125,16 @@ BOOL CSoundFile::SaveIT(LPCSTR lpszFileName, UINT nPacking)
 		}
 		itss.samplepointer = dwPos;
 		fseek(f, smppos[nsmp-1], SEEK_SET);
+
+		itss.id = bswapLE32(itss.id);
+		itss.length = bswapLE32(itss.length);
+		itss.loopbegin = bswapLE32(itss.loopbegin);
+		itss.loopend = bswapLE32(itss.loopend);
+		itss.C5Speed = bswapLE32(itss.C5Speed);
+		itss.susloopbegin = bswapLE32(itss.susloopbegin);
+		itss.susloopend = bswapLE32(itss.susloopend);
+		itss.samplepointer = bswapLE32(itss.samplepointer);
+
 		fwrite(&itss, 1, sizeof(ITSAMPLESTRUCT), f);
 		fseek(f, dwPos, SEEK_SET);
 		if ((psmp->pSample) && (psmp->nLength))
@@ -1081,6 +1144,25 @@ BOOL CSoundFile::SaveIT(LPCSTR lpszFileName, UINT nPacking)
 	}
 	// Updating offsets
 	fseek(f, dwHdrPos, SEEK_SET);
+	
+	/* <Toad> Now we can byteswap them ;-) */
+	UINT WW;
+	UINT WX;
+	WX = (UINT)header.insnum;
+	WX <<= 2;
+	for (WW=0; WW < (WX>>2); WW++)
+	       inspos[WW] = bswapLE32(inspos[WW]);
+
+	WX = (UINT)header.smpnum;
+	WX <<= 2;
+	for (WW=0; WW < (WX>>2); WW++)
+	       smppos[WW] = bswapLE32(smppos[WW]);
+
+	WX=(UINT)header.patnum;
+	WX <<= 2;
+	for (WW=0; WW < (WX>>2); WW++)
+	       patpos[WW] = bswapLE32(patpos[WW]);
+	
 	if (header.insnum) fwrite(inspos, 4, header.insnum, f);
 	if (header.smpnum) fwrite(smppos, 4, header.smpnum, f);
 	if (header.patnum) fwrite(patpos, 4, header.patnum, f);
@@ -1088,7 +1170,7 @@ BOOL CSoundFile::SaveIT(LPCSTR lpszFileName, UINT nPacking)
 	return TRUE;
 }
 
-#pragma warning(default:4100)
+//#pragma warning(default:4100)
 #endif // MODPLUG_NO_FILESAVE
 
 //////////////////////////////////////////////////////////////////////////////
@@ -1292,7 +1374,8 @@ UINT CSoundFile::SaveMixPlugins(FILE *f, BOOL bUpdate)
 {
 	DWORD chinfo[64];
 	CHAR s[32];
-	DWORD nPluginSize;
+	DWORD nPluginSize, writeSwapDWORD;
+	SNDMIXPLUGININFO writePluginInfo;
 	UINT nTotalSize = 0;
 	UINT nChInfo = 0;
 
@@ -1317,9 +1400,23 @@ UINT CSoundFile::SaveMixPlugins(FILE *f, BOOL bUpdate)
 				s[2] = '0' + (i/10);
 				s[3] = '0' + (i%10);
 				fwrite(s, 1, 4, f);
-				fwrite(&nPluginSize, 1, 4, f);
-				fwrite(&p->Info, 1, sizeof(SNDMIXPLUGININFO), f);
-				fwrite(&m_MixPlugins[i].nPluginDataSize, 1, 4, f);
+				writeSwapDWORD = bswapLE32(nPluginSize);
+				fwrite(&writeSwapDWORD, 1, 4, f);
+
+				// Copy Information To Be Written for ByteSwapping
+				memcpy(&writePluginInfo, &p->Info, sizeof(SNDMIXPLUGININFO));
+				writePluginInfo.dwPluginId1 = bswapLE32(p->Info.dwPluginId1);
+				writePluginInfo.dwPluginId2 = bswapLE32(p->Info.dwPluginId2);
+				writePluginInfo.dwInputRouting = bswapLE32(p->Info.dwInputRouting);
+				writePluginInfo.dwOutputRouting = bswapLE32(p->Info.dwOutputRouting);
+				for (UINT j=0; j<4; j++)
+				{
+				        writePluginInfo.dwReserved[j] = bswapLE32(p->Info.dwReserved[j]);
+				}
+
+				fwrite(&writePluginInfo, 1, sizeof(SNDMIXPLUGININFO), f);
+				writeSwapDWORD = bswapLE32(m_MixPlugins[i].nPluginDataSize);
+				fwrite(&writeSwapDWORD, 1, 4, f);
 				if (m_MixPlugins[i].pPluginData)
 				{
 					fwrite(m_MixPlugins[i].pPluginData, 1, m_MixPlugins[i].nPluginDataSize, f);
@@ -1335,6 +1432,7 @@ UINT CSoundFile::SaveMixPlugins(FILE *f, BOOL bUpdate)
 			if ((chinfo[j] = ChnSettings[j].nMixPlugin) != 0)
 			{
 				nChInfo = j+1;
+				chinfo[j] = bswapLE32(chinfo[j]); // inplace BS
 			}
 		}
 	}
@@ -1342,10 +1440,11 @@ UINT CSoundFile::SaveMixPlugins(FILE *f, BOOL bUpdate)
 	{
 		if (f)
 		{
-			nPluginSize = 0x58464843;
+			nPluginSize = bswapLE32(0x58464843);
 			fwrite(&nPluginSize, 1, 4, f);
 			nPluginSize = nChInfo*4;
-			fwrite(&nPluginSize, 1, 4, f);
+			writeSwapDWORD = bswapLE32(nPluginSize);
+			fwrite(&writeSwapDWORD, 1, 4, f);
 			fwrite(chinfo, 1, nPluginSize, f);
 		}
 		nTotalSize += nChInfo*4 + 8;

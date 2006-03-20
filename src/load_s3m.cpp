@@ -605,7 +605,7 @@ BOOL CSoundFile::SaveS3M(LPCSTR lpszFileName, UINT nPacking)
 			if (nPacking)
 			{
 				if ((!(pins->uFlags & (CHN_16BIT|CHN_STEREO)))
-				 && (CanPackSample(pins->pSample, pins->nLength, nPacking)))
+				 && (CanPackSample((char *)pins->pSample, pins->nLength, nPacking)))
 				{
 					insex[i-1].pack = 4;
 					flags = RS_ADPCM4;

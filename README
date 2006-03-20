@@ -1,4 +1,4 @@
-Modplug Plugin for XMMS v2.0 / libmodplug v0.7
+Modplug Plugin for XMMS v2.0 / libmodplug v0.8
  Based on the ModPlug sound engine by Olivier Lapicque <olivierl@jps.net>
  XMMS plugin by Kenton Varda <temporal@gauge3d.org>
  Maintainer is now Konstanty Bialkowski <konstanty@ieee.org>
@@ -9,15 +9,6 @@ public domain.  This library and plugin is based on that code.
 
 For more information on libmodplug, the library for decoding mod-like music
 formats, see libmodplug/README.
-
-NOTE TO FELLOW OPEN SOURCE PROGRAMMERS:
-  I (Kenton Varda) no longer have the time or desire to maintain this library.
-  If anyone would like to take over for me, please e-mail me at
-  <temporal@gauge3d.org>.  Thanks.
-
--- 
-
-Konstanty Bialkowski has taken this job.
 
 Contents
 --------
@@ -194,6 +185,6 @@ Problem:
  feature.
 
 Solution:
- E-mail me (Kenton Varda) at <temporal@gauge3d.org>.  I would be
+ E-mail me (Kenton Varda) at <konstanty@ieee.org>.  I would be
  happy to hear any suggestions or problems you have.
 

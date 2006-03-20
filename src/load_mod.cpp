@@ -481,7 +481,7 @@ BOOL CSoundFile::SaveMod(LPCSTR lpszFileName, UINT nPacking)
 #ifndef NO_PACKING
 		if (!(pins->uFlags & (CHN_16BIT|CHN_STEREO)))
 		{
-			if ((nPacking) && (CanPackSample(pins->pSample, inslen[ismpd], nPacking)))
+			if ((nPacking) && (CanPackSample((char *)pins->pSample, inslen[ismpd], nPacking)))
 			{
 				fwrite("ADPCM", 1, 5, f);
 				flags = RS_ADPCM4;

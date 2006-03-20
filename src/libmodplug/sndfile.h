@@ -22,7 +22,7 @@ typedef const BYTE * LPCBYTE;
 
 #define MOD_AMIGAC2			0x1AB
 #define MAX_SAMPLE_LENGTH	16000000
-#define MAX_SAMPLE_RATE		50000
+#define MAX_SAMPLE_RATE		192000
 #define MAX_ORDERS			256
 #define MAX_PATTERNS		240
 #define MAX_SAMPLES			240

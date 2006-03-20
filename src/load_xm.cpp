@@ -790,7 +790,7 @@ BOOL CSoundFile::SaveXM(LPCSTR lpszFileName, UINT nPacking)
 			if (nPacking)
 			{
 				if ((!(pins->uFlags & (CHN_16BIT|CHN_STEREO)))
-				 && (CanPackSample(pins->pSample, pins->nLength, nPacking)))
+				 && (CanPackSample((char *)pins->pSample, pins->nLength, nPacking)))
 				{
 					flags[ins] = RS_ADPCM4;
 					xmss.res = 0xAD;
@@ -826,7 +826,7 @@ BOOL CSoundFile::SaveXM(LPCSTR lpszFileName, UINT nPacking)
 			if (pins->pSample)
 			{
 #ifndef NO_PACKING
-				if ((flags[ismpd] == RS_ADPCM4) && (xmih.samples>1)) CanPackSample(pins->pSample, pins->nLength, nPacking);
+				if ((flags[ismpd] == RS_ADPCM4) && (xmih.samples>1)) CanPackSample((char *)pins->pSample, pins->nLength, nPacking);
 #endif // NO_PACKING
 				WriteSample(f, pins, flags[ismpd]);
 			}

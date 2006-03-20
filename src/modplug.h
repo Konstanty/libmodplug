@@ -14,6 +14,18 @@ extern "C" {
 struct _ModPlugFile;
 typedef struct _ModPlugFile ModPlugFile;
 
+struct _ModPlugNote {
+	unsigned char Note;
+	unsigned char Instrument;
+	unsigned char VolumeEffect;
+	unsigned char Effect;
+	unsigned char Volume;
+	unsigned char Parameter;
+};
+typedef struct _ModPlugNote ModPlugNote;
+
+typedef void (*ModPlugMixerProc)(int*, unsigned long, unsigned long);
+
 /* Load a mod file.  [data] should point to a block of memory containing the complete
  * file, and [size] should be the size of that block.
  * Return the loaded mod file on success, or NULL on failure. */
@@ -84,6 +96,70 @@ typedef struct _ModPlug_Settings
  * take effect immediately will take effect the next time you load a mod. */
 void ModPlug_GetSettings(ModPlug_Settings* settings);
 void ModPlug_SetSettings(const ModPlug_Settings* settings);
+
+/* New ModPlug API Functions */
+/* NOTE: Master Volume (1-512) */
+unsigned int ModPlug_GetMasterVolume(ModPlugFile* file) ;
+void ModPlug_SetMasterVolume(ModPlugFile* file,unsigned int cvol) ;
+
+int ModPlug_GetCurrentSpeed(ModPlugFile* file);
+int ModPlug_GetCurrentTempo(ModPlugFile* file);
+int ModPlug_GetCurrentOrder(ModPlugFile* file);
+int ModPlug_GetCurrentPattern(ModPlugFile* file);
+int ModPlug_GetCurrentRow(ModPlugFile* file);
+int ModPlug_GetPlayingChannels(ModPlugFile* file);
+
+void ModPlug_SeekOrder(ModPlugFile* file,int order);
+int ModPlug_GetModuleType(ModPlugFile* file);
+char* ModPlug_GetMessage(ModPlugFile* file);
+
+
+#ifndef MODPLUG_NO_FILESAVE
+/*
+ * EXPERIMENTAL Export Functions
+ */
+/*Export to a Scream Tracker 3 S3M module. EXPERIMENTAL (only works on Little-Endian platforms)*/
+char ModPlug_ExportS3M(ModPlugFile* file, const char* filepath);
+
+/*Export to a Extended Module (XM). EXPERIMENTAL (only works on Little-Endian platforms)*/
+char ModPlug_ExportXM(ModPlugFile* file, const char* filepath);
+
+/*Export to a Amiga MOD file. EXPERIMENTAL.*/
+char ModPlug_ExportMOD(ModPlugFile* file, const char* filepath);
+
+/*Export to a Impulse Tracker IT file. Should work OK in Little-Endian & Big-Endian platforms :-) */
+char ModPlug_ExportIT(ModPlugFile* file, const char* filepath);
+#endif // MODPLUG_NO_FILESAVE
+
+unsigned int ModPlug_NumInstruments(ModPlugFile* file);
+unsigned int ModPlug_NumSamples(ModPlugFile* file);
+unsigned int ModPlug_NumPatterns(ModPlugFile* file);
+unsigned int ModPlug_NumChannels(ModPlugFile* file);
+unsigned int ModPlug_SampleName(ModPlugFile* file, unsigned int qual, char* buff);
+unsigned int ModPlug_InstrumentName(ModPlugFile* file, unsigned int qual, char* buff);
+
+/*
+ * Retrieve pattern note-data
+ */
+ModPlugNote* ModPlug_GetPattern(ModPlugFile* file, int pattern, unsigned int* numrows);
+
+/*
+ * =================
+ * Mixer callback
+ * =================
+ *
+ * Use this callback if you want to 'modify' the mixed data of LibModPlug.
+ * 
+ * void proc(int* buffer,unsigned long channels,unsigned long nsamples) ;
+ *
+ * 'buffer': A buffer of mixed samples
+ * 'channels': N. of channels in the buffer
+ * 'nsamples': N. of samples in the buffeer (without taking care of n.channels)
+ *
+ * (Samples are signed 32-bit integers)
+ */
+void ModPlug_InitMixerCallback(ModPlugFile* file,ModPlugMixerProc proc) ;
+void ModPlug_UnloadMixerCallback(ModPlugFile* file) ;
 
 #ifdef __cplusplus
 } /* extern "C" */
