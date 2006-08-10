@@ -48,6 +48,45 @@ Contents
    Note(2): The format of the mod is NOT determined from the extension on
     compressed mods.  For example, if you zipped a UMX mod and gave it the
     extension MDZ, it would work fine.
+- plays timidity's GUS patch files (*.pat):
+   a multi sample pat file with n samples can be played with a Frere Jacques 
+   canon with n voices.
+- plays all types of MIDI files (*.mid):
+   uses the timidity .pat files for samples (when available)
+   recognizes environment variables:
+
+     MMPAT_PATH_TO_CFG	set to the directory where the file "timidity.cfg" and
+      the subdirectory "instruments" can be found,
+       default: "/usr/local/share/timidity".
+      MMMID_SPEED for experimenting with the mod speed (1 thru 9)
+      MMMID_VERBOSE for feedback on the conversion process
+      MMMID_DEBUG for sake of completeness, only useful for maintainers
+
+- plays textfiles written in the ABC music notation (*.abc):
+   uses the timidity .pat files for samples (when available)
+   recognizes environment variables:
+
+      MMPAT_PATH_TO_CFG	set to the directory where the file "timidity.cfg" and
+       the subdirectory "instruments" can be found,
+       default: "/usr/local/share/timidity".
+
+      MMABC_NO_RANDOM_PICK when not set and the abc file contains multiple songs
+       (X:n) the first song to be played will be picked at random another click 
+       on the play button advances to the next
+       song in the file (or the first when the last song has been
+       played), when set it can be 0 (zero) or not numeric
+       to let it play all songs in the file, a positive number n to
+       let it play the n-th song in the file, a negative number -n to
+       let it play the n-th song in the file and advancing to the next
+       song when the play button is clicked.
+
+      MMABC_DUMPTRACKS when set it gives diagnostic information on stdout, 
+       values can be:
+
+        all - every event is printed
+        nonotes - only the control events (looping, breaks etc.) are printed
+           any other value prints the control events and every note event
+           immediately succeeding the control events.
 - Slightly better sound quality than Mikmod.  Vastly superior quality
    over Winamp.
 - All XMMS calls are supported exept for the band gains on the

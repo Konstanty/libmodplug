@@ -31,8 +31,12 @@ libmodplug_la_SOURCES = tables.cpp         \
                         load_j2b.cpp       \
                         load_mt2.cpp       \
                         load_psm.cpp       \
+                        load_abc.cpp       \
+                        load_mid.cpp       \
+                        load_pat.cpp       \
                         modplug.cpp
 
 libmodplugincludedir = $(includedir)/libmodplug
 
 libmodpluginclude_HEADERS = libmodplug/stdafx.h libmodplug/sndfile.h libmodplug/it_defs.h modplug.h
+noinst_HEADERS = load_pat.h

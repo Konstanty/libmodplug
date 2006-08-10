@@ -1,4 +1,62 @@
 changes:
+date = 20-jul-2006 [Peter Grootswagers]
+-> file: src/load_abc.cpp
+		where: instrument loader functions
+		what: replaced with correspondig functions in load_pat.cpp
+-> file: src/load_mid.cpp
+		where: whole source
+		what: new loader for midi files
+-> file: src/load_pat.cpp
+		where: whole source
+		what: new loader for GUS instrument patch files (pat)
+-> file: src/load_pat.h
+		where: whole source
+		what: new header declaring reuseable GUS instrument patch functions (pat)
+-> file: README
+		where: 2. Features
+		what: added description of load_mid.cpp and load_pat.cpp
+-> file: src/Makefile.am
+		where: libmodplug_la_SOURCES
+		what: added load_mid.cpp and load_pat.cpp
+		where: libmodpluginclude_HEADERS
+		what: added load_pat.h
+-> file: src/sndfile.cpp
+		where: function CSoundFile::Create()
+		what: added call to ReadMID and ReadPAT
+-> file: src/libmodplug/sndfile.h
+		where: #define
+		what: added MOD_TYPE_PAT (MOD_TYPE_MID already there...)
+		where: class CSoundFile
+		what: added public function members ReadMID, TestMID, ReadPat, TestPAT and PATsample
+date = 24-jun-2006 [Peter Grootswagers]
+-> file: src/load_abc.cpp
+		where: whole source
+		what: new loader for abc files
+-> file: README
+		where: 2. Features
+		what: added description of load_abc.cpp
+-> file: src/Makefile.am
+		where: libmodplug_la_SOURCES
+		what: added load_abc.cpp
+-> file: src/sndfile.cpp
+		where: function CSoundFile::Create()
+		what: added call to ReadABC
+-> file: src/libmodplug/sndfile.h
+		where: #define
+		what: added MOD_TYPE_ABC
+		where: class CSoundFile
+		what: added public function members ReadABC and TestABC
+date = 20-mar-2006 [Macro Trillo / "Custom libmodplug project"]
+-> file : src/load_s3m.cpp
+-> file : src/load_far.cpp
+		what: fixed endianness 
+date = 20-mar-2006 [Alistair John Strachan]
+....
+
+Many other changes need to be documented here...
+
+GCC3 fixes, GCC4 fixes, More Archive Types.
+	
 date = 09-feb-2001 [Markus Fick]
 -> file: fastmix.cpp
 		where: spline creation, spline macros

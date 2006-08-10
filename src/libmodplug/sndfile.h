@@ -68,8 +68,10 @@ typedef const BYTE * LPCBYTE;
 #define MOD_TYPE_AMF0		0x200000
 #define MOD_TYPE_PSM		0x400000
 #define MOD_TYPE_J2B		0x800000
+#define MOD_TYPE_ABC		0x1000000
+#define MOD_TYPE_PAT		0x2000000
 #define MOD_TYPE_UMX		0x80000000 // Fake type
-#define MAX_MODTYPE		23
+#define MAX_MODTYPE		24
 
 
 
@@ -637,6 +639,12 @@ public:
 	BOOL ReadPSM(LPCBYTE lpStream, DWORD dwMemLength);
 	BOOL ReadJ2B(LPCBYTE lpStream, DWORD dwMemLength);
 	BOOL ReadUMX(LPCBYTE lpStream, DWORD dwMemLength);
+	BOOL ReadABC(LPCBYTE lpStream, DWORD dwMemLength);
+	BOOL TestABC(LPCBYTE lpStream, DWORD dwMemLength);
+	BOOL ReadMID(LPCBYTE lpStream, DWORD dwMemLength);
+	BOOL TestMID(LPCBYTE lpStream, DWORD dwMemLength);
+	BOOL ReadPAT(LPCBYTE lpStream, DWORD dwMemLength);
+	BOOL TestPAT(LPCBYTE lpStream, DWORD dwMemLength);
 	// Save Functions
 #ifndef MODPLUG_NO_FILESAVE
 	UINT WriteSample(FILE *f, MODINSTRUMENT *pins, UINT nFlags, UINT nMaxLen=0);
