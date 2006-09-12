@@ -232,7 +232,7 @@ static char *sig[] = {
 	" CD E FG A B cd e fg a b ",	// 5 flats  Db
 	"C D E FG A Bc d e fg a b ",	// 6 flats  Gb
 	"C D EF G A Bc d ef g a b ",	// 7 flats  Cb
-// 0123456789012	
+// 0123456789012345678901234	
 };
 
 static char *keySigs[] = {
@@ -630,7 +630,7 @@ static int abc_interval(const char *s, const char *d)
 				break;
 		oct = 4;	// ABC note pitch C is C4 and pitch c is C5
 		if( k > 12 ) {
-			oct = 5;
+			oct++;
 			k -= 12;
 		}
 		while( p[i] == ',' || p[i] == '\'' ) {
@@ -1250,12 +1250,21 @@ static int abc_add_noteon(ABCHANDLE *h, int ch, const char *p, ULONG tracktime, 
 			i = 0;
 			break;
 	}
-	for( k=0; k<25; k++ ) {
+	for( k=0; k<51; k++ ) {
 		if( n == barkey[k] )
 			break;
 	}
 	j = k;
-	if( i ) {	// propagate accidentals if necessary
+	if( k > 24 )
+		k -= 25; // had something like A# over Bb key F signature....
+	if( i ) {
+		// propagate accidentals if necessary
+		// do NOT do redundant accidentals they're allways relative to C-scale
+		for( k=0; k<25; k++ ) {
+			if( n == sig[7][k] )
+				break;
+		}
+		if( k < 25 ) { // only do real notes...
 		switch(ch) {
 			case 'x':
 				k++;
@@ -1268,13 +1277,9 @@ static int abc_add_noteon(ABCHANDLE *h, int ch, const char *p, ULONG tracktime, 
 				k--;
 				break;
 			case '=':
-				for( k=0; k<25; k++ ) {
-					if( n == sig[7][k] )
 						break;
 				}
-				break;
-		}
-		if( k < 25 && barkey[k] == ' ' ) { // do not propagate twice
+			if( j < 25 ) // was it not A# over Bb?
 			barkey[j] = ' ';
 			barkey[k] = n;
 		}
@@ -1343,7 +1348,9 @@ static int abc_add_noteon(ABCHANDLE *h, int ch, const char *p, ULONG tracktime, 
 			}
 		}
 		tp->tienote->tiednote = 1; // mark him for the pattern writers
-		tp->tienote = NULL;
+		for( j=i; isdigit(p[j]) || p[j]=='/'; j++ ) ; // look ahead to see if this one is tied too
+		if( p[j] != '-' ) // is this note tied too?
+			tp->tienote = NULL; // if not the tie ends here...
 		return i;
 	}
 	tp->tienote = NULL;
@@ -2530,12 +2537,7 @@ static void ABC_ReadPatterns(UNIMOD *of, ABCHANDLE *h, int numpat)
 							vol += vol / 10;
 							if( vol > 127 ) vol = 127;
 						}
-						if( vol == 0 ) {
-							eff.param.u = 0;
-							eff.effect  = UNI_NOTEKILL;
-							utrk_write_local(of->ut, &eff, UNIMEM_NONE);
-						}
-						else {
+						if( vol > 0 ) {
 							if( el->par[volume] == 0 ) {
 								eff.framedly     = modticks(el->tracktick - tt1);
 								eff.param.u      = 0;
@@ -2693,13 +2695,8 @@ static int ABC_ReadPatterns(MODCOMMAND *pattern[], WORD psize[], ABCHANDLE *h, i
 							n   = pat_modnote(i);
 							ins = e->par[smpno];
 						}
-						if( e->par[volume] == 0 ) {
-							m->param   = 0;
-							m->command = CMD_KEYOFF;
-							vol        = 0;
-						}
-						else {
 							vol = e->par[volume]/2;
+						if( e->par[volume] > 0 ) {
 							if( e->par[effect] == accent ) vol += vol / 20;
 							if( vol > 64 ) vol = 64;
 							if( el->par[volume] == 0 ) { // note cut
@@ -2919,6 +2916,7 @@ static void abc_setup_chordnames()
 	static int list_7sus[4] = { 0, 5, 7, 10 };
 	static int list_7sus4[4] = { 0, 5, 7, 10 };
 	static int list_7sus9[4] = { 0, 2, 7, 10 };
+	static int list_9sus4[5] = { 0, 5, 10, 14, 19 };
 	static int list_5[2] = { 0, 7 };
 	static int list_13[6] = { 0, 4, 7, 10, 16, 21 };
 	
@@ -2948,6 +2946,7 @@ static void abc_setup_chordnames()
 	abc_addchordname("7sus", 4, list_7sus);
 	abc_addchordname("7sus4", 4, list_7sus4);
 	abc_addchordname("7sus9", 4, list_7sus9);
+	abc_addchordname("9sus4", 5, list_9sus4);
 	abc_addchordname("5", 2, list_5);
 	abc_addchordname("13", 6, list_13);
 }
@@ -3714,7 +3713,7 @@ BOOL CSoundFile::ReadABC(const BYTE *lpStream, DWORD dwMemLength)
 #endif
 	uint t;
 	char	*line, *p, *pp, ch, ch0=0;
-	char barsig[26];	// for propagated accidental key signature within bar
+	char barsig[52];	// for propagated accidental key signature within bar
 	char *abcparts;
 	BYTE partpat[27][2], *orderlist;
 	int orderlen;
@@ -3960,7 +3959,7 @@ BOOL CSoundFile::ReadABC(const BYTE *lpStream, DWORD dwMemLength)
 					if( !strncmp(p,"K:",2) ) {
 						abcstate = INBODY;
 						abckey = ABC_Key(p+2);
-						strcpy(barsig, sig[abckey]);	// reset the key signature
+						sprintf(barsig, "%s%s", sig[abckey], sig[abckey]);	// reset the key signature
 						p = abc_skip_word(p+2);
 						h->ktrans = abc_transpose(p);
 						*p = '%'; // force skip rest of line
@@ -4013,7 +4012,7 @@ BOOL CSoundFile::ReadABC(const BYTE *lpStream, DWORD dwMemLength)
 						abcstate = INBODY;
 						// fall through
 				case INBODY:
-					if( !strlen(p) ) { // end of this song
+					if( !strlen(p) && h->track ) { // end of this song
 						abcstate = h->pickrandom? INSKIPFORX: INBETWEEN;
 						// last but not least shut off all pending events
 						abc_recalculate_tracktime(h);
@@ -4041,7 +4040,7 @@ BOOL CSoundFile::ReadABC(const BYTE *lpStream, DWORD dwMemLength)
 					if( !strncmp(p,"V:",2) ) {
 						for( t=2; p[t]==' '; t++ ) ;
 						h->tp = abc_locate_track(h, p+t, 0);
-						strcpy(barsig, sig[abckey]);	// reset the key signature
+						sprintf(barsig, "%s%s", sig[abckey], sig[abckey]);	// reset the key signature
 						abcgrace = 0;
 						brokenrithm = 0;
 						h->tracktime = abc_tracktime(h->tp);
@@ -4052,7 +4051,7 @@ BOOL CSoundFile::ReadABC(const BYTE *lpStream, DWORD dwMemLength)
 					}
 					if( !strncmp(p,"K:",2) ) {
 						abckey = ABC_Key(p+2);
-						strcpy(barsig, sig[abckey]);	// reset the key signature
+						sprintf(barsig, "%s%s", sig[abckey], sig[abckey]);	// reset the key signature
 						p = abc_skip_word(p+2);
 						h->ktrans = abc_transpose(p);
 						*p = '%';	// make me skip the rest of the line....
@@ -4255,7 +4254,7 @@ BOOL CSoundFile::ReadABC(const BYTE *lpStream, DWORD dwMemLength)
 									for( ; *p && *p != ']'; p++ ) ;
 									abcgrace = 0;
 									brokenrithm = 0;
-									strcpy(barsig, sig[abckey]);	// reset the key signature
+									sprintf(barsig, "%s%s", sig[abckey], sig[abckey]);	// reset the key signature
 									h->tracktime = abc_tracktime(h->tp);
 									bartime = h->tracktime; // it is not wise to break voices in the middle of a track...
 									abcvol = h->tp->volume;
@@ -4265,7 +4264,7 @@ BOOL CSoundFile::ReadABC(const BYTE *lpStream, DWORD dwMemLength)
 								}
 								if( !strncmp(p,"K:",2) ) {
 									abckey = ABC_Key(p+2);
-									strcpy(barsig, sig[abckey]);	// reset the key signature
+									sprintf(barsig, "%s%s", sig[abckey], sig[abckey]);	// reset the key signature
 									p = abc_skip_word(p+2);
 									h->ktrans = abc_transpose(p);
 									for( ; *p && *p != ']'; p++ ) ;
@@ -4335,6 +4334,7 @@ BOOL CSoundFile::ReadABC(const BYTE *lpStream, DWORD dwMemLength)
 										p += abc_notelen(p, &notelen, &notediv);
 										if( *p == '-' ) {
 											p++;
+											if( h->tp->tail->flg != 1 )
 											h->tp->tienote = h->tp->tail;
 										}
 										if( abcchord<8 ) {
@@ -4410,7 +4410,8 @@ BOOL CSoundFile::ReadABC(const BYTE *lpStream, DWORD dwMemLength)
 											 	+ (thistime * cnl[abcchord] * cnotediv)/(cnd[abcchord] * cnotelen) );
 										}
 										else {
-											if( ch=='-' ) h->tp->tienote = h->tp->tail;	// copy noteon event to tienote in track
+											if( ch=='-' && h->tp->tail->flg != 1 )
+												h->tp->tienote = h->tp->tail;	// copy noteon event to tienote in track
 											if( thistime > abcticks(h->speed) )
 												abc_add_noteoff(h, h->tp, h->tracktime - abcnoslurs);
 											else
@@ -4495,6 +4496,7 @@ BOOL CSoundFile::ReadABC(const BYTE *lpStream, DWORD dwMemLength)
 									p += abc_notelen(p, &notelen, &notediv);
 									if( *p=='-' ) {
 										p++;
+										if( h->tp->tail->flg != 1 )
 										h->tp->tienote = h->tp->tail;
 									}
 									notediv *= 4;	// grace notes factor 4 shorter (1/8 => 1/32)
@@ -4514,7 +4516,7 @@ BOOL CSoundFile::ReadABC(const BYTE *lpStream, DWORD dwMemLength)
 									abc_add_gchord(h, h->tracktime, bartime);
 								if( h->drumon && (h->tp == h->tpr) )	
 									abc_add_drum(h, h->tracktime, bartime);
-								strcpy(barsig, sig[abckey]);	// reset the key signature
+								sprintf(barsig, "%s%s", sig[abckey], sig[abckey]);	// reset the key signature
 								bartime = h->tracktime;
 								if( h->tp && h->tp->vpos ) h->tp = abc_locate_track(h, h->tp->v, 0); // reset from voice overlay
 								if( isdigit(*p) ) {	// different endings in repeats |i,j,n-r,s,...
@@ -4802,6 +4804,7 @@ BOOL CSoundFile::ReadABC(const BYTE *lpStream, DWORD dwMemLength)
 									p += abc_notelen(p, &notelen, &notediv);
 									if( *p=='-' ) {
 										p++;
+										if( h->tp->tail->flg != 1 )
 										h->tp->tienote = h->tp->tail;
 									}
 									tupletr = abc_tuplet(&notelen, &notediv, tupletp, tupletq, tupletr);
@@ -4883,7 +4886,7 @@ BOOL CSoundFile::ReadABC(const BYTE *lpStream, DWORD dwMemLength)
 										abcgrace += abcticks(h->speed);
 									}
 									h->tracktime += thistime; 
-									strcpy(barsig, sig[abckey]);	// reset the key signature, just in case...
+									sprintf(barsig, "%s%s", sig[abckey], sig[abckey]);	// reset the key signature
 									abc_add_sync(h, h->tp, h->tracktime);
 									if( h->gchordon && (h->tp == h->tpc) )
 										abc_add_gchord(h, h->tracktime, bartime);
@@ -4913,6 +4916,12 @@ BOOL CSoundFile::ReadABC(const BYTE *lpStream, DWORD dwMemLength)
 		if( mmsp ) mmfclose(mmstack[mmsp]);
 	}
 	ABC_CleanupMacros(h);	// we dont need them anymore
+	if( !h->track ) {
+		char buf[10];
+		sprintf(buf,"%d",abcxnumber);
+		abc_message("abc X:%s has no body", buf);
+		h->track = abc_check_track(h, h->track); // for sanity...
+	}
 	if( abcstate == INBODY ) {
 		// last but not least shut off all pending events
 		abc_recalculate_tracktime(h);

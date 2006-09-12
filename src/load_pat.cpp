@@ -47,8 +47,16 @@ typedef UWORD WORD;
 
 #include "load_pat.h"
 
+#ifdef MSC_VER
+#define DIRDELIM		'\\'
+#define TIMIDITYCFG	"C:\\TIMIDITY\\TIMIDITY.CFG"
+#define PATHFORPAT	"C:\\TIMIDITY\\INSTRUMENTS"
+#else
+#define DIRDELIM		'/'
 #define TIMIDITYCFG	"/usr/local/share/timidity/timidity.cfg"
 #define PATHFORPAT	"/usr/local/share/timidity/instruments"
+#endif
+
 #define PAT_ENV_PATH2CFG			"MMPAT_PATH_TO_CFG"
 
 // 128 gm and 63 drum
@@ -405,11 +413,11 @@ static char *pat_build_path(char *fname, int pat)
 	char *ps;
 	ps = strrchr(midipat[pat], ':');
 	if( ps ) {
-		sprintf(fname, "%s/%s", pathforpat, midipat[pat]);
+		sprintf(fname, "%s%c%s", pathforpat, DIRDELIM, midipat[pat]);
 		strcpy(strrchr(fname, ':'), ".pat");
 		return ps;
 	}
-	sprintf(fname, "%s/%s.pat", pathforpat, midipat[pat]);
+	sprintf(fname, "%s%c%s.pat", pathforpat, DIRDELIM, midipat[pat]);
 	return 0;
 }
 
@@ -1122,6 +1130,7 @@ static void PATinst(INSTRUMENTHEADER *d, int smp, int gm)
 		hw.modes = PAT_16BIT|PAT_ENVELOPE|PAT_SUSTAIN|PAT_LOOP;
 		hw.start_loop = 0;
 		hw.end_loop = 30000;
+		hw.wave_size  = 30000;
 //  envelope rates and offsets pinched from timidity's acpiano.pat sample no 1
 		hw.envelope_rate[0] = 0x3f;
 		hw.envelope_rate[1] = 0x3f;
