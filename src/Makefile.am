@@ -1,5 +1,6 @@
 INCLUDES = -Ilibmodplug
 lib_LTLIBRARIES = libmodplug.la
+libmodplug_la_LIBADD = -lm
 libmodplug_la_SOURCES = tables.cpp         \
                         sndmix.cpp         \
                         sndfile.cpp        \
@@ -37,6 +38,7 @@ libmodplug_la_SOURCES = tables.cpp         \
                         modplug.cpp
 
 libmodplugincludedir = $(includedir)/libmodplug
+
 
 libmodpluginclude_HEADERS = libmodplug/stdafx.h libmodplug/sndfile.h libmodplug/it_defs.h modplug.h
 noinst_HEADERS = load_pat.h

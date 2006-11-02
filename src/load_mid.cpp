@@ -200,7 +200,7 @@ static void mid_dump_tracks(MIDHANDLE *h)
 	MIDTRACK *tr;
 	MIDEVENT *e;
 	int t;
-	printf("tracktime  = %ld\n", h->tracktime);
+	printf("tracktime  = %ld\n", (long)(h->tracktime));
 	printf("speed      = %d\n", h->speed);
 	printf("midispeed  = %d\n", h->midispeed);
 	printf("midiformat = %d\n", h->midiformat);
@@ -215,7 +215,9 @@ static void mid_dump_tracks(MIDHANDLE *h)
 		t++;
 		printf("TRACK %2d chan=%d note=0x%02x vol=%d pan=0x%02x instr=%d\n", t, tr->chan + 1, tr->vpos, tr->balance, tr->volume, tr->instr);
 		for( e=tr->head; e; e=e->next ) {
-			printf("%2d %6ld %s %3d %3d %3d ", t, e->tracktick, e->flg? "NOTE": "CTRL", e->note, e->volume, e->smpno);
+			printf("%2d %6ld %s %3d %3d %3d ",
+			       t, (long)(e->tracktick),
+			       e->flg? "NOTE": "CTRL", e->note, e->volume, e->smpno);
 			switch(	e->fx ) {
 				case fxbrk: printf("fxbrk\n");break;
 				case fxsync: printf("fxsync\n");break;
@@ -673,7 +675,7 @@ static void mid_all_notes_off(MIDHANDLE *h, int mch)
 // =====================================================================================
 {
 	MIDTRACK *tr;
-	if( h->debug ) printf("%ld %d all notes off\n",h->tracktime, mch+1);
+	if( h->debug ) printf("%ld %d all notes off\n",(long)(h->tracktime), mch+1);
 	for( tr=h->track; tr; tr=tr->next ) {
 		if( tr->chan == mch || mch == -1 ) {
 			mid_sync_track(tr, h->tracktime);
@@ -1311,7 +1313,7 @@ static void mid_notes_to_percussion(MIDTRACK *tp, ULONG adjust, ULONG tmin)
 	}
 	if( ton > toff ) {
 		char info[32];
-		sprintf(info,"%ld > %ld note %d", ton, toff, n);
+		sprintf(info,"%ld > %ld note %d", (long)ton, (long)toff, n);
 		mid_message("drum track ends with note on (%s)", info);
 	}
 	if( lno && lno->next ) mid_stripoff(tp, lno);
@@ -1365,7 +1367,7 @@ static void mid_prog_to_notes(MIDTRACK *tp, ULONG adjust, ULONG tmin)
 	}
 	if( ton > toff ) {
 		char info[40];
-		sprintf(info,"channel %d, %ld > %ld note %d", tp->chan + 1, ton, toff, n);
+		sprintf(info,"channel %d, %ld > %ld note %d", tp->chan + 1, (long)ton, (long)toff, n);
 		mid_message("melody track ends with note on (%s)", info);
 	}
 	if( lno && lno->next ) mid_stripoff(tp, lno);
@@ -1539,7 +1541,9 @@ BOOL CSoundFile::ReadMID(const BYTE *lpStream, DWORD dwMemLength)
 					ttp = mid_find_track(h, ch, midibyte[0]);
 					if( ttp ) mid_add_noteoff(h, ttp);
 					if( h->debug )
-						printf("%2d %08ld       Note off: ch %d 0x%02x 0x%02x\n", t, h->tracktime, ch + 1, midibyte[0], midibyte[1]);
+						printf("%2d %08ld       Note off: ch %d 0x%02x 0x%02x\n",
+						       t, (long)(h->tracktime),
+						       ch + 1, midibyte[0], midibyte[1]);
 					break;
 				case 0x90: // note on
 					midibyte[1] = mid_read_byte(h);
@@ -1548,20 +1552,24 @@ BOOL CSoundFile::ReadMID(const BYTE *lpStream, DWORD dwMemLength)
 						ttp = mid_locate_track(h, ch, midibyte[0]);
 						mid_add_noteon(h, ttp, midibyte[0], midibyte[1]);
 						if( h->debug )
-							printf("%2d %08ld Note  on: ch %d 0x%02x 0x%02x\n", t, h->tracktime, ch + 1, midibyte[0], midibyte[1]);
+							printf("%2d %08ld Note  on: ch %d 0x%02x 0x%02x\n",
+							       t, (long)(h->tracktime),
+							       ch + 1, midibyte[0], midibyte[1]);
 					}
 					else {
 						ttp = mid_find_track(h, ch, midibyte[0]);
 						if( ttp ) mid_add_noteoff(h, ttp);
 						if( h->debug )
-							printf("%2d %08ld note off: ch %d 0x%02x\n", t, h->tracktime, ch + 1, midibyte[0]);
+							printf("%2d %08ld note off: ch %d 0x%02x\n",
+							t, (long)(h->tracktime),
+							ch + 1, midibyte[0]);
 					}
 					break;
 				case 0xa0: // polyphonic key pressure
 					midibyte[1] = mid_read_byte(h);
 					miditracklen--;
 					if( h->debug )
-						printf("%2d %08ld polyphonic key pressure: ch %d 0x%02x 0x%02x\n", t, h->tracktime, ch + 1, midibyte[0], midibyte[1]);
+						printf("%2d %08ld polyphonic key pressure: ch %d 0x%02x 0x%02x\n", t, (long)(h->tracktime), ch + 1, midibyte[0], midibyte[1]);
 					break;
 				case 0xb0: // control change
 					midibyte[1] = mid_read_byte(h);
@@ -1588,28 +1596,32 @@ BOOL CSoundFile::ReadMID(const BYTE *lpStream, DWORD dwMemLength)
 							break;
 					}
 					if( h->debug )
-						printf("%2d %08ld control change: ch %d 0x%02x 0x%02x\n", t, h->tracktime, ch + 1, midibyte[0], midibyte[1]);
+						printf("%2d %08ld control change: ch %d 0x%02x 0x%02x\n",
+						t, (long)(h->tracktime), ch + 1, midibyte[0], midibyte[1]);
 					break;
 				case 0xc0: // program change
 					mid_add_program(h, ch, midibyte[0]);
 					if( h->debug )
-						printf("%2d %08ld program change: ch %d %d\n", t, h->tracktime, ch + 1, midibyte[0]);
+						printf("%2d %08ld program change: ch %d %d\n",
+						t, (long)(h->tracktime), ch + 1, midibyte[0]);
 					break;
 				case 0xd0: // channel pressure
 					if( h->debug )
-						printf("%2d %08ld channel pressure: ch %d 0x%02x\n", t, h->tracktime, ch + 1, midibyte[0]);
+						printf("%2d %08ld channel pressure: ch %d 0x%02x\n", t, (long)(h->tracktime), ch + 1, midibyte[0]);
 					break;
 				case 0xe0: // pitch wheel change
 					midibyte[1] = mid_read_byte(h);
 					miditracklen--;
 					if( h->debug )
-						printf("%2d %08ld pitch wheel change: ch %d %d\n", t, h->tracktime, ch + 1, midishort(midibyte));
+						printf("%2d %08ld pitch wheel change: ch %d %d\n",
+						t, (long)(h->tracktime), ch + 1, midishort(midibyte));
 					mid_add_pitchwheel(h, ch, midishort(midibyte));
 					break;
 				case 0xf0: // system & realtime
 					switch( runningstatus ) {
 						case 0xf0:	// sysex
-							if( h->debug ) printf("%2d %08ld sysex: 0x%02x", t, h->tracktime, midibyte[0]);
+							if( h->debug ) printf("%2d %08ld sysex: 0x%02x",
+								t, (long)(h->tracktime), midibyte[0]);
 							while( midibyte[0] != 0xf7 ) {
 								midibyte[0] = mid_read_byte(h);
 								miditracklen--;
@@ -1620,13 +1632,17 @@ BOOL CSoundFile::ReadMID(const BYTE *lpStream, DWORD dwMemLength)
 						case 0xf2:	// song position pointer
 							midibyte[1] = mid_read_byte(h);
 							miditracklen--;
-							if( h->debug ) printf("%2d %08ld song position pointer: %d", t, h->tracktime, midishort(midibyte));
+							if( h->debug )
+								printf("%2d %08ld song position pointer: %d", 
+								t, (long)(h->tracktime), midishort(midibyte));
 							break;
 						case 0xf7:
 							delta = h->deltatime;
 							miditracklen -= mid_read_delta(h);
 							metalen = h->deltatime;
-							if( h->debug ) printf("%2d %08ld sysex continued: %ld", t, h->tracktime, metalen);
+							if( h->debug )
+								printf("%2d %08ld sysex continued: %ld",
+								t, (long)(h->tracktime), metalen);
 							while( metalen > 0 ) {
 								midibyte[1] = mid_read_byte(h);
 								metalen--;
@@ -1654,7 +1670,8 @@ BOOL CSoundFile::ReadMID(const BYTE *lpStream, DWORD dwMemLength)
 							h->deltatime = delta;
 							switch( midibyte[0] ) {
 								case 0x03: // type: track name
-									if( h->debug ) printf("%2d %08ld META trackname:%s\n", t, h->tracktime, buf);
+									if( h->debug )
+										printf("%2d %08ld META trackname:%s\n", t, (long)(h->tracktime), buf);
 #ifdef NEWMIKMOD
 									if( !of->songname )
 										of->songname = DupStr(of->allochandle, buf, strlen(buf));
@@ -1668,7 +1685,7 @@ BOOL CSoundFile::ReadMID(const BYTE *lpStream, DWORD dwMemLength)
 									delta = (p[0]<<16)|(p[1]<<8)|p[2];
 									if( delta )
 										h->tempo = 60000000 / delta;
-									if( h->debug ) printf("%2d %08ld META tempo:%d\n", t, h->tracktime, h->tempo);
+									if( h->debug ) printf("%2d %08ld META tempo:%d\n", t, (long)(h->tracktime), h->tempo);
 									if( m_nDefaultTempo == 0 ) m_nDefaultTempo = h->tempo;
 									else {
 										ttp = h->track;
@@ -1678,7 +1695,7 @@ BOOL CSoundFile::ReadMID(const BYTE *lpStream, DWORD dwMemLength)
 									if( h->tempo > maxtempo ) maxtempo = h->tempo;
 									break;
 								case 0x2f: // type: end of track
-									if( h->debug ) printf("%2d %08ld META end of track\n", t, h->tracktime);
+									if( h->debug ) printf("%2d %08ld META end of track\n", t, (long)(h->tracktime));
 									if( miditracklen > 0 ) {
 										sprintf(buf, "%ld", miditracklen);
 										mid_message("Meta event not at end of track, %s bytes left in track", buf);
@@ -1686,17 +1703,17 @@ BOOL CSoundFile::ReadMID(const BYTE *lpStream, DWORD dwMemLength)
 									}
 									break;
 								default:
-									if( h->debug ) printf("%2d %08ld META type 0x%02x\n", t, h->tracktime, midibyte[0]);
+									if( h->debug ) printf("%2d %08ld META type 0x%02x\n", t, (long)(h->tracktime), midibyte[0]);
 									break;
 							}
 							break;
 						default:
-							if( h->debug ) printf("%2d %08ld System type 0x%02x\n", t, h->tracktime, midibyte[0]);
+							if( h->debug ) printf("%2d %08ld System type 0x%02x\n", t, (long)(h->tracktime), midibyte[0]);
 							break;
 					}
 					break;
 				default:   // no running status, just skip it...
-					if( h->debug ) printf("%2d %08ld unknown runningstatus: 0x%02x skipped:0x%02x\n", t, h->tracktime, runningstatus, midibyte[0]);
+					if( h->debug ) printf("%2d %08ld unknown runningstatus: 0x%02x skipped:0x%02x\n", t, (long)(h->tracktime), runningstatus, midibyte[0]);
 					break;
 			}
 			if( miditracklen < 1 && (runningstatus != 0xff || midibyte[0] != 0x2f) ) {

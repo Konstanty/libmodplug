@@ -1,8 +1,5 @@
 /*
- * This program is  free software; you can redistribute it  and modify it
- * under the terms of the GNU  General Public License as published by the
- * Free Software Foundation; either version 2  of the license or (at your
- * option) any later version.
+ * This source code is public domain.
  *
  * Authors: Olivier Lapicque <olivierl@jps.net>
  *          Markus Fick <webmaster@mark-f.de> spline + fir-resampler
@@ -44,49 +41,50 @@ extern LONG gnRvbLOfsVol;
 extern short int gFastSinc[];
 extern short int gKaiserSinc[]; // 8-taps polyphase
 /*
-  -----------------------------------------------------------------------------
-   cubic spline interpolation doc,
-     (derived from "digital image warping", g. wolberg)
+ *-----------------------------------------------------------------------------
+ cubic spline interpolation doc,
+   (derived from "digital image warping", g. wolberg)
 
-     interpolation polynomial: f(x) = A3*(x-floor(x))**3 + A2*(x-floor(x))**2 + A1*(x-floor(x)) + A0
+   interpolation polynomial: f(x) = A3*(x-floor(x))**3 + A2*(x-floor(x))**2 +
+     A1*(x-floor(x)) + A0
 
-     with Y = equispaced data points (dist=1), YD = first derivates of data points and IP = floor(x)
-     the A[0..3] can be found by solving
-       A0  = Y[IP]
-       A1  = YD[IP]
-       A2  = 3*(Y[IP+1]-Y[IP])-2.0*YD[IP]-YD[IP+1]
-       A3  = -2.0 * (Y[IP+1]-Y[IP]) + YD[IP] - YD[IP+1]
+   with Y = equispaced data points (dist=1), YD = first derivates of data points and IP = floor(x)
+   the A[0..3] can be found by solving
+     A0  = Y[IP]
+     A1  = YD[IP]
+     A2  = 3*(Y[IP+1]-Y[IP])-2.0*YD[IP]-YD[IP+1]
+     A3  = -2.0 * (Y[IP+1]-Y[IP]) + YD[IP] - YD[IP+1]
 
-     with the first derivates as
-       YD[IP]    = 0.5 * (Y[IP+1] - Y[IP-1]);
-       YD[IP+1]  = 0.5 * (Y[IP+2] - Y[IP])
+   with the first derivates as
+     YD[IP]    = 0.5 * (Y[IP+1] - Y[IP-1]);
+     YD[IP+1]  = 0.5 * (Y[IP+2] - Y[IP])
 
-     the coefs becomes
-       A0  = Y[IP]
-       A1  = YD[IP]
-           =  0.5 * (Y[IP+1] - Y[IP-1]);
-       A2  =  3.0 * (Y[IP+1]-Y[IP])-2.0*YD[IP]-YD[IP+1]
-           =  3.0 * (Y[IP+1] - Y[IP]) - 0.5 * 2.0 * (Y[IP+1] - Y[IP-1]) - 0.5 * (Y[IP+2] - Y[IP])
-           =  3.0 * Y[IP+1] - 3.0 * Y[IP] - Y[IP+1] + Y[IP-1] - 0.5 * Y[IP+2] + 0.5 * Y[IP]
-           = -0.5 * Y[IP+2] + 2.0 * Y[IP+1] - 2.5 * Y[IP] + Y[IP-1]
-	   = Y[IP-1] + 2 * Y[IP+1] - 0.5 * (5.0 * Y[IP] + Y[IP+2])
-       A3  = -2.0 * (Y[IP+1]-Y[IP]) + YD[IP] + YD[IP+1]
-           = -2.0 * Y[IP+1] + 2.0 * Y[IP] + 0.5 * (Y[IP+1] - Y[IP-1]) + 0.5 * (Y[IP+2] - Y[IP])
-           = -2.0 * Y[IP+1] + 2.0 * Y[IP] + 0.5 * Y[IP+1] - 0.5 * Y[IP-1] + 0.5 * Y[IP+2] - 0.5 * Y[IP]
-           =  0.5 * Y[IP+2] - 1.5 * Y[IP+1] + 1.5 * Y[IP] - 0.5 * Y[IP-1]
-	   =  0.5 * (3.0 * (Y[IP] - Y[IP+1]) - Y[IP-1] + YP[IP+2])
+   the coefs becomes
+     A0 = Y[IP]
+     A1 = YD[IP]
+        =  0.5*(Y[IP+1] - Y[IP-1]);
+     A2 =  3.0*(Y[IP+1]-Y[IP])-2.0*YD[IP]-YD[IP+1]
+        =  3.0*(Y[IP+1]-Y[IP]) - 0.5*2.0*(Y[IP+1]-Y[IP-1]) - 0.5*(Y[IP+2]-Y[IP])
+        =  3.0*Y[IP+1] - 3.0*Y[IP] - Y[IP+1] + Y[IP-1] - 0.5*Y[IP+2] + 0.5*Y[IP]
+        = -0.5*Y[IP+2] + 2.0 * Y[IP+1] - 2.5*Y[IP] + Y[IP-1]
+        = Y[IP-1] + 2 * Y[IP+1] - 0.5 * (5.0 * Y[IP] + Y[IP+2])
+     A3 = -2.0*(Y[IP+1]-Y[IP]) + YD[IP] + YD[IP+1]
+        = -2.0*Y[IP+1] + 2.0*Y[IP] + 0.5*(Y[IP+1]-Y[IP-1]) + 0.5*(Y[IP+2]-Y[IP])
+        = -2.0*Y[IP+1] + 2.0*Y[IP] + 0.5*Y[IP+1] - 0.5*Y[IP-1] + 0.5*Y[IP+2] - 0.5*Y[IP]
+        =  0.5 * Y[IP+2] - 1.5 * Y[IP+1] + 1.5 * Y[IP] - 0.5 * Y[IP-1]
+	=  0.5 * (3.0 * (Y[IP] - Y[IP+1]) - Y[IP-1] + YP[IP+2])
 
-     then interpolated data value is (horner rule)
-       out = (((A3*x)+A2)*x+A1)*x+A0
+   then interpolated data value is (horner rule)
+     out = (((A3*x)+A2)*x+A1)*x+A0
 
-     this gives parts of data points Y[IP-1] to Y[IP+2] of
-       part       x**3    x**2    x**1    x**0
-       Y[IP-1]    -0.5     1      -0.5    0
-       Y[IP]       1.5    -2.5     0      1
-       Y[IP+1]    -1.5     2       0.5    0
-       Y[IP+2]     0.5    -0.5     0      0
-  -----------------------------------------------------------------------------
-*/
+   this gives parts of data points Y[IP-1] to Y[IP+2] of
+     part       x**3    x**2    x**1    x**0
+      Y[IP-1]    -0.5     1      -0.5    0
+      Y[IP]       1.5    -2.5     0      1
+      Y[IP+1]    -1.5     2       0.5    0
+      Y[IP+2]     0.5    -0.5     0      0
+ *---------------------------------------------------------------------------
+ */
 // number of bits used to scale spline coefs
 #define SPLINE_QUANTBITS	14
 #define SPLINE_QUANTSCALE	(1L<<SPLINE_QUANTBITS)
@@ -114,18 +112,18 @@ CzCUBICSPLINE::CzCUBICSPLINE( )
 	float _LScale	= (float)SPLINE_QUANTSCALE;
 	for(_LIi=0;_LIi<_LLen;_LIi++)
 	{	float _LCm1, _LC0, _LC1, _LC2;
-		float _LX		= ((float)_LIi)*_LFlen;
+		float _LX = ((float)_LIi)*_LFlen;
 		int _LSum,_LIdx	= _LIi<<2;
-		_LCm1			= (float)floor( 0.5 + _LScale * (-0.5*_LX*_LX*_LX + 1.0 * _LX*_LX - 0.5 * _LX       ) );
-		_LC0			= (float)floor( 0.5 + _LScale * ( 1.5*_LX*_LX*_LX - 2.5 * _LX*_LX             + 1.0 ) );
-		_LC1			= (float)floor( 0.5 + _LScale * (-1.5*_LX*_LX*_LX + 2.0 * _LX*_LX + 0.5 * _LX       ) );
-		_LC2			= (float)floor( 0.5 + _LScale * ( 0.5*_LX*_LX*_LX - 0.5 * _LX*_LX                   ) );
-		lut[_LIdx+0]	= (signed short)( (_LCm1 < -_LScale) ? -_LScale : ((_LCm1 > _LScale) ? _LScale : _LCm1) );
-		lut[_LIdx+1]	= (signed short)( (_LC0  < -_LScale) ? -_LScale : ((_LC0  > _LScale) ? _LScale : _LC0 ) );
-		lut[_LIdx+2]	= (signed short)( (_LC1  < -_LScale) ? -_LScale : ((_LC1  > _LScale) ? _LScale : _LC1 ) );
-		lut[_LIdx+3]	= (signed short)( (_LC2  < -_LScale) ? -_LScale : ((_LC2  > _LScale) ? _LScale : _LC2 ) );
+		_LCm1 = (float)floor( 0.5 + _LScale*(-0.5*_LX*_LX*_LX + 1.0*_LX*_LX - 0.5*_LX ) );
+		_LC0 = (float)floor( 0.5 + _LScale*( 1.5*_LX*_LX*_LX - 2.5*_LX*_LX + 1.0 ) );
+		_LC1 = (float)floor( 0.5 + _LScale*(-1.5*_LX*_LX*_LX + 2.0*_LX*_LX + 0.5*_LX ) );
+		_LC2 = (float)floor( 0.5 + _LScale*( 0.5*_LX*_LX*_LX - 0.5*_LX*_LX) );
+		lut[_LIdx+0] = (signed short)( (_LCm1 < -_LScale) ? -_LScale : ((_LCm1 > _LScale) ? _LScale : _LCm1) );
+		lut[_LIdx+1] = (signed short)( (_LC0  < -_LScale) ? -_LScale : ((_LC0  > _LScale) ? _LScale : _LC0 ) );
+		lut[_LIdx+2] = (signed short)( (_LC1  < -_LScale) ? -_LScale : ((_LC1  > _LScale) ? _LScale : _LC1 ) );
+		lut[_LIdx+3] = (signed short)( (_LC2  < -_LScale) ? -_LScale : ((_LC2  > _LScale) ? _LScale : _LC2 ) );
 #ifdef SPLINE_CLAMPFORUNITY
-		_LSum			= lut[_LIdx+0]+lut[_LIdx+1]+lut[_LIdx+2]+lut[_LIdx+3];
+		_LSum = lut[_LIdx+0]+lut[_LIdx+1]+lut[_LIdx+2]+lut[_LIdx+3];
 		if( _LSum != SPLINE_QUANTSCALE )
 		{	int _LMax = _LIdx;
 			if( lut[_LIdx+1]>lut[_LMax] ) _LMax = _LIdx+1;
@@ -144,19 +142,20 @@ CzCUBICSPLINE::~CzCUBICSPLINE( )
 CzCUBICSPLINE sspline;
 
 /*
-  ------------------------------------------------------------------------------------------------
+  ------------------------------------------------------------------------------
    fir interpolation doc,
-	(derived from "an engineer's guide to fir digital filters", n.j. loy)
+     (derived from "an engineer's guide to fir digital filters", n.j. loy)
 
-	calculate coefficients for ideal lowpass filter (with cutoff = fc in 0..1 (mapped to 0..nyquist))
-	  c[-N..N] = (i==0) ? fc : sin(fc*pi*i)/(pi*i)
+     calculate coefficients for ideal lowpass filter (with cutoff = fc in 
+	0..1 (mapped to 0..nyquist))
+     c[-N..N] = (i==0) ? fc : sin(fc*pi*i)/(pi*i)
 
-	then apply selected window to coefficients
-	  c[-N..N] *= w(0..N)
-	with n in 2*N and w(n) being a window function (see loy)
+     then apply selected window to coefficients
+      c[-N..N] *= w(0..N)
+     with n in 2*N and w(n) being a window function (see loy)
 
-	then calculate gain and scale filter coefs to have unity gain.
-  ------------------------------------------------------------------------------------------------
+     then calculate gain and scale filter coefs to have unity gain.
+  ------------------------------------------------------------------------------
 */
 // quantizer scale of window coefs
 #define WFIR_QUANTBITS		15
@@ -194,7 +193,8 @@ class CzWINDOWEDFIR
 public:
 	CzWINDOWEDFIR( );
 	~CzWINDOWEDFIR( );
-	float coef( int _PCnr, float _POfs, float _PCut, int _PWidth, int _PType ) //float _PPos, float _PFc, int _PLen )
+	float coef( int _PCnr, float _POfs, float _PCut, int _PWidth, int _PType ) 
+//OLD args to coef: float _PPos, float _PFc, int _PLen )
 	{	
 		double	_LWidthM1       = _PWidth-1;
 		double	_LWidthM1Half   = 0.5*_LWidthM1;
@@ -215,22 +215,31 @@ public:
 				_LWc = 0.54 - 0.46 * cos(_LPIdl*_LPosU);
 				break;
 			case WFIR_BLACKMANEXACT:
-				_LWc = 0.42 - 0.50 * cos(_LPIdl*_LPosU) + 0.08 * cos(2.0*_LPIdl*_LPosU);
+				_LWc = 0.42 - 0.50 * cos(_LPIdl*_LPosU) + 
+					0.08 * cos(2.0*_LPIdl*_LPosU);
 				break;
 			case WFIR_BLACKMAN3T61:
-				_LWc = 0.44959 - 0.49364 * cos(_LPIdl*_LPosU) + 0.05677 * cos(2.0*_LPIdl*_LPosU);
+				_LWc = 0.44959 - 0.49364 * cos(_LPIdl*_LPosU) + 
+					0.05677 * cos(2.0*_LPIdl*_LPosU);
 				break;
 			case WFIR_BLACKMAN3T67:
-				_LWc = 0.42323 - 0.49755 * cos(_LPIdl*_LPosU) + 0.07922 * cos(2.0*_LPIdl*_LPosU);
+				_LWc = 0.42323 - 0.49755 * cos(_LPIdl*_LPosU) + 
+					0.07922 * cos(2.0*_LPIdl*_LPosU);
 				break;
 			case WFIR_BLACKMAN4T92:
-				_LWc = 0.35875 - 0.48829 * cos(_LPIdl*_LPosU) + 0.14128 * cos(2.0*_LPIdl*_LPosU) - 0.01168 * cos(3.0*_LPIdl*_LPosU);
+				_LWc = 0.35875 - 0.48829 * cos(_LPIdl*_LPosU) + 
+					0.14128 * cos(2.0*_LPIdl*_LPosU) - 
+					0.01168 * cos(3.0*_LPIdl*_LPosU);
 				break;
 			case WFIR_BLACKMAN4T74:
-				_LWc = 0.40217 - 0.49703 * cos(_LPIdl*_LPosU) + 0.09392 * cos(2.0*_LPIdl*_LPosU) - 0.00183 * cos(3.0*_LPIdl*_LPosU);
+				_LWc = 0.40217 - 0.49703 * cos(_LPIdl*_LPosU) + 
+					0.09392 * cos(2.0*_LPIdl*_LPosU) - 
+					0.00183 * cos(3.0*_LPIdl*_LPosU);
 				break;
 			case WFIR_KAISER4T:
-				_LWc = 0.40243 - 0.49804 * cos(_LPIdl*_LPosU) + 0.09831 * cos(2.0*_LPIdl*_LPosU) - 0.00122 * cos(3.0*_LPIdl*_LPosU);
+				_LWc = 0.40243 - 0.49804 * cos(_LPIdl*_LPosU) + 
+					0.09831 * cos(2.0*_LPIdl*_LPosU) - 
+					0.00122 * cos(3.0*_LPIdl*_LPosU);
 				break;
 			default:
 				_LWc = 1.0;
@@ -278,9 +287,6 @@ CzWINDOWEDFIR sfir;
 // ----------------------------------------------------------------------------
 // MIXING MACROS
 // ----------------------------------------------------------------------------
-/////////////////////////////////////////////////////
-// Mixing Macros
-
 #define SNDMIX_BEGINSAMPLELOOP8\
 	register MODCHANNEL * const pChn = pChannel;\
 	nPos = pChn->nPosLo;\
@@ -1245,7 +1251,7 @@ END_RAMPMIX_STFLT_INTERFACE()
 
 #endif
 
-/////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
 //
 // Mix function tables
 //
@@ -1369,7 +1375,8 @@ static LONG MPPFASTCALL GetSampleCount(MODCHANNEL *pChn, LONG nSamples)
 			LONG nDelta = ((nLoopStart - pChn->nPos) << 16) - (pChn->nPosLo & 0xffff);
 			pChn->nPos = nLoopStart | (nDelta>>16);
 			pChn->nPosLo = nDelta & 0xffff;
-			if (((LONG)pChn->nPos < nLoopStart) || (pChn->nPos >= (nLoopStart+pChn->nLength)/2))
+			if (((LONG)pChn->nPos < nLoopStart) || 
+				(pChn->nPos >= (nLoopStart+pChn->nLength)/2))
 			{
 				pChn->nPos = nLoopStart; pChn->nPosLo = 0;
 			}
@@ -1384,7 +1391,8 @@ static LONG MPPFASTCALL GetSampleCount(MODCHANNEL *pChn, LONG nSamples)
 			}
 		} else
 		{
-			// We probably didn't hit the loop end yet (first loop), so we do nothing
+			// We probably didn't hit the loop end yet 
+			// (first loop), so we do nothing
 			if ((LONG)pChn->nPos < 0) pChn->nPos = 0;
 		}
 	} else
@@ -1406,7 +1414,9 @@ static LONG MPPFASTCALL GetSampleCount(MODCHANNEL *pChn, LONG nSamples)
 			LONG nDeltaLo = 0x10000 - (pChn->nPosLo & 0xffff);
 			pChn->nPos = pChn->nLength - nDeltaHi - (nDeltaLo>>16);
 			pChn->nPosLo = nDeltaLo & 0xffff;
-			if ((pChn->nPos <= pChn->nLoopStart) || (pChn->nPos >= pChn->nLength)) pChn->nPos = pChn->nLength-1;
+			if ((pChn->nPos <= pChn->nLoopStart) || 
+			(pChn->nPos >= pChn->nLength)) 
+				pChn->nPos = pChn->nLength-1;
 		} else
 		{
 			if (nInc < 0) // This is a bug
@@ -1416,7 +1426,8 @@ static LONG MPPFASTCALL GetSampleCount(MODCHANNEL *pChn, LONG nSamples)
 			}
 			// Restart at loop start
 			pChn->nPos += nLoopStart - pChn->nLength;
-			if ((LONG)pChn->nPos < nLoopStart) pChn->nPos = pChn->nLoopStart;
+			if ((LONG)pChn->nPos < nLoopStart) 
+				pChn->nPos = pChn->nLoopStart;
 		}
 	}
 	LONG nPos = pChn->nPos;
@@ -1492,7 +1503,8 @@ UINT CSoundFile::CreateStereoMix(int count)
 		if (!(pChannel->dwFlags & CHN_NOIDO))
 		{
 			// use hq-fir mixer?
-			if( (gdwSoundSetup & (SNDMIX_HQRESAMPLER|SNDMIX_ULTRAHQSRCMODE)) == (SNDMIX_HQRESAMPLER|SNDMIX_ULTRAHQSRCMODE) )
+			if( (gdwSoundSetup & (SNDMIX_HQRESAMPLER|SNDMIX_ULTRAHQSRCMODE)) == 
+				(SNDMIX_HQRESAMPLER|SNDMIX_ULTRAHQSRCMODE) )
 				nFlags += MIXNDX_FIRSRC;
 			else if( (gdwSoundSetup & (SNDMIX_HQRESAMPLER)) == SNDMIX_HQRESAMPLER )
 				nFlags += MIXNDX_SPLINESRC;
@@ -1601,7 +1613,7 @@ UINT CSoundFile::CreateStereoMix(int count)
 // Clip and convert to 8 bit
 #ifdef MSC_VER
 __declspec(naked) DWORD MPPASMCALL X86_Convert32To8(LPVOID lp16, int *pBuffer, DWORD lSampleCount, LPLONG lpMin, LPLONG lpMax)
-//----------------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 {
     _asm {
         push ebx
@@ -1692,7 +1704,7 @@ DWORD MPPASMCALL X86_Convert32To8(LPVOID lp8, int *pBuffer, DWORD lSampleCount, 
 #ifdef MSC_VER
 // Clip and convert to 16 bit
 __declspec(naked) DWORD MPPASMCALL X86_Convert32To16(LPVOID lp16, int *pBuffer, DWORD lSampleCount, LPLONG lpMin, LPLONG lpMax)
-//-----------------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 {
 	_asm {
 	push ebx
@@ -1785,7 +1797,7 @@ DWORD MPPASMCALL X86_Convert32To16(LPVOID lp16, int *pBuffer, DWORD lSampleCount
 #ifdef MSC_VER
 // Clip and convert to 24 bit
 __declspec(naked) DWORD MPPASMCALL X86_Convert32To24(LPVOID lp16, int *pBuffer, DWORD lSampleCount, LPLONG lpMin, LPLONG lpMax)
-//-----------------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 {
 	_asm {
 	push ebx
@@ -1874,9 +1886,15 @@ DWORD MPPASMCALL X86_Convert32To24(LPVOID lp16, int *pBuffer, DWORD lSampleCount
 		else if (n > vumax)
 			vumax = n;
 		p = n >> (8-MIXING_ATTENUATION) ; // 24-bit signed
-		buf[i*3]   = p & 0xFF0000 ;
+#ifdef WORDS_BIGENDIAN
+		buf[i*3+0] = p & 0xFF0000 ;
 		buf[i*3+1] = p & 0x00FF00 ;
 		buf[i*3+2] = p & 0x0000FF ;
+#else
+		buf[i*3+0] = p & 0x0000FF ;
+		buf[i*3+1] = p & 0x00FF00 ;
+		buf[i*3+2] = p & 0xFF0000 ;
+#endif
 	}
 	*lpMin = vumin;
 	*lpMax = vumax;
@@ -1887,7 +1905,7 @@ DWORD MPPASMCALL X86_Convert32To24(LPVOID lp16, int *pBuffer, DWORD lSampleCount
 #ifdef MSC_VER
 // Clip and convert to 32 bit
 __declspec(naked) DWORD MPPASMCALL X86_Convert32To32(LPVOID lp16, int *pBuffer, DWORD lSampleCount, LPLONG lpMin, LPLONG lpMax)
-//-----------------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 {
 	_asm {
 	push ebx
@@ -2018,7 +2036,7 @@ void MPPASMCALL X86_InitMixBuffer(int *pBuffer, UINT nSamples)
 
 #ifdef MSC_VER
 __declspec(naked) void MPPASMCALL X86_InterleaveFrontRear(int *pFrontBuf, int *pRearBuf, DWORD nSamples)
-//------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 {
 	_asm {
 	push ebx
@@ -2100,7 +2118,7 @@ VOID MPPASMCALL X86_MonoFromStereo(int *pMixBuf, UINT nSamples)
 
 #ifdef MSC_VER
 void MPPASMCALL X86_StereoFill(int *pBuffer, UINT nSamples, LPLONG lpROfs, LPLONG lpLOfs)
-//---------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 {
 	_asm {
 	mov edi, pBuffer
@@ -2175,7 +2193,7 @@ done:
 #define OFSDECAYSHIFT    8
 #define OFSDECAYMASK     0xFF
 void MPPASMCALL X86_StereoFill(int *pBuffer, UINT nSamples, LPLONG lpROfs, LPLONG lpLOfs)
-//---------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------
 {
 	int rofs = *lpROfs;
 	int lofs = *lpLOfs;
@@ -2201,7 +2219,7 @@ void MPPASMCALL X86_StereoFill(int *pBuffer, UINT nSamples, LPLONG lpROfs, LPLON
 
 #ifdef MSC_VER
 void MPPASMCALL X86_EndChannelOfs(MODCHANNEL *pChannel, int *pBuffer, UINT nSamples)
-//----------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 {
 	_asm {
 	mov esi, pChannel
@@ -2275,7 +2293,7 @@ void MPPASMCALL X86_EndChannelOfs(MODCHANNEL *pChannel, int *pBuffer, UINT nSamp
 
 #ifdef MSC_VER
 __declspec(naked) UINT MPPASMCALL X86_AGC(int *pBuffer, UINT nSamples, UINT nAGC)
-//-------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 {
 	__asm {
 	push ebx
@@ -2340,8 +2358,8 @@ void CSoundFile::ProcessAGC(int count)
 	static DWORD gAGCRecoverCount = 0;
 	UINT agc = X86_AGC(MixSoundBuffer, count, gnAGC);
 	// Some kind custom law, so that the AGC stays quite stable, but slowly
-	// goes back up if the sound level stays below a level inversely proportional
-	// to the AGC level. (J'me comprends)
+	// goes back up if the sound level stays below a level inversely 
+	// proportional to the AGC level. (J'me comprends)
 	if ((agc >= gnAGC) && (gnAGC < AGC_UNITY) && (gnVUMeter < (0xFF - (gnAGC >> (AGC_PRECISION-7))) ))
 	{
 		gAGCRecoverCount += count;

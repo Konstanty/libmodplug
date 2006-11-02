@@ -1,4 +1,15 @@
 changes:
+adate = 2-nov-2006 [Alec Berryman/CVE-2006-4192]
+-> file: src/sndfile.cpp
+		where: ReadSample
+		what: prevent buffer overflow [as reported in CVE-2006-4192]
+date = 2-nov-2006 [Konstanty Bialkowski/Macro Trillo]
+-> file: configure.in,config.h,load_abc.cpp,fastmix.cpp
+		where: Automake 2.60 used
+		what: In order to properly use stdint.h we should make use of the new macros for its detection, on systems with automake 2.59 but where stdint.h is available, this can be removed. (Patch by Macro Trillo)
+-> file: src/load_amf.cpp, src/fastmix.cpp
+		where: Licensing
+		what: all old code was relicensed for public domain, and somehow an old version was included with GPL notices
 date = 20-jul-2006 [Peter Grootswagers]
 -> file: src/load_abc.cpp
 		where: instrument loader functions

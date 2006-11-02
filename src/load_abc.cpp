@@ -153,9 +153,9 @@ typedef struct _ABCTRACK
 	int transpose;
 	int octave_shift;
 	ULONG slidevoltime;	// for crescendo and diminuendo
-	int slidevol; // -2 for fade away, -1 for diminuendo, 0 for none, +1 for crescendo
-	BYTE vno;	// 0 is track is free for use, from previous song in multi-songbook
-	BYTE vpos;	// 0 is main voice, other is subtrack for gchords , gchords or drumnotes
+	int slidevol; // -2:fade away, -1:diminuendo, 0:none, +1:crescendo
+	BYTE vno; // 0 is track is free for use, from previous song in multi-songbook
+	BYTE vpos; // 0 is main voice, other is subtrack for gchords, gchords or drumnotes
 	BYTE tiedvpos;
 	BYTE mute;
 	BYTE chan; // 10 is percussion channel, any other is melodic channel
@@ -301,7 +301,8 @@ static void abc_dumptracks(ABCHANDLE *h, const char *p)
 	char nn[3];
 	if( !h ) return;
 	for( t=h->track; t; t=t->next ) {
-		printf("track %d.%d chan=%d %s\n", t->vno, t->vpos, t->chan, t->v);
+		printf("track %d.%d chan=%d %s\n", (int)(t->vno), (int)(t->vpos),
+		                                   (int)(t->chan), (char *)(t->v));
 		if( strcmp(p,"nonotes") )
 			n = 1;
 		else
@@ -314,13 +315,16 @@ static void abc_dumptracks(ABCHANDLE *h, const char *p)
 			row = row % 64; 
 			nn[0] = ( e->tracktick % abcticks(h->speed * 64) ) ? ' ': '-';
 			if( e->flg == 1 ) {
-				printf("  %6d.%02d.%d%c%c %d.%d %s ", pat, row, tck, nn[0], e->part, t->vno, t->vpos, t->v);
+				printf("  %6d.%02d.%d%c%c %d.%d %s ",
+				       pat, row, tck, nn[0], (int)(e->part), (int)(t->vno),
+				       (int)(t->vpos), (char *)(t->v));
 				if( e->cmd == cmdchord ) {
 					nn[0] = "CCCDDEFFGGAABccddeffggaabb"[e->par[chordnote]];
 					nn[1] = "b # #  # # #  # #  # # # #"[e->par[chordnote]];
 					nn[2] = '\0';
 					if( isspace(nn[1]) ) nn[1] = '\0';
-					printf("CMD %c: gchord %s%s", e->cmd, nn, chordname[e->par[chordnum]]);
+					printf("CMD %c: gchord %s%s",
+					       (char)(e->cmd), nn, chordname[e->par[chordnum]]);
 					if( e->par[chordbase] != e->par[chordnote] ) {
 						nn[0] = "CCCDDEFFGGAABccddeffggaabb"[e->par[chordbase]];
 						nn[1] = "b # #  # # #  # #  # # # #"[e->par[chordbase]];
@@ -330,7 +334,9 @@ static void abc_dumptracks(ABCHANDLE *h, const char *p)
 					printf("\n");
 				}
 				else
-					printf("CMD %c @%p 0x%08lX\n", e->cmd, e, e->lpar);
+					printf("CMD %c @%p 0x%08lX\n",
+					       (char)(e->cmd), e,
+					       (unsigned long)(e->lpar));
 				if( strcmp(p,"nonotes") )
 					n = 1;
 				else
@@ -355,28 +361,28 @@ static void abc_dumptracks(ABCHANDLE *h, const char *p)
 
 #ifdef NEWMIKMOD
 
-#define MMFILE						MMSTREAM
-#define mmfgetc(x)				_mm_read_SBYTE(x)
-#define mmfeof(x)					_mm_feof(x)
+#define MMFILE				MMSTREAM
+#define mmfgetc(x)			_mm_read_SBYTE(x)
+#define mmfeof(x)			_mm_feof(x)
 #define mmfgets(buf,sz,f) _mm_fgets(f,buf,sz)
-#define mmftell(x)				_mm_ftell(x)
+#define mmftell(x)			_mm_ftell(x)
 #define mmfseek(f,p,w)		_mm_fseek(f,p,w)
 #define mmfopen(s,m)			_mm_fopen(s,m)
-#define mmfclose(f)				_mm_fclose(f)
+#define mmfclose(f)			_mm_fclose(f)
 
 #else
 
 #define MMSTREAM										FILE
-#define _mm_fopen(name,mode)				fopen(name,mode)
-#define _mm_fgets(f,buf,sz)					fgets(buf,sz,f)
-#define _mm_fseek(f,pos,whence)			fseek(f,pos,whence)
+#define _mm_fopen(name,mode)		fopen(name,mode)
+#define _mm_fgets(f,buf,sz)		fgets(buf,sz,f)
+#define _mm_fseek(f,pos,whence)		fseek(f,pos,whence)
 #define _mm_ftell(f)								ftell(f)
-#define _mm_read_UBYTES(buf,sz,f)		fread(buf,sz,1,f)
-#define _mm_read_SBYTES(buf,sz,f)		fread(buf,sz,1,f)
+#define _mm_read_UBYTES(buf,sz,f)	fread(buf,sz,1,f)
+#define _mm_read_SBYTES(buf,sz,f)	fread(buf,sz,1,f)
 #define _mm_feof(f)									feof(f)
 #define _mm_fclose(f)								fclose(f)
-#define DupStr(h,buf,sz)						strdup(buf)
-#define _mm_calloc(h,n,sz)					calloc(n,sz)
+#define DupStr(h,buf,sz)		strdup(buf)
+#define _mm_calloc(h,n,sz)		calloc(n,sz)
 #define _mm_recalloc(h,buf,sz,elsz)	realloc(buf,sz)
 #define _mm_free(h,p)								free(p)
 
@@ -482,9 +488,9 @@ static ABCEVENT *abc_new_event(ABCHANDLE *h, ULONG abctick, const char data[])
     return retval;
 }
 
-// =====================================================================================
+// =============================================================================
 static ABCEVENT *abc_copy_event(ABCHANDLE *h, ABCEVENT *se)
-// =====================================================================================
+// =============================================================================
 {
 	ABCEVENT *e;
 	e = (ABCEVENT *)_mm_calloc(h->trackhandle, 1,sizeof(ABCEVENT));
@@ -497,9 +503,9 @@ static ABCEVENT *abc_copy_event(ABCHANDLE *h, ABCEVENT *se)
 	return e;
 }
 
-// =====================================================================================
+// =============================================================================
 static void abc_new_macro(ABCHANDLE *h, const char *m)
-// =====================================================================================
+// =============================================================================
 {
     ABCMACRO *retval;
 		const char *p;
@@ -521,9 +527,9 @@ static void abc_new_macro(ABCHANDLE *h, const char *m)
 		h->macro      = retval;
 }
 
-// =====================================================================================
+// =============================================================================
 static void abc_new_umacro(ABCHANDLE *h, const char *m)
-// =====================================================================================
+// =============================================================================
 {
     ABCMACRO *retval, *mp;
 		const char *p;
@@ -561,9 +567,9 @@ static void abc_new_umacro(ABCHANDLE *h, const char *m)
 		h->umacro      = retval;
 }
 
-// =====================================================================================
+// =============================================================================
 static ABCTRACK *abc_new_track(ABCHANDLE *h, const char *voice, int pos)
-// =====================================================================================
+// =============================================================================
 {
 	ABCTRACK *retval;
 	if( !pos ) global_voiceno++;
@@ -792,9 +798,9 @@ static int abc_transpose(const char *v)
 	return t;
 }
 
-// =====================================================================================
+// =============================================================================
 static ABCTRACK *abc_locate_track(ABCHANDLE *h, const char *voice, int pos)
-// =====================================================================================
+// =============================================================================
 {
 	ABCTRACK *tr, *prev, *trunused;
 	char vc[21];
@@ -861,9 +867,9 @@ static ABCTRACK *abc_locate_track(ABCHANDLE *h, const char *voice, int pos)
 	return tr;
 }
 
-// =====================================================================================
+// =============================================================================
 static ABCTRACK *abc_check_track(ABCHANDLE *h, ABCTRACK *tp)
-// =====================================================================================
+// =============================================================================
 {
 	if( !tp ) { 
 		tp = abc_locate_track(h, "", 0);	// must work for voiceless abc too...
@@ -1259,7 +1265,7 @@ static int abc_add_noteon(ABCHANDLE *h, int ch, const char *p, ULONG tracktime, 
 		k -= 25; // had something like A# over Bb key F signature....
 	if( i ) {
 		// propagate accidentals if necessary
-		// do NOT do redundant accidentals they're allways relative to C-scale
+		// DON'T do redundant accidentals they're always relative to C-scale
 		for( k=0; k<25; k++ ) {
 			if( n == sig[7][k] )
 				break;
@@ -2461,10 +2467,10 @@ static ABCEVENT *abc_next_note(ABCEVENT *e)
 	return e;
 }
 
-// =====================================================================================
+// =============================================================================
 #ifdef NEWMIKMOD
 static void ABC_ReadPatterns(UNIMOD *of, ABCHANDLE *h, int numpat)
-// =====================================================================================
+// =============================================================================
 {
 	int pat,row,i,ch,trillbits;
 	BYTE n,ins,vol;
@@ -2537,42 +2543,41 @@ static void ABC_ReadPatterns(UNIMOD *of, ABCHANDLE *h, int numpat)
 							vol += vol / 10;
 							if( vol > 127 ) vol = 127;
 						}
-						if( vol > 0 ) {
-							if( el->par[volume] == 0 ) {
-								eff.framedly     = modticks(el->tracktick - tt1);
+						if (vol <= 0) {}
+						else if( el->par[volume] == 0 ) {
+							eff.framedly     = modticks(el->tracktick - tt1);
+							eff.param.u      = 0;
+							eff.param.byte_a = n;
+							eff.param.byte_b = ins;
+							eff.effect       = UNI_NOTEKILL;
+							utrk_write_local(of->ut, &eff, UNIMEM_NONE);
+						}
+						else {
+							switch( e->par[effect] ) {
+								case trill:
+									eff.effect  = UNI_VIBRATO_DEPTH;
+									eff.param.u = 12;	// depth 1.5
+									utrk_write_local(of->ut, &eff, PTMEM_VIBRATO_DEPTH);
+									eff.effect  = UNI_VIBRATO_SPEED;
+									eff.param.u = 48; // speed 12
+									utrk_write_local(of->ut, &eff, PTMEM_VIBRATO_SPEED);
+									trillbits |= (1<<ch);
+									break;
+								case bow:
+									eff.effect   = UNI_PITCHSLIDE;
+									eff.framedly = (h->speed/2)|UFD_RUNONCE;
+									eff.param.s  = 2;
+									utrk_write_local(of->ut, &eff, (e->par[effoper])? PTMEM_PITCHSLIDEUP: PTMEM_PITCHSLIDEDN);
+									break;
+								default:
+									break;
+							}
+							if( eff.framedly ) {
 								eff.param.u      = 0;
 								eff.param.byte_a = n;
 								eff.param.byte_b = ins;
-								eff.effect       = UNI_NOTEKILL;
+								eff.effect       = UNI_NOTEDELAY;
 								utrk_write_local(of->ut, &eff, UNIMEM_NONE);
-							}
-							else {
-								switch( e->par[effect] ) {
-									case trill:
-										eff.effect  = UNI_VIBRATO_DEPTH;
-										eff.param.u = 12;	// depth 1.5
-										utrk_write_local(of->ut, &eff, PTMEM_VIBRATO_DEPTH);
-										eff.effect  = UNI_VIBRATO_SPEED;
-										eff.param.u = 48; // speed 12
-										utrk_write_local(of->ut, &eff, PTMEM_VIBRATO_SPEED);
-										trillbits |= (1<<ch);
-										break;
-									case bow:
-										eff.effect   = UNI_PITCHSLIDE;
-										eff.framedly = (h->speed/2)|UFD_RUNONCE;
-										eff.param.s  = 2;
-										utrk_write_local(of->ut, &eff, (e->par[effoper])? PTMEM_PITCHSLIDEUP: PTMEM_PITCHSLIDEDN);
-										break;
-									default:
-										break;
-								}
-								if( eff.framedly ) {
-									eff.param.u      = 0;
-									eff.param.byte_a = n;
-									eff.param.byte_b = ins;
-									eff.effect       = UNI_NOTEDELAY;
-									utrk_write_local(of->ut, &eff, UNIMEM_NONE);
-								}
 							}
 						}
 						utrk_write_inst(of->ut, ins);

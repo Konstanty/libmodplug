@@ -23,47 +23,46 @@ inline void ProcessPlugins(int n) {}
 
 #else
 
+#if defined(HAVE_CONFIG_H) && !defined(CONFIG_H_INCLUDED)
+# include "config.h"
+# define CONFIG_H_INCLUDED 1
+#endif
+#ifdef HAVE_INTTYPES_H
+# include <inttypes.h>
+#endif
+#ifdef HAVE_STDINT_H
+# include <stdint.h>
+#endif
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 
-typedef signed char CHAR;
-typedef unsigned char UCHAR;
-typedef unsigned char* PUCHAR;
-typedef unsigned short USHORT;
-#if defined(__x86_64__)
-typedef unsigned int ULONG;
-typedef unsigned int UINT;
-typedef unsigned int DWORD;
-typedef int LONG;
-typedef long LONGLONG;
-typedef int * LPLONG;
-typedef unsigned int * LPDWORD;
-#else
-typedef unsigned long ULONG;
-typedef unsigned long UINT;
-typedef unsigned long DWORD;
-typedef long LONG;
-typedef long long LONGLONG;
-typedef long * LPLONG;
-typedef unsigned long * LPDWORD;
-#endif
-typedef unsigned short WORD;
-typedef unsigned char BYTE;
-typedef unsigned char * LPBYTE;
+typedef int8_t CHAR;
+typedef uint8_t UCHAR;
+typedef uint8_t* PUCHAR;
+typedef uint16_t USHORT;
+typedef uint32_t ULONG;
+typedef uint32_t UINT;
+typedef uint32_t DWORD;
+typedef int32_t LONG;
+typedef int64_t LONGLONG;
+typedef int32_t* LPLONG;
+typedef uint32_t* LPDWORD;
+typedef uint16_t WORD;
+typedef uint8_t BYTE;
+typedef uint8_t* LPBYTE;
 typedef bool BOOL;
-typedef char * LPSTR;
-typedef void *  LPVOID;
-typedef unsigned short * LPWORD;
-typedef const char * LPCSTR;
-typedef void * PVOID;
+typedef char* LPSTR;
+typedef void* LPVOID;
+typedef uint16_t* LPWORD;
+typedef const char* LPCSTR;
+typedef void* PVOID;
 typedef void VOID;
-
 
 inline LONG MulDiv (long a, long b, long c)
 {
   // if (!c) return 0;
-  return ((unsigned long long) a * (unsigned long long) b ) / c;
+  return ((uint64_t) a * (uint64_t) b ) / c;
 }
 
 #define MODPLUG_NO_FILESAVE
@@ -77,9 +76,9 @@ inline LONG MulDiv (long a, long b, long c)
 
 #define  GHND   0
 
-inline signed char * GlobalAllocPtr(unsigned int, size_t size)
+inline int8_t * GlobalAllocPtr(unsigned int, size_t size)
 {
-  signed char * p = (signed char *) malloc(size);
+  int8_t * p = (int8_t *) malloc(size);
 
   if (p != NULL) memset(p, 0, size);
   return p;

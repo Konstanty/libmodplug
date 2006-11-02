@@ -29,17 +29,17 @@ typedef struct tagMTMSAMPLE
 
 typedef struct tagMTMHEADER
 {
-	char id[4];	        // MTM file marker + version // changed from CHAR
-	char songname[20];	// ASCIIZ songname  // changed from CHAR
-	WORD numtracks;		// number of tracks saved
-	BYTE lastpattern;	// last pattern number saved
-	BYTE lastorder;		// last order number to play (songlength-1)
-	WORD commentsize;	// length of comment field
-	BYTE numsamples;	// number of samples saved
-	BYTE attribute;		// attribute byte (unused)
+	char id[4];	    // MTM file marker + version // changed from CHAR
+	char songname[20];  // ASCIIZ songname  // changed from CHAR
+	WORD numtracks;	    // number of tracks saved
+	BYTE lastpattern;   // last pattern number saved
+	BYTE lastorder;	    // last order number to play (songlength-1)
+	WORD commentsize;   // length of comment field
+	BYTE numsamples;    // number of samples saved
+	BYTE attribute;	    // attribute byte (unused)
 	BYTE beatspertrack;
-	BYTE numchannels;	// number of channels used
-	BYTE panpos[32];	// voice pan positions
+	BYTE numchannels;   // number of channels used
+	BYTE panpos[32];    // voice pan positions
 } MTMHEADER;
 
 
@@ -56,11 +56,13 @@ BOOL CSoundFile::ReadMTM(LPCBYTE lpStream, DWORD dwMemLength)
 	if ((strncmp(pmh->id, "MTM", 3)) || (pmh->numchannels > 32)
 	 || (pmh->numsamples >= MAX_SAMPLES) || (!pmh->numsamples)
 	 || (!pmh->numtracks) || (!pmh->numchannels)
-	 || (!pmh->lastpattern) || (pmh->lastpattern > MAX_PATTERNS)) return FALSE;
+	 || (!pmh->lastpattern) || (pmh->lastpattern > MAX_PATTERNS)) 
+		return FALSE;
 	strncpy(m_szNames[0], pmh->songname, 20);
 	m_szNames[0][20] = 0;
 	if (dwMemPos + 37*pmh->numsamples + 128 + 192*pmh->numtracks
-	 + 64 * (pmh->lastpattern+1) + pmh->commentsize >= dwMemLength) return FALSE;
+	 + 64 * (pmh->lastpattern+1) + pmh->commentsize >= dwMemLength) 
+		return FALSE;
 	m_nType = MOD_TYPE_MTM;
 	m_nSamples = pmh->numsamples;
 	m_nChannels = pmh->numchannels;
@@ -78,8 +80,10 @@ BOOL CSoundFile::ReadMTM(LPCBYTE lpStream, DWORD dwMemLength)
 			Ins[i].nLength = len;
 			Ins[i].nLoopStart = pms->reppos;
 			Ins[i].nLoopEnd = pms->repend;
-			if (Ins[i].nLoopEnd > Ins[i].nLength) Ins[i].nLoopEnd = Ins[i].nLength;
-			if (Ins[i].nLoopStart + 4 >= Ins[i].nLoopEnd) Ins[i].nLoopStart = Ins[i].nLoopEnd = 0;
+			if (Ins[i].nLoopEnd > Ins[i].nLength) 
+				Ins[i].nLoopEnd = Ins[i].nLength;
+			if (Ins[i].nLoopStart + 4 >= Ins[i].nLoopEnd) 
+				Ins[i].nLoopStart = Ins[i].nLoopEnd = 0;
 			if (Ins[i].nLoopEnd) Ins[i].uFlags |= CHN_LOOP;
 			Ins[i].nFineTune = MOD2XMFineTune(pms->finetune);
 			if (pms->attribute & 0x01)
