@@ -3713,10 +3713,10 @@ BOOL CSoundFile::ReadABC(const BYTE *lpStream, DWORD dwMemLength)
 #define m_nDefaultTempo	of->inittempo
 #else
 	ABCHANDLE *h;
-	uint numpat;
+	uint32_t numpat;
 	MMFILE mm, *mmfile;
 #endif
-	uint t;
+	uint32_t t;
 	char	*line, *p, *pp, ch, ch0=0;
 	char barsig[52];	// for propagated accidental key signature within bar
 	char *abcparts;
@@ -5023,7 +5023,7 @@ BOOL CSoundFile::ReadABC(const BYTE *lpStream, DWORD dwMemLength)
 	m_nMinPeriod    = 28 << 2;
 	m_nMaxPeriod    = 1712 << 3;
 	// orderlist
-	for(t=0; t < (uint)orderlen; t++)
+	for(t=0; t < (uint32_t)orderlen; t++)
 		Order[t] = orderlist[t];
 	free(orderlist);	// get rid of orderlist memory
 #endif

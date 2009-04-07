@@ -4,7 +4,7 @@
 # Generated automatically by  (GNU libmodplug 0.8.4)
 # NOTE: Changes made to this file will be lost: look at ltmain.sh.
 #
-# Copyright (C) 1996, 1997, 1998, 1999, 2000, 2001
+# Copyright (C) 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008
 # Free Software Foundation, Inc.
 #
 # This file is part of GNU Libtool:
@@ -66,12 +66,12 @@ fast_install=yes
 
 # The host system.
 host_alias=
-host=i686-pc-linux-gnu
+host=x86_64-unknown-linux-gnu
 host_os=linux-gnu
 
 # The build system.
 build_alias=
-build=i686-pc-linux-gnu
+build=x86_64-unknown-linux-gnu
 build_os=linux-gnu
 
 # An echo program that does not interpret backslashes.
@@ -93,14 +93,11 @@ CC="gcc"
 # Is the compiler the GNU C compiler?
 with_gcc=yes
 
-gcc_dir=`gcc -print-file-name=. | /bin/sed 's,/\.$,,'`
-gcc_ver=`gcc -dumpversion`
-
 # An ERE matcher.
 EGREP="/bin/grep -E"
 
 # The linker used to build libraries.
-LD="/usr/bin/ld"
+LD="/usr/bin/ld -m elf_x86_64"
 
 # Whether we need hard or soft links.
 LN_S="ln -s"
@@ -150,7 +147,7 @@ pic_flag=" -fPIC -DPIC"
 pic_mode=default
 
 # What is the maximum length of a command?
-max_cmd_len=32768
+max_cmd_len=1966080
 
 # Does compiler simultaneously support -c and -o options?
 compiler_c_o="yes"
@@ -203,7 +200,7 @@ soname_spec="\${libname}\${release}\${shared_ext}\$major"
 
 # Commands used to build and install an old-style archive.
 RANLIB="ranlib"
-old_archive_cmds="\$AR \$AR_FLAGS \$oldlib\$oldobjs\$old_deplibs~\$RANLIB \$oldlib"
+old_archive_cmds="\$AR \$AR_FLAGS \$oldlib\$oldobjs~\$RANLIB \$oldlib"
 old_postinstall_cmds="chmod 644 \$oldlib~\$RANLIB \$oldlib"
 old_postuninstall_cmds=""
 
@@ -232,11 +229,11 @@ striplib="strip --strip-unneeded"
 
 # Dependencies to place before the objects being linked to create a
 # shared library.
-predep_objects=`echo "" | $SED -e "s@${gcc_dir}@\${gcc_dir}@g;s@${gcc_ver}@\${gcc_ver}@g"`
+predep_objects=""
 
 # Dependencies to place after the objects being linked to create a
 # shared library.
-postdep_objects=`echo "" | $SED -e "s@${gcc_dir}@\${gcc_dir}@g;s@${gcc_ver}@\${gcc_ver}@g"`
+postdep_objects=""
 
 # Dependencies to place before the objects being linked to create a
 # shared library.
@@ -246,9 +243,13 @@ predeps=""
 # shared library.
 postdeps=""
 
+# The directories searched by this compiler when creating a shared
+# library
+compiler_lib_search_dirs=""
+
 # The library search path used internally by the compiler when linking
 # a shared library.
-compiler_lib_search_path=`echo "" | $SED -e "s@${gcc_dir}@\${gcc_dir}@g;s@${gcc_ver}@\${gcc_ver}@g"`
+compiler_lib_search_path=""
 
 # Method to check whether dependent libraries are shared objects.
 deplibs_check_method="pass_all"
@@ -328,10 +329,10 @@ variables_saved_for_relink="PATH LD_LIBRARY_PATH LD_RUN_PATH GCC_EXEC_PREFIX COM
 link_all_deplibs=unknown
 
 # Compile-time system search path for libraries
-sys_lib_search_path_spec=`echo " /usr/lib/gcc/i386-redhat-linux/4.1.1/ /usr/lib/gcc/i386-redhat-linux/4.1.1/ /usr/lib/gcc/i386-redhat-linux/4.1.1/../../../../i386-redhat-linux/lib/i386-redhat-linux/4.1.1/ /usr/lib/gcc/i386-redhat-linux/4.1.1/../../../../i386-redhat-linux/lib/ /usr/lib/gcc/i386-redhat-linux/4.1.1/../../../i386-redhat-linux/4.1.1/ /usr/lib/gcc/i386-redhat-linux/4.1.1/../../../ /lib/i386-redhat-linux/4.1.1/ /lib/ /usr/lib/i386-redhat-linux/4.1.1/ /usr/lib/" | $SED -e "s@${gcc_dir}@\${gcc_dir}@g;s@${gcc_ver}@\${gcc_ver}@g"`
+sys_lib_search_path_spec="/usr/lib64 /lib64 /usr/local/lib64"
 
 # Run-time system search path for libraries
-sys_lib_dlsearch_path_spec="/lib /usr/lib /usr/lib/atlas /usr/lib/lam /usr/lib/mysql /usr/lib/mysql /usr/lib/nvidia /usr/lib/octave-2.9.9 /usr/lib/opensync/ /usr/lib/opensync/formats/ /usr/lib/opensync/plugins/ /usr/lib/qt-3.3/lib /usr/lib/wine/ /usr/lib/wine "
+sys_lib_dlsearch_path_spec="/usr/lib64 /lib64 /usr/lib/atlas /usr/lib64/atlas /usr/lib/mysql /usr/lib64/mysql /usr/lib64/octave-3.0.3 /usr/lib/qt-3.3/lib /usr/lib64/qt-3.3/lib /usr/lib/wine/ /usr/lib64/xulrunner-1.9 "
 
 # Fix the shell variable $srcfile for the compiler.
 fix_srcfile_path=""
@@ -346,7 +347,7 @@ export_symbols_cmds="\$NM \$libobjs \$convenience | \$global_symbol_pipe | \$SED
 extract_expsyms_cmds=""
 
 # Symbols that should not be listed in the preloaded symbols.
-exclude_expsyms="_GLOBAL_OFFSET_TABLE_"
+exclude_expsyms="_GLOBAL_OFFSET_TABLE_|_GLOBAL__F[ID]_.*"
 
 # Symbols that must always be exported.
 include_expsyms=""
@@ -6802,12 +6803,12 @@ fast_install=yes
 
 # The host system.
 host_alias=
-host=i686-pc-linux-gnu
+host=x86_64-unknown-linux-gnu
 host_os=linux-gnu
 
 # The build system.
 build_alias=
-build=i686-pc-linux-gnu
+build=x86_64-unknown-linux-gnu
 build_os=linux-gnu
 
 # An echo program that does not interpret backslashes.
@@ -6829,14 +6830,11 @@ CC="g++"
 # Is the compiler the GNU C compiler?
 with_gcc=yes
 
-gcc_dir=`gcc -print-file-name=. | /bin/sed 's,/\.$,,'`
-gcc_ver=`gcc -dumpversion`
-
 # An ERE matcher.
 EGREP="/bin/grep -E"
 
 # The linker used to build libraries.
-LD="/usr/bin/ld"
+LD="/usr/bin/ld -m elf_x86_64"
 
 # Whether we need hard or soft links.
 LN_S="ln -s"
@@ -6886,7 +6884,7 @@ pic_flag=" -fPIC -DPIC"
 pic_mode=default
 
 # What is the maximum length of a command?
-max_cmd_len=32768
+max_cmd_len=1966080
 
 # Does compiler simultaneously support -c and -o options?
 compiler_c_o="yes"
@@ -6939,7 +6937,7 @@ soname_spec="\${libname}\${release}\${shared_ext}\$major"
 
 # Commands used to build and install an old-style archive.
 RANLIB="ranlib"
-old_archive_cmds="\$AR \$AR_FLAGS \$oldlib\$oldobjs\$old_deplibs~\$RANLIB \$oldlib"
+old_archive_cmds="\$AR \$AR_FLAGS \$oldlib\$oldobjs~\$RANLIB \$oldlib"
 old_postinstall_cmds="chmod 644 \$oldlib~\$RANLIB \$oldlib"
 old_postuninstall_cmds=""
 
@@ -6965,11 +6963,11 @@ striplib="strip --strip-unneeded"
 
 # Dependencies to place before the objects being linked to create a
 # shared library.
-predep_objects=`echo "/usr/lib/gcc/i386-redhat-linux/4.1.1/../../../crti.o /usr/lib/gcc/i386-redhat-linux/4.1.1/crtbeginS.o" | $SED -e "s@${gcc_dir}@\${gcc_dir}@g;s@${gcc_ver}@\${gcc_ver}@g"`
+predep_objects="/usr/lib/gcc/x86_64-redhat-linux/4.3.2/../../../../lib64/crti.o /usr/lib/gcc/x86_64-redhat-linux/4.3.2/crtbeginS.o"
 
 # Dependencies to place after the objects being linked to create a
 # shared library.
-postdep_objects=`echo "/usr/lib/gcc/i386-redhat-linux/4.1.1/crtendS.o /usr/lib/gcc/i386-redhat-linux/4.1.1/../../../crtn.o" | $SED -e "s@${gcc_dir}@\${gcc_dir}@g;s@${gcc_ver}@\${gcc_ver}@g"`
+postdep_objects="/usr/lib/gcc/x86_64-redhat-linux/4.3.2/crtendS.o /usr/lib/gcc/x86_64-redhat-linux/4.3.2/../../../../lib64/crtn.o"
 
 # Dependencies to place before the objects being linked to create a
 # shared library.
@@ -6979,9 +6977,13 @@ predeps=""
 # shared library.
 postdeps="-lstdc++ -lm -lgcc_s -lc -lgcc_s"
 
+# The directories searched by this compiler when creating a shared
+# library
+compiler_lib_search_dirs="/usr/lib/gcc/x86_64-redhat-linux/4.3.2 /usr/lib/gcc/x86_64-redhat-linux/4.3.2 /usr/lib/gcc/x86_64-redhat-linux/4.3.2/../../../../lib64 /lib/../lib64 /usr/lib/../lib64 /usr/lib/gcc/x86_64-redhat-linux/4.3.2/../../.."
+
 # The library search path used internally by the compiler when linking
 # a shared library.
-compiler_lib_search_path=`echo "-L/usr/lib/gcc/i386-redhat-linux/4.1.1 -L/usr/lib/gcc/i386-redhat-linux/4.1.1 -L/usr/lib/gcc/i386-redhat-linux/4.1.1/../../.." | $SED -e "s@${gcc_dir}@\${gcc_dir}@g;s@${gcc_ver}@\${gcc_ver}@g"`
+compiler_lib_search_path="-L/usr/lib/gcc/x86_64-redhat-linux/4.3.2 -L/usr/lib/gcc/x86_64-redhat-linux/4.3.2 -L/usr/lib/gcc/x86_64-redhat-linux/4.3.2/../../../../lib64 -L/lib/../lib64 -L/usr/lib/../lib64 -L/usr/lib/gcc/x86_64-redhat-linux/4.3.2/../../.."
 
 # Method to check whether dependent libraries are shared objects.
 deplibs_check_method="pass_all"
@@ -7061,10 +7063,10 @@ variables_saved_for_relink="PATH LD_LIBRARY_PATH LD_RUN_PATH GCC_EXEC_PREFIX COM
 link_all_deplibs=unknown
 
 # Compile-time system search path for libraries
-sys_lib_search_path_spec=`echo " /usr/lib/gcc/i386-redhat-linux/4.1.1/ /usr/lib/gcc/i386-redhat-linux/4.1.1/ /usr/lib/gcc/i386-redhat-linux/4.1.1/../../../../i386-redhat-linux/lib/i386-redhat-linux/4.1.1/ /usr/lib/gcc/i386-redhat-linux/4.1.1/../../../../i386-redhat-linux/lib/ /usr/lib/gcc/i386-redhat-linux/4.1.1/../../../i386-redhat-linux/4.1.1/ /usr/lib/gcc/i386-redhat-linux/4.1.1/../../../ /lib/i386-redhat-linux/4.1.1/ /lib/ /usr/lib/i386-redhat-linux/4.1.1/ /usr/lib/" | $SED -e "s@${gcc_dir}@\${gcc_dir}@g;s@${gcc_ver}@\${gcc_ver}@g"`
+sys_lib_search_path_spec="/usr/lib64 /lib64 /usr/local/lib64"
 
 # Run-time system search path for libraries
-sys_lib_dlsearch_path_spec="/lib /usr/lib /usr/lib/atlas /usr/lib/lam /usr/lib/mysql /usr/lib/mysql /usr/lib/nvidia /usr/lib/octave-2.9.9 /usr/lib/opensync/ /usr/lib/opensync/formats/ /usr/lib/opensync/plugins/ /usr/lib/qt-3.3/lib /usr/lib/wine/ /usr/lib/wine "
+sys_lib_dlsearch_path_spec="/usr/lib64 /lib64 /usr/lib/atlas /usr/lib64/atlas /usr/lib/mysql /usr/lib64/mysql /usr/lib64/octave-3.0.3 /usr/lib/qt-3.3/lib /usr/lib64/qt-3.3/lib /usr/lib/wine/ /usr/lib64/xulrunner-1.9 "
 
 # Fix the shell variable $srcfile for the compiler.
 fix_srcfile_path=""
@@ -7079,7 +7081,7 @@ export_symbols_cmds="\$NM \$libobjs \$convenience | \$global_symbol_pipe | \$SED
 extract_expsyms_cmds=""
 
 # Symbols that should not be listed in the preloaded symbols.
-exclude_expsyms=""
+exclude_expsyms="_GLOBAL_OFFSET_TABLE_|_GLOBAL__F[ID]_.*"
 
 # Symbols that must always be exported.
 include_expsyms=""
@@ -7110,12 +7112,12 @@ fast_install=yes
 
 # The host system.
 host_alias=
-host=i686-pc-linux-gnu
+host=x86_64-unknown-linux-gnu
 host_os=linux-gnu
 
 # The build system.
 build_alias=
-build=i686-pc-linux-gnu
+build=x86_64-unknown-linux-gnu
 build_os=linux-gnu
 
 # An echo program that does not interpret backslashes.
@@ -7137,14 +7139,11 @@ CC="gfortran"
 # Is the compiler the GNU C compiler?
 with_gcc=yes
 
-gcc_dir=`gcc -print-file-name=. | /bin/sed 's,/\.$,,'`
-gcc_ver=`gcc -dumpversion`
-
 # An ERE matcher.
 EGREP="/bin/grep -E"
 
 # The linker used to build libraries.
-LD="/usr/bin/ld"
+LD="/usr/bin/ld -m elf_x86_64"
 
 # Whether we need hard or soft links.
 LN_S="ln -s"
@@ -7194,7 +7193,7 @@ pic_flag=" -fPIC"
 pic_mode=default
 
 # What is the maximum length of a command?
-max_cmd_len=32768
+max_cmd_len=1966080
 
 # Does compiler simultaneously support -c and -o options?
 compiler_c_o="yes"
@@ -7247,7 +7246,7 @@ soname_spec="\${libname}\${release}\${shared_ext}\$major"
 
 # Commands used to build and install an old-style archive.
 RANLIB="ranlib"
-old_archive_cmds="\$AR \$AR_FLAGS \$oldlib\$oldobjs\$old_deplibs~\$RANLIB \$oldlib"
+old_archive_cmds="\$AR \$AR_FLAGS \$oldlib\$oldobjs~\$RANLIB \$oldlib"
 old_postinstall_cmds="chmod 644 \$oldlib~\$RANLIB \$oldlib"
 old_postuninstall_cmds=""
 
@@ -7276,11 +7275,11 @@ striplib="strip --strip-unneeded"
 
 # Dependencies to place before the objects being linked to create a
 # shared library.
-predep_objects=`echo "" | $SED -e "s@${gcc_dir}@\${gcc_dir}@g;s@${gcc_ver}@\${gcc_ver}@g"`
+predep_objects=""
 
 # Dependencies to place after the objects being linked to create a
 # shared library.
-postdep_objects=`echo "" | $SED -e "s@${gcc_dir}@\${gcc_dir}@g;s@${gcc_ver}@\${gcc_ver}@g"`
+postdep_objects=""
 
 # Dependencies to place before the objects being linked to create a
 # shared library.
@@ -7290,9 +7289,13 @@ predeps=""
 # shared library.
 postdeps=""
 
+# The directories searched by this compiler when creating a shared
+# library
+compiler_lib_search_dirs=""
+
 # The library search path used internally by the compiler when linking
 # a shared library.
-compiler_lib_search_path=`echo "" | $SED -e "s@${gcc_dir}@\${gcc_dir}@g;s@${gcc_ver}@\${gcc_ver}@g"`
+compiler_lib_search_path=""
 
 # Method to check whether dependent libraries are shared objects.
 deplibs_check_method="pass_all"
@@ -7372,10 +7375,10 @@ variables_saved_for_relink="PATH LD_LIBRARY_PATH LD_RUN_PATH GCC_EXEC_PREFIX COM
 link_all_deplibs=unknown
 
 # Compile-time system search path for libraries
-sys_lib_search_path_spec=`echo " /usr/lib/gcc/i386-redhat-linux/4.1.1/ /usr/lib/gcc/i386-redhat-linux/4.1.1/ /usr/lib/gcc/i386-redhat-linux/4.1.1/../../../../i386-redhat-linux/lib/i386-redhat-linux/4.1.1/ /usr/lib/gcc/i386-redhat-linux/4.1.1/../../../../i386-redhat-linux/lib/ /usr/lib/gcc/i386-redhat-linux/4.1.1/../../../i386-redhat-linux/4.1.1/ /usr/lib/gcc/i386-redhat-linux/4.1.1/../../../ /lib/i386-redhat-linux/4.1.1/ /lib/ /usr/lib/i386-redhat-linux/4.1.1/ /usr/lib/" | $SED -e "s@${gcc_dir}@\${gcc_dir}@g;s@${gcc_ver}@\${gcc_ver}@g"`
+sys_lib_search_path_spec="/usr/lib64 /lib64 /usr/local/lib64"
 
 # Run-time system search path for libraries
-sys_lib_dlsearch_path_spec="/lib /usr/lib /usr/lib/atlas /usr/lib/lam /usr/lib/mysql /usr/lib/mysql /usr/lib/nvidia /usr/lib/octave-2.9.9 /usr/lib/opensync/ /usr/lib/opensync/formats/ /usr/lib/opensync/plugins/ /usr/lib/qt-3.3/lib /usr/lib/wine/ /usr/lib/wine "
+sys_lib_dlsearch_path_spec="/usr/lib64 /lib64 /usr/lib/atlas /usr/lib64/atlas /usr/lib/mysql /usr/lib64/mysql /usr/lib64/octave-3.0.3 /usr/lib/qt-3.3/lib /usr/lib64/qt-3.3/lib /usr/lib/wine/ /usr/lib64/xulrunner-1.9 "
 
 # Fix the shell variable $srcfile for the compiler.
 fix_srcfile_path=""
@@ -7390,7 +7393,7 @@ export_symbols_cmds="\$NM \$libobjs \$convenience | \$global_symbol_pipe | \$SED
 extract_expsyms_cmds=""
 
 # Symbols that should not be listed in the preloaded symbols.
-exclude_expsyms="_GLOBAL_OFFSET_TABLE_"
+exclude_expsyms="_GLOBAL_OFFSET_TABLE_|_GLOBAL__F[ID]_.*"
 
 # Symbols that must always be exported.
 include_expsyms=""

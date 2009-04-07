@@ -1289,7 +1289,7 @@ static void PATsample(CSoundFile *cs, MODINSTRUMENT *q, int smp, int gm)
 // =====================================================================================
 BOOL PAT_Load_Instruments(void *c)
 {
-	uint t;
+	uint32_t t;
 #ifdef NEWMIKMOD
 	UNIMOD *of = (UNIMOD *)c;
 	INSTRUMENT *d;

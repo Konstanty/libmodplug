@@ -7,5 +7,6 @@ Name: libmodplug
 Description: The ModPlug mod file playing library.
 Version: @VERSION@
 Requires: 
-Libs: -L${libdir} -lmodplug -lstdc++ -lm
+Libs: -L${libdir} -lmodplug 
+Libs.private: -lstdc++ -lm
 Cflags: -I${includedir} -I${includedir}/libmodplug

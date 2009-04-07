@@ -1408,7 +1408,7 @@ BOOL CSoundFile::ReadMID(const BYTE *lpStream, DWORD dwMemLength)
 #endif
 	int ch, dmulti, maxtempo, panlow, panhigh, numchans, numtracks;
 	MIDTRACK *ttp;
-	uint t, numpats;
+	uint32_t t, numpats;
 	char buf[256];
 	long miditracklen;
 	BYTE runningstatus;
@@ -1493,7 +1493,7 @@ BOOL CSoundFile::ReadMID(const BYTE *lpStream, DWORD dwMemLength)
 		printf("Multiplying resolution and deltatimes by %d to get %d miditicks per patternrow\n",
 			dmulti, h->midispeed);
 	}
-	for( t=0; t<(uint)h->miditracks; t++ ) {
+	for( t=0; t<(uint32_t)h->miditracks; t++ ) {
 		if( h->verbose ) printf("Parsing track %d\n", t+1);
 		mmreadSBYTES(buf,4,h->mmf);
 		buf[4] = '\0';
