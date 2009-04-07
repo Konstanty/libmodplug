@@ -130,17 +130,17 @@ typedef enum {
 typedef struct _ABCEVENT
 {
 	struct _ABCEVENT *next;
-	ULONG	tracktick;
+	uint32_t tracktick;
 	union {
-		BYTE	par[6];
+		uint8_t par[6];
 		struct {
-			BYTE flg;
-			BYTE cmd;
-			ULONG lpar;	// for variant selections, bit pattern
+			uint8_t flg;
+			uint8_t cmd;
+			uint32_t lpar;	// for variant selections, bit pattern
 		};
 	};
-	BYTE part;
-	BYTE tiednote;
+	uint8_t part;
+	uint8_t tiednote;
 } ABCEVENT;
 
 typedef struct _ABCTRACK
@@ -152,16 +152,16 @@ typedef struct _ABCTRACK
 	ABCEVENT *tienote;
 	int transpose;
 	int octave_shift;
-	ULONG slidevoltime;	// for crescendo and diminuendo
+	uint32_t slidevoltime;	// for crescendo and diminuendo
 	int slidevol; // -2:fade away, -1:diminuendo, 0:none, +1:crescendo
-	BYTE vno; // 0 is track is free for use, from previous song in multi-songbook
-	BYTE vpos; // 0 is main voice, other is subtrack for gchords, gchords or drumnotes
-	BYTE tiedvpos;
-	BYTE mute;
-	BYTE chan; // 10 is percussion channel, any other is melodic channel
-	BYTE volume;
-	BYTE instr;	// current instrument for this track
-	BYTE legato;
+	uint8_t vno; // 0 is track is free for use, from previous song in multi-songbook
+	uint8_t vpos; // 0 is main voice, other is subtrack for gchords, gchords or drumnotes
+	uint8_t tiedvpos;
+	uint8_t mute;
+	uint8_t chan; // 10 is percussion channel, any other is melodic channel
+	uint8_t volume;
+	uint8_t instr;	// current instrument for this track
+	uint8_t legato;
 	char v[22];	// first twenty characters are significant
 } ABCTRACK;
 
@@ -192,24 +192,24 @@ typedef struct _ABCHANDLE
 	int speed;
 	char *line;
 	char *beatstring;
-	BYTE beat[4]; // a:first note, b:strong notes, c:weak notes, n:strong note every n
+	uint8_t beat[4]; // a:first note, b:strong notes, c:weak notes, n:strong note every n
 	char gchord[80];	// last setting for gchord
 	char drum[80]; // last setting for drum 
 	char drumins[80]; // last setting for drum 
 	char drumvol[80]; // last setting for drum 
-	ULONG barticks;
+	uint32_t barticks;
 	// parse variables, declared here to avoid parameter pollution
 	int abcchordvol, abcchordprog, abcbassvol, abcbassprog;
 	int ktrans;
 	int drumon, gchordon, droneon;
 	int dronegm, dronepitch[2], dronevol[2];
 	ABCTRACK *tp, *tpc, *tpr;
-	ULONG tracktime;
+	uint32_t tracktime;
 } ABCHANDLE;
 
 static int global_voiceno, global_octave_shift, global_tempo_factor, global_tempo_divider;
 static char global_part;
-static ULONG global_songstart;
+static uint32_t global_songstart;
 /* Named guitar chords */
 static char chordname[MAXCHORDNAMES][8];
 static int chordnotes[MAXCHORDNAMES][6];
@@ -259,10 +259,10 @@ static char *keySigs[] = {
 static int abc_getnumber(const char *p, int *number);
 static ABCTRACK *abc_locate_track(ABCHANDLE *h, const char *voice, int pos);
 static void	abc_add_event(ABCHANDLE *h, ABCTRACK *tp, ABCEVENT *e);
-static void abc_add_setloop(ABCHANDLE *h, ABCTRACK *tp, ULONG tracktime);
-static void abc_add_setjumploop(ABCHANDLE *h, ABCTRACK *tp, ULONG tracktime, ABCEVENT_JUMPTYPE j);
-static ULONG abc_pattracktime(ABCHANDLE *h, ULONG tracktime);
-static int abc_patno(ABCHANDLE *h, ULONG tracktime);
+static void abc_add_setloop(ABCHANDLE *h, ABCTRACK *tp, uint32_t tracktime);
+static void abc_add_setjumploop(ABCHANDLE *h, ABCTRACK *tp, uint32_t tracktime, ABCEVENT_JUMPTYPE j);
+static uint32_t abc_pattracktime(ABCHANDLE *h, uint32_t tracktime);
+static int abc_patno(ABCHANDLE *h, uint32_t tracktime);
 
 static void abc_message(const char *s1, const char *s2)
 {
@@ -276,19 +276,19 @@ static void abc_message(const char *s1, const char *s2)
 #endif
 }
 
-static ULONG modticks(ULONG abcticks)
+static uint32_t modticks(uint32_t abcticks)
 {
 	return abcticks / RESOLUTION;
 }
 
-static ULONG abcticks(ULONG modticks)
+static uint32_t abcticks(uint32_t modticks)
 {
 	return modticks * RESOLUTION;
 }
 
-static ULONG notelen_notediv_to_ticks(int speed, int len, int div)
+static uint32_t notelen_notediv_to_ticks(int speed, int len, int div)
 {
-	ULONG u;
+	uint32_t u;
 	u = (ROWSPERNOTE * RESOLUTION * speed * len * global_tempo_factor) / (div * global_tempo_divider);
 	return u;
 }
@@ -472,7 +472,7 @@ static void mmfseek(MMFILE *mmfile, long p, int whence)
 #endif
 
 // =====================================================================================
-static ABCEVENT *abc_new_event(ABCHANDLE *h, ULONG abctick, const char data[])
+static ABCEVENT *abc_new_event(ABCHANDLE *h, uint32_t abctick, const char data[])
 // =====================================================================================
 {
     ABCEVENT   *retval;
@@ -878,7 +878,7 @@ static ABCTRACK *abc_check_track(ABCHANDLE *h, ABCTRACK *tp)
 	return tp;
 }
 
-static void abc_add_capo(ABCHANDLE *h, ABCTRACK *tp, ULONG tracktime)
+static void abc_add_capo(ABCHANDLE *h, ABCTRACK *tp, uint32_t tracktime)
 {
 	ABCEVENT *e;
 	char d[6];
@@ -890,7 +890,7 @@ static void abc_add_capo(ABCHANDLE *h, ABCTRACK *tp, ULONG tracktime)
 	abc_add_event(h, tp, e); // do this last (recursion danger)
 }
 
-static void abc_add_segno(ABCHANDLE *h, ABCTRACK *tp, ULONG tracktime)
+static void abc_add_segno(ABCHANDLE *h, ABCTRACK *tp, uint32_t tracktime)
 {
 	ABCEVENT *e;
 	char d[6];
@@ -901,7 +901,7 @@ static void abc_add_segno(ABCHANDLE *h, ABCTRACK *tp, ULONG tracktime)
 	abc_add_event(h, tp, e);
 }
 
-static void abc_add_coda(ABCHANDLE *h, ABCTRACK *tp, ULONG tracktime)
+static void abc_add_coda(ABCHANDLE *h, ABCTRACK *tp, uint32_t tracktime)
 {
 	ABCEVENT *e;
 	char d[6];
@@ -912,7 +912,7 @@ static void abc_add_coda(ABCHANDLE *h, ABCTRACK *tp, ULONG tracktime)
 	abc_add_event(h, tp, e);
 }
 
-static void abc_add_fine(ABCHANDLE *h, ABCTRACK *tp, ULONG tracktime)
+static void abc_add_fine(ABCHANDLE *h, ABCTRACK *tp, uint32_t tracktime)
 {
 	ABCEVENT *e;
 	char d[6];
@@ -923,7 +923,7 @@ static void abc_add_fine(ABCHANDLE *h, ABCTRACK *tp, ULONG tracktime)
 	abc_add_event(h, tp, e);
 }
 
-static void abc_add_tocoda(ABCHANDLE *h, ABCTRACK *tp, ULONG tracktime)
+static void abc_add_tocoda(ABCHANDLE *h, ABCTRACK *tp, uint32_t tracktime)
 {
 	ABCEVENT *e;
 	char d[6];
@@ -946,7 +946,7 @@ static void abc_remove_unnecessary_events(ABCHANDLE *h)
 {
 	ABCTRACK *tp,*ptp;
 	ABCEVENT *ep, *el;
-	ULONG ct, et;
+	uint32_t ct, et;
 	int d;
 	ptp = NULL;
 	for( tp=h->track; tp; tp=tp->next ) {
@@ -1014,7 +1014,7 @@ static void abc_retick_events(ABCHANDLE *h)
 {
 	ABCTRACK *tp;
 	ABCEVENT *ep;
-	ULONG et, tt=0, at = abcticks(64 * h->speed);
+	uint32_t et, tt=0, at = abcticks(64 * h->speed);
 	for( tp=h->track; tp; tp=tp->next ) {
 		// make ticks relative
 		tt = 0;
@@ -1047,7 +1047,7 @@ static void abc_retick_events(ABCHANDLE *h)
 static void abc_synchronise_tracks(ABCHANDLE *h)
 {
 	ABCTRACK *tp;
-	ULONG tm;	// tracktime in master
+	uint32_t tm;	// tracktime in master
 	ABCEVENT *em, *es, *et, *ec;	// events in master, slave, slave temporary and copied event
 	if( !h || !h->track ) return;
 	abc_remove_unnecessary_events(h);
@@ -1095,7 +1095,7 @@ static void	abc_add_event(ABCHANDLE *h, ABCTRACK *tp, ABCEVENT *e)
 	}
 }
 
-static void abc_add_partbreak(ABCHANDLE *h, ABCTRACK *tp, ULONG tracktime)
+static void abc_add_partbreak(ABCHANDLE *h, ABCTRACK *tp, uint32_t tracktime)
 {
 	ABCEVENT *e;
 	char d[6];
@@ -1106,7 +1106,7 @@ static void abc_add_partbreak(ABCHANDLE *h, ABCTRACK *tp, ULONG tracktime)
 	abc_add_event(h, tp, e);
 }
 
-static void abc_add_tempo_event(ABCHANDLE *h, ABCTRACK *tp, ULONG tracktime, int tempo)
+static void abc_add_tempo_event(ABCHANDLE *h, ABCTRACK *tp, uint32_t tracktime, int tempo)
 {
 	ABCEVENT *e;
 	char d[6];
@@ -1118,7 +1118,7 @@ static void abc_add_tempo_event(ABCHANDLE *h, ABCTRACK *tp, ULONG tracktime, int
 	abc_add_event(h, tp, e);
 }
 
-static void abc_add_noteoff(ABCHANDLE *h, ABCTRACK *tp, ULONG tracktime)
+static void abc_add_noteoff(ABCHANDLE *h, ABCTRACK *tp, uint32_t tracktime)
 {
 	ABCEVENT *e;
 	char d[6];
@@ -1132,9 +1132,9 @@ static void abc_add_noteoff(ABCHANDLE *h, ABCTRACK *tp, ULONG tracktime)
 	abc_add_event(h, tp, e);
 }
 
-static int abc_dynamic_volume(ABCTRACK *tp, ULONG tracktime, int vol)
+static int abc_dynamic_volume(ABCTRACK *tp, uint32_t tracktime, int vol)
 {
-	ULONG slidetime;
+	uint32_t slidetime;
 	int voldelta;
 	if( tp->mute ) return 0;
 	if( tp->slidevol == 0 ) return vol;
@@ -1182,7 +1182,7 @@ static void abc_track_clear_tiedvpos(ABCHANDLE *h)
 		if( tp->vno == vn ) tp->tiedvpos = tp->vpos;
 }
 
-static ABCTRACK *abc_track_with_note_tied(ABCHANDLE *h, ULONG tracktime, int n, int oct)
+static ABCTRACK *abc_track_with_note_tied(ABCHANDLE *h, uint32_t tracktime, int n, int oct)
 {
 	int vn, vp;
 	ABCTRACK *tp;
@@ -1216,7 +1216,7 @@ static ABCTRACK *abc_track_with_note_tied(ABCHANDLE *h, ULONG tracktime, int n, 
 	return h->tp;
 }
 
-static int abc_add_noteon(ABCHANDLE *h, int ch, const char *p, ULONG tracktime, char *barkey, int vol, ABCEVENT_X_EFFECT fx, int fxop)
+static int abc_add_noteon(ABCHANDLE *h, int ch, const char *p, uint32_t tracktime, char *barkey, int vol, ABCEVENT_X_EFFECT fx, int fxop)
 {
 	ABCEVENT *e;
 	ABCTRACK *tp;
@@ -1378,7 +1378,7 @@ static int abc_add_noteon(ABCHANDLE *h, int ch, const char *p, ULONG tracktime, 
 	return i;
 }
 
-static void abc_add_dronenote(ABCHANDLE *h, ABCTRACK *tp, ULONG tracktime, int nnum, int vol)
+static void abc_add_dronenote(ABCHANDLE *h, ABCTRACK *tp, uint32_t tracktime, int nnum, int vol)
 {
 	ABCEVENT *e;
 	int j,k;
@@ -1414,17 +1414,17 @@ static void abc_add_dronenote(ABCHANDLE *h, ABCTRACK *tp, ULONG tracktime, int n
 	}
 }
 
-static void abc_add_chordnote(ABCHANDLE *h, ABCTRACK *tp, ULONG tracktime, int nnum, int vol)
+static void abc_add_chordnote(ABCHANDLE *h, ABCTRACK *tp, uint32_t tracktime, int nnum, int vol)
 {
 	abc_add_dronenote(h, tp, tracktime, nnum + 23, tp->mute? 0: vol);
 }
 
-static void abc_add_drumnote(ABCHANDLE *h, ABCTRACK *tp, ULONG tracktime, int nnum, int vol)
+static void abc_add_drumnote(ABCHANDLE *h, ABCTRACK *tp, uint32_t tracktime, int nnum, int vol)
 {
 	abc_add_dronenote(h, tp, tracktime, nnum, tp->mute? 0: vol);
 }
 
-static void abc_add_variant_start(ABCHANDLE *h, ABCTRACK *tp, ULONG tracktime, int n)
+static void abc_add_variant_start(ABCHANDLE *h, ABCTRACK *tp, uint32_t tracktime, int n)
 {
 	ABCEVENT *e;
 	char d[6];
@@ -1441,7 +1441,7 @@ static void abc_add_variant_choise(ABCTRACK *tp, int n)
   tp->tail->lpar |= 1<<n;
 }
 
-static void	abc_add_chord(const char *p, ABCHANDLE *h, ABCTRACK *tp, ULONG tracktime)
+static void	abc_add_chord(const char *p, ABCHANDLE *h, ABCTRACK *tp, uint32_t tracktime)
 {
 	ABCEVENT *e;
 	char d[6];
@@ -1504,7 +1504,7 @@ static void	abc_add_chord(const char *p, ABCHANDLE *h, ABCTRACK *tp, ULONG track
 	abc_add_event(h, tp, e);
 }
 
-static void abc_add_setloop(ABCHANDLE *h, ABCTRACK *tp, ULONG tracktime)
+static void abc_add_setloop(ABCHANDLE *h, ABCTRACK *tp, uint32_t tracktime)
 {
 	ABCEVENT *e;
 	char d[6];
@@ -1524,7 +1524,7 @@ static void abc_fade_track(ABCTRACK *tp, ABCEVENT *e)
 	}
 }
 
-static void abc_add_setjumploop(ABCHANDLE *h, ABCTRACK *tp, ULONG tracktime, ABCEVENT_JUMPTYPE j)
+static void abc_add_setjumploop(ABCHANDLE *h, ABCTRACK *tp, uint32_t tracktime, ABCEVENT_JUMPTYPE j)
 {
 	ABCEVENT *e;
 	char d[8];
@@ -1536,7 +1536,7 @@ static void abc_add_setjumploop(ABCHANDLE *h, ABCTRACK *tp, ULONG tracktime, ABC
 	abc_add_event(h, tp, e);
 }
 
-static void abc_add_sync(ABCHANDLE *h, ABCTRACK *tp, ULONG tracktime)
+static void abc_add_sync(ABCHANDLE *h, ABCTRACK *tp, uint32_t tracktime)
 {
 	ABCEVENT *e;
 	char d[6];
@@ -1553,7 +1553,7 @@ static void abc_add_sync(ABCHANDLE *h, ABCTRACK *tp, ULONG tracktime)
 	abc_add_event(h, tp, e);
 }
 
-static void abc_add_gchord_syncs(ABCHANDLE *h, ABCTRACK *tpc, ULONG tracktime)
+static void abc_add_gchord_syncs(ABCHANDLE *h, ABCTRACK *tpc, uint32_t tracktime)
 {
 	ABCTRACK *tp;
 	int i;
@@ -1563,7 +1563,7 @@ static void abc_add_gchord_syncs(ABCHANDLE *h, ABCTRACK *tpc, ULONG tracktime)
 	}
 }
 
-static void abc_add_drum_sync(ABCHANDLE *h, ABCTRACK *tpr, ULONG tracktime)
+static void abc_add_drum_sync(ABCHANDLE *h, ABCTRACK *tpr, uint32_t tracktime)
 {
 	ABCTRACK *tp;
 	tp = abc_locate_track(h, tpr->v, DRUMPOS);
@@ -1847,10 +1847,10 @@ static void	abc_set_parts(char **d, char *p)
 	*d = q;
 }
 
-static void abc_appendpart(ABCHANDLE *h, ABCTRACK *tp, ULONG pt1, ULONG pt2)
+static void abc_appendpart(ABCHANDLE *h, ABCTRACK *tp, uint32_t pt1, uint32_t pt2)
 {
 	ABCEVENT *e, *ec;
-	ULONG dt;
+	uint32_t dt;
 	dt = tp->tail->tracktick - pt1;
 	for( e=tp->head; e && e->tracktick <= pt2; e=e->next ) {
 		if( e->tracktick >= pt1 ) {
@@ -1869,10 +1869,10 @@ static void abc_appendpart(ABCHANDLE *h, ABCTRACK *tp, ULONG pt1, ULONG pt2)
 	abc_add_sync(h, tp, pt2 + dt); // make sure there is progression...
 }
 
-static ULONG abc_pattracktime(ABCHANDLE *h, ULONG tracktime)
+static uint32_t abc_pattracktime(ABCHANDLE *h, uint32_t tracktime)
 {
 	ABCEVENT *e;
-	ULONG dt,et,pt=abcticks(64 * h->speed);
+	uint32_t dt,et,pt=abcticks(64 * h->speed);
 	if(!h || !h->track || !h->track->head ) return 0;
 	dt = 0;
 	for( e=h->track->head; e && e->tracktick <= tracktime; e=e->next ) {
@@ -1889,12 +1889,12 @@ static ULONG abc_pattracktime(ABCHANDLE *h, ULONG tracktime)
 	return (tracktime + dt);
 }
 
-static int abc_patno(ABCHANDLE *h, ULONG tracktime)
+static int abc_patno(ABCHANDLE *h, uint32_t tracktime)
 {
 	return modticks(abc_pattracktime(h, tracktime)) / 64 / h->speed;
 }
 
-static void abc_stripoff(ABCHANDLE *h, ABCTRACK *tp, ULONG tt)
+static void abc_stripoff(ABCHANDLE *h, ABCTRACK *tp, uint32_t tt)
 {
 	ABCEVENT *e1, *e2;
 	e2 = NULL;
@@ -1917,7 +1917,7 @@ static void abc_stripoff(ABCHANDLE *h, ABCTRACK *tp, ULONG tt)
 	}
 }
 
-static void abc_keeptiednotes(ABCHANDLE *h, ULONG fromtime, ULONG totime) {
+static void abc_keeptiednotes(ABCHANDLE *h, uint32_t fromtime, uint32_t totime) {
 	ABCTRACK *tp;
 	ABCEVENT *e,*n,*f;
 	if( totime <= fromtime ) return;
@@ -1947,14 +1947,14 @@ static void abc_keeptiednotes(ABCHANDLE *h, ULONG fromtime, ULONG totime) {
 	}
 }
 
-static ULONG abc_fade_tracks(ABCHANDLE *h, char *abcparts, ULONG ptt[27])
+static uint32_t abc_fade_tracks(ABCHANDLE *h, char *abcparts, uint32_t ptt[27])
 {
 	ABCTRACK *tp;
 	ABCEVENT *e0;
 	char *p;
 	int vol;
-	ULONG pt1,pt2;
-	ULONG tt;
+	uint32_t pt1, pt2;
+	uint32_t tt;
 	tt = h->track->tail->tracktick;
 	for( tp=h->track->next; tp; tp=tp->next ) {
 		if( !tp->tail ) abc_add_sync(h, tp, tt); // no empty tracks please...
@@ -1984,11 +1984,11 @@ static ULONG abc_fade_tracks(ABCHANDLE *h, char *abcparts, ULONG ptt[27])
 
 static void abc_song_to_parts(ABCHANDLE *h, char **abcparts, BYTE partp[27][2])
 {
-	ULONG starttick;
+	uint32_t starttick;
 	ABCEVENT *e;
 	int i, fading, loop, normal, partno, partsegno, partloop, partcoda, parttocoda, partfine, skip, x, y;
 	int vmask[27],nextp[27];
-	ULONG ptt[27];
+	uint32_t ptt[27];
 	char buf[256];	// must be enough, mod's cannot handle more than 240 patterns
 	char *pfade;
 	if( !h || !h->track || !h->track->capostart ) return;
@@ -2476,7 +2476,7 @@ static void ABC_ReadPatterns(UNIMOD *of, ABCHANDLE *h, int numpat)
 	BYTE n,ins,vol;
 	ABCTRACK *t;
 	ABCEVENT *e, *en, *ef, *el;
-	ULONG tt1, tt2;
+	uint32_t tt1, tt2;
 	UNITRK_EFFECT eff;
 
 	// initialize start points of event list in tracks
@@ -2638,7 +2638,7 @@ static int ABC_ReadPatterns(MODCOMMAND *pattern[], WORD psize[], ABCHANDLE *h, i
 	BYTE n,ins,vol;
 	ABCTRACK *t;
 	ABCEVENT *e, *en, *ef, *el;
-	ULONG tt1, tt2;
+	uint32_t tt1, tt2;
 	MODCOMMAND *m;
 	int patbrk, tempo;
 	if( numpat > MAX_PATTERNS ) numpat = MAX_PATTERNS;
@@ -2854,9 +2854,9 @@ static char *abc_skip_word(char *p)
 	return p;
 }
 
-static ULONG abc_tracktime(ABCTRACK *tp)
+static uint32_t abc_tracktime(ABCTRACK *tp)
 {
-	ULONG tracktime;
+	uint32_t tracktime;
 	if( tp->tail ) tracktime = tp->tail->tracktick;
 	else tracktime = 0;
 	if( tracktime < global_songstart ) 
@@ -3272,11 +3272,11 @@ static int abc_drum_steps(const char *dch)
 	return i;
 }
 
-static void abc_add_drum(ABCHANDLE *h, ULONG tracktime, ULONG bartime)
+static void abc_add_drum(ABCHANDLE *h, uint32_t tracktime, uint32_t bartime)
 {
 	ABCEVENT *e;
 	ABCTRACK *tp;
-	ULONG etime, ctime , rtime, stime;
+	uint32_t etime, ctime , rtime, stime;
 	int i, g, steps, gnote, gsteps, nnum;
 	steps = abc_drum_steps(h->drum);
 	ctime = h->barticks;
@@ -3321,11 +3321,11 @@ static int abc_gchord_steps(const char *gch)
 	return i;
 }
 
-static void abc_add_gchord(ABCHANDLE *h, ULONG tracktime, ULONG bartime)
+static void abc_add_gchord(ABCHANDLE *h, uint32_t tracktime, uint32_t bartime)
 {
 	ABCEVENT *e, *c;
 	ABCTRACK *tp;
-	ULONG etime, ctime , rtime, stime;
+	uint32_t etime, ctime , rtime, stime;
 	int i, g, steps, gnote, gcnum, gsteps, nnum, glen;
 	// look up the last chord event in tpc
 	c = 0;
@@ -3559,7 +3559,7 @@ static int abc_partpat_to_orderlist(BYTE partp[27][2], const char *abcparts, ABC
 	return orderlen;
 }
 
-static void abc_globalslide(ABCHANDLE *h, ULONG tracktime, int slide)
+static void abc_globalslide(ABCHANDLE *h, uint32_t tracktime, int slide)
 {
 	ABCTRACK *tp;
 	ABCEVENT *e;
@@ -3705,7 +3705,7 @@ static char *abc_continuated(ABCHANDLE *h, MMFILE *mmf, char *p) {
 #ifdef NEWMIKMOD
 BOOL ABC_Load(ABCHANDLE *h, UNIMOD *of, MMSTREAM *mmfile)
 #else
-BOOL CSoundFile::ReadABC(const BYTE *lpStream, DWORD dwMemLength)
+BOOL CSoundFile::ReadABC(const uint8_t *lpStream, DWORD dwMemLength)
 #endif
 {
 	static int avoid_reentry = 0;
@@ -3720,7 +3720,7 @@ BOOL CSoundFile::ReadABC(const BYTE *lpStream, DWORD dwMemLength)
 	char	*line, *p, *pp, ch, ch0=0;
 	char barsig[52];	// for propagated accidental key signature within bar
 	char *abcparts;
-	BYTE partpat[27][2], *orderlist;
+	uint8_t partpat[27][2], *orderlist;
 	int orderlen;
 	enum { NOWHERE, INBETWEEN, INHEAD, INBODY, INSKIPFORX, INSKIPFORQUOTE } abcstate;
 	ABCEVENT_JUMPTYPE j;
@@ -3733,7 +3733,7 @@ BOOL CSoundFile::ReadABC(const BYTE *lpStream, DWORD dwMemLength)
 	// c for chords, s for standard L: setting, m for M: barlength
 	int abchornpipe, brokenrithm, tupletp, tupletq, tupletr;
 	int ktempo;
-	ULONG abcgrace=0, bartime, thistime=0;
+	uint32_t abcgrace=0, bartime, thistime=0;
 	ABCTRACK *tpd, *ttp;
 	ABCMACRO *mp;
 	int mmsp;
