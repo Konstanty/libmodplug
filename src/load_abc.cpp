@@ -216,7 +216,7 @@ static int chordnotes[MAXCHORDNAMES][6];
 static int chordlen[MAXCHORDNAMES];
 static int chordsnamed = 0;
 
-static char *sig[] = {
+static const char *sig[] = {
 	" C D EF G A Bc d ef g a b",	// 7 sharps C#
 	" C D EF G AB c d ef g ab ",	// 6 sharps F#
 	" C DE F G AB c de f g ab ",	// 5 sharps B
@@ -235,7 +235,7 @@ static char *sig[] = {
 // 0123456789012345678901234	
 };
 
-static char *keySigs[] = {
+static const char *keySigs[] = {
 /* 0....:....1....:....2....:....3....:....4....:....5. */
 	"7 sharps: C#    A#m   G#Mix D#Dor E#Phr F#Lyd B#Loc ",
 	"6 sharps: F#    D#m   C#Mix G#Dor A#Phr BLyd  E#Loc ",
@@ -263,6 +263,17 @@ static void abc_add_setloop(ABCHANDLE *h, ABCTRACK *tp, uint32_t tracktime);
 static void abc_add_setjumploop(ABCHANDLE *h, ABCTRACK *tp, uint32_t tracktime, ABCEVENT_JUMPTYPE j);
 static uint32_t abc_pattracktime(ABCHANDLE *h, uint32_t tracktime);
 static int abc_patno(ABCHANDLE *h, uint32_t tracktime);
+
+#ifndef HAVE_SETENV
+static void setenv(const char *name, const char *value, int overwrite)
+{
+	int len = strlen(name)+1+strlen(value)+1;
+	char *str = (char *)alloca(len);
+	sprintf(str, "%s=%s", name, value);
+	putenv(str);
+}
+#endif
+
 
 static int abc_isvalidchar(char c) {
 	return(isalpha(c) || isspace(c) || c == '%' || c == ':');

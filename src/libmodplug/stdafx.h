@@ -10,14 +10,23 @@
 #define _STDAFX_H_
 
 
-#ifdef MSC_VER
+#ifdef _WIN32
 
+#ifdef MSC_VER
 #pragma warning (disable:4201)
 #pragma warning (disable:4514)
+#endif
+
+#define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <windowsx.h>
 #include <mmsystem.h>
 #include <stdio.h>
+#include <malloc.h>
+
+#define srandom(_seed)  srand(_seed)
+#define random()        rand()
+#define sleep(_ms)      Sleep(_ms)
 
 inline void ProcessPlugins(int n) {}
 
@@ -36,6 +45,9 @@ inline void ProcessPlugins(int n) {}
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#ifdef HAVE_MALLOC_H
+#include <malloc.h>
+#endif
 
 typedef int8_t CHAR;
 typedef uint8_t UCHAR;
@@ -99,7 +111,7 @@ inline void ProcessPlugins(int n) {}
 #define TRUE	true
 #endif
 
-#endif // MSC_VER
+#endif // _WIN32
 
 #endif
 

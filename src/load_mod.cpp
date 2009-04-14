@@ -8,7 +8,9 @@
 #include "stdafx.h"
 #include "sndfile.h"
 
+#ifdef _MSC_VER
 //#pragma warning(disable:4244)
+#endif
 
 extern WORD ProTrackerPeriodTable[6*12];
 
@@ -363,7 +365,10 @@ BOOL CSoundFile::ReadMod(const BYTE *lpStream, DWORD dwMemLength)
 
 
 #ifndef MODPLUG_NO_FILESAVE
+
+#ifdef _MSC_VER
 #pragma warning(disable:4100)
+#endif
 
 BOOL CSoundFile::SaveMod(LPCSTR lpszFileName, UINT nPacking)
 //----------------------------------------------------------
@@ -494,5 +499,8 @@ BOOL CSoundFile::SaveMod(LPCSTR lpszFileName, UINT nPacking)
 	return TRUE;
 }
 
+#ifdef _MSC_VER
 #pragma warning(default:4100)
+#endif
+
 #endif // MODPLUG_NO_FILESAVE

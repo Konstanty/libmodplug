@@ -3,7 +3,7 @@ AC_INIT
 AC_PREREQ([2.60])
 AC_CONFIG_SRCDIR([Makefile.am])
 
-AM_INIT_AUTOMAKE(libmodplug, 0.8.5)
+AM_INIT_AUTOMAKE(libmodplug, 0.8.6)
 AC_CONFIG_HEADERS([src/config.h])
 
 dnl Checks for programs.
@@ -17,9 +17,11 @@ AC_PROG_CC
 AC_PROG_CXX
 AC_LANG([C++])
 AC_C_BIGENDIAN     #this will cause problems when cross-compiling...
+AC_LIBTOOL_WIN32_DLL
 AM_PROG_LIBTOOL
 AC_HEADER_STDC
-AC_CHECK_HEADERS([inttypes.h stdint.h])
+AC_CHECK_HEADERS([inttypes.h stdint.h malloc.h])
+AC_CHECK_FUNCS(setenv)
 
 CXXFLAGS="$CXXFLAGS -fno-exceptions -Wall -ffast-math -D_REENTRANT"
 # CXXFLAGS="-fno-exceptions -g -Wall -ffast-math -D_REENTRANT `glib-config --cflags`"

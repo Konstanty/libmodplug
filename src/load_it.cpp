@@ -11,7 +11,7 @@
 #include "sndfile.h"
 #include "it_defs.h"
 
-#ifdef MSC_VER
+#ifdef _MSC_VER
 #pragma warning(disable:4244)
 #endif
 
@@ -592,7 +592,9 @@ BOOL CSoundFile::ReadIT(const BYTE *lpStream, DWORD dwMemLength)
 
 #ifndef MODPLUG_NO_FILESAVE
 //#define SAVEITTIMESTAMP
+#ifdef _MSC_VER
 #pragma warning(disable:4100)
+#endif
 
 BOOL CSoundFile::SaveIT(LPCSTR lpszFileName, UINT nPacking)
 //---------------------------------------------------------
@@ -691,7 +693,7 @@ BOOL CSoundFile::SaveIT(LPCSTR lpszFileName, UINT nPacking)
 		header.msgoffset = dwHdrPos + dwExtra + header.insnum*4 + header.patnum*4 + header.smpnum*4;
 	}
 	// Write file header
-	memcpy(writeheader, header, sizeof(header));
+	memcpy(&writeheader, &header, sizeof(header));
 
 	// Byteswap header information
 	writeheader.id = bswapLE32(writeheader.id);
@@ -743,7 +745,7 @@ BOOL CSoundFile::SaveIT(LPCSTR lpszFileName, UINT nPacking)
 		DWORD d = bswapLE32(0x4d414e50);
 		UINT len= bswapLE32(dwPatNamLen);
 		fwrite(&d, 1, 4, f);
-		write(&len, 1, 4, f);
+		fwrite(&len, 1, 4, f);
 		fwrite(m_lpszPatternNames, 1, dwPatNamLen, f);
 	}
 	// Writing channel Names
@@ -898,8 +900,8 @@ BOOL CSoundFile::SaveIT(LPCSTR lpszFileName, UINT nPacking)
 		if (PatternSize[npat] == 64)
 		{
 			MODCOMMAND *pzc = Patterns[npat];
-			UINT nz = PatternSize[npat] * m_nChannels;
-			for (UINT iz=0; iz<nz; iz++)
+			UINT iz, nz = PatternSize[npat] * m_nChannels;
+			for (iz=0; iz<nz; iz++)
 			{
 				if ((pzc[iz].note) || (pzc[iz].instr)
 				 || (pzc[iz].volcmd) || (pzc[iz].command)) break;
@@ -1170,7 +1172,9 @@ BOOL CSoundFile::SaveIT(LPCSTR lpszFileName, UINT nPacking)
 	return TRUE;
 }
 
+#ifdef _MSC_VER
 //#pragma warning(default:4100)
+#endif
 #endif // MODPLUG_NO_FILESAVE
 
 //////////////////////////////////////////////////////////////////////////////
