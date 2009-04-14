@@ -15,7 +15,7 @@ date = 15-apr-2009 [Konstanty Bialkowski]
 		where: IMixPlugin
 		what: made sure there is a virtual destructor (to avoid
 		warnings)
-->file: src/load_ptmf.cpp
+->file: src/load_ptm.cpp
 		where: mixing routine
 		what: bswap32 was used on a uint16_t [2] array, and when gcc
 		uses -O2 (or greater) optimization, this may not do what is
