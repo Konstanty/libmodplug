@@ -1,5 +1,36 @@
 changes:
-adate = 2-nov-2006 [Alec Berryman/CVE-2006-4192]
+date = 15-apr-2009 [Konstanty Bialkowski]
+->file: src/load_abc.cpp
+		where: TestABC
+		what: made sure obviously binary files do not try to get
+		loaded as ABC
+		where: abc_addchordname
+		what: made sure first argument was const char * (not just char
+		*)
+->file: src/sndfile.cpp
+		where: format conversion routines
+		what: made sure (*a++) = func(*a), is executed properly, by
+		splitting into two lines
+-file: src/libmodplug/sndfile.h
+		where: IMixPlugin
+		what: made sure there is a virtual destructor (to avoid
+		warnings)
+->file: src/load_amf.cpp
+		where: mixing routine
+		what: bswap32 was used on a uint16_t [2] array, and when gcc
+		uses -O2 (or greater) optimization, this may not do what is
+		intended.
+date = 7-apr-2009 [Konstanty Bialkowski/Anthony Ramine]
+-> file: src/load_abc.cpp,load_mid.cpp,load_pat.cpp
+		where: whole file(s)
+		what: removed use of ULONG, and changed to uint32_t
+		where: few functions
+		what: removed uint, and replaced with uint32_t
+date = 7-apr-2009 [Zed Pobre/Debian]
+-> file: src/libmodplug.pc
+		where: file.
+		what: split Libs into Libs.private
+date = 2-nov-2006 [Alec Berryman/CVE-2006-4192]
 -> file: src/sndfile.cpp
 		where: ReadSample
 		what: prevent buffer overflow [as reported in CVE-2006-4192]

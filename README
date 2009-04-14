@@ -1,4 +1,4 @@
-Modplug Plugin for XMMS v2.0 / libmodplug v0.8.4
+Modplug Plugin for XMMS v2.0 / libmodplug v0.8.5
  Based on the ModPlug sound engine by Olivier Lapicque <olivierl@jps.net>
  XMMS plugin by Kenton Varda <temporal@gauge3d.org>
  Maintainer is now Konstanty Bialkowski <konstanty@ieee.org>
@@ -20,8 +20,8 @@ Contents
 ---------------
 1. Requirements
 ---------------
-- XMMS 1.0.0 or higher
 - POSIX OS (Linux or other unix*)
+- XMMS 1.0.0 or higher (only for modplug-xmms plugin).
 
 * This library is only guaranteed to work on Linux.  I have received
   conflicting reports on whether or not it will work on Solaris x86.
@@ -29,6 +29,9 @@ Contents
   "-fpermissive" compiler flag, which I have added.  Others had far
   more trouble.  Note that a recent change to the library should allow
   it to work on PPC and other big-endian systems.
+
+* Under linux there is also modplugplay contributed, which allows command
+ line playing of mod files under Linux.
 
 -----------
 2. Features
@@ -216,7 +219,8 @@ Solution:
  If it sounds wrong there, then send the mod and a bug report to
  Olivier Lapicque <olivierl@jps.net>.  If the mod plays correctly in
  Windows, however, then the bug is my fault.  In that case, e-mail
- me (Kenton Varda) at <temporal@gauge3d.org>.
+ me (Konstanty) <konstanty@ieee.org>. (previously Kenton Varda at 
+ <temporal@gauge3d.org>).
 
 
 Problem:
@@ -224,6 +228,6 @@ Problem:
  feature.
 
 Solution:
- E-mail me (Kenton Varda) at <konstanty@ieee.org>.  I would be
+ E-mail me (Konstanty) at <konstanty@ieee.org>.  I would be
  happy to hear any suggestions or problems you have.
 

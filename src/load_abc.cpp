@@ -264,6 +264,11 @@ static void abc_add_setjumploop(ABCHANDLE *h, ABCTRACK *tp, uint32_t tracktime, 
 static uint32_t abc_pattracktime(ABCHANDLE *h, uint32_t tracktime);
 static int abc_patno(ABCHANDLE *h, uint32_t tracktime);
 
+static int abc_isvalidchar(char c) {
+	return(isalpha(c) || isspace(c) || c == '%' || c == ':');
+}
+
+
 static void abc_message(const char *s1, const char *s2)
 {
 	char txt[256];
@@ -2278,6 +2283,7 @@ BOOL CSoundFile::TestABC(const BYTE *lpStream, DWORD dwMemLength)
 // =====================================================================================
 {
     char id[128];
+    char first = 1; 
     // scan file for first K: line (last in header)
 #ifdef NEWMIKMOD
     _mm_fseek(mmfile,0,SEEK_SET);
@@ -2289,6 +2295,12 @@ BOOL CSoundFile::TestABC(const BYTE *lpStream, DWORD dwMemLength)
     mmfseek(&mmfile,0,SEEK_SET);
 		while(abc_fgets(&mmfile,id,128)) {
 #endif
+		if (first) {
+			if (!abc_isvalidchar(id[0])  || !abc_isvalidchar(id[1])) {
+				return(0); // probably not an ABC.
+			}
+
+		}
 	    if(id[0]=='K' 
 			&& id[1]==':' 
 			&& (isalpha(id[2]) || isspace(id[2])) ) return 1;
@@ -2864,7 +2876,7 @@ static uint32_t abc_tracktime(ABCTRACK *tp)
 	return tracktime;
 }
 
-static void abc_addchordname(char *s, int len, int *notes)
+static void abc_addchordname(const char *s, int len, int *notes)
 // adds chord name and note set to list of known chords
 {
 	int i, j;

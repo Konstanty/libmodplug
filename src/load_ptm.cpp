@@ -114,12 +114,12 @@ BOOL CSoundFile::ReadPTM(const BYTE *lpStream, DWORD dwMemLength)
 		if ((psmp->sampletype & 3) == 1)
 		{
 			UINT smpflg = RS_PCM8D;
-			DWORD samplepos;
+			DWORD samplepos = psmp->fileofs[1] << 16 +
+				psmp->fileofs[0];
 			pins->nLength = bswapLE32(*(LPDWORD)(psmp->length));
 			pins->nLoopStart = bswapLE32(*(LPDWORD)(psmp->loopbeg));
 			pins->nLoopEnd = bswapLE32(*(LPDWORD)(psmp->loopend));
-			samplepos = (bswapLE16(psmp->fileofs[0]) << 16) +
-				bswapLE16(psmp->fileofs[1]); 
+			samplepos = bswapLE32(samplepos);
 			if (psmp->sampletype & 4) pins->uFlags |= CHN_LOOP;
 			if (psmp->sampletype & 8) pins->uFlags |= CHN_PINGPONGLOOP;
 			if (psmp->sampletype & 16)
