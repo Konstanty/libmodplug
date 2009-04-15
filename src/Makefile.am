@@ -1,4 +1,4 @@
-INCLUDES = -Ilibmodplug
+AM_CPPFLAGS = -I$(top_srcdir)/src/libmodplug
 lib_LTLIBRARIES = libmodplug.la
 libmodplug_la_LIBADD = -lm
 libmodplug_la_SOURCES = tables.cpp         \
