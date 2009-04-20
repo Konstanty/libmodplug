@@ -2316,6 +2316,7 @@ BOOL CSoundFile::TestABC(const BYTE *lpStream, DWORD dwMemLength)
 			&& id[1]==':' 
 			&& (isalpha(id[2]) || isspace(id[2])) ) return 1;
 		}
+		printf("I am testing a supposed... ABC file\n");
     return 0;
 }
 
