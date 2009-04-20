@@ -1,4 +1,22 @@
 changes:
+date = 20-apr-2009 [Konstanty Bialkowski
+->file: src/load_meb.cpp
+		where: LoadMED
+		what: fixed integer boundary condition checking code (fixing
+		exploit)
+->file: src/load_abc.cpp
+		where: TestABC
+		what: Made ABC detection code more robust
+->file: src/load_abc.cpp, sndfile.cpp, snd_fx.cpp
+		where: various
+		what: change constant variables to explicitly use const
+		definition
+		(Thanks to Leandro Nini/Diego "Flameeyes" Pettenò)
+->file: src/table.cpp -> src/table.h
+		where: rename of file
+		what: moved tables to seperate file 
+		(Thanks to Leandro Nini/Diego "Flameeyes" Pettenò)
+
 date = 15-apr-2009 [Konstanty Bialkowski]
 ->file: src/load_abc.cpp
 		where: TestABC
