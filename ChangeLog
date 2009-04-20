@@ -4,6 +4,9 @@ date = 20-apr-2009 [Konstanty Bialkowski
 		where: LoadMED
 		what: fixed integer boundary condition checking code (fixing
 		exploit)
+		Details of exploit (and creator of test.s3m for exploit)
+		http://www.securityfocus.com/bid/30801/info
+		http://www.15897.com/blog/post/QianQianJingTing-mod-buffer-overflow-POC.html
 ->file: src/load_abc.cpp
 		where: TestABC
 		what: Made ABC detection code more robust
