@@ -4,10 +4,22 @@
  * Authors: Rani Assaf <rani@magic.metawire.com>,
  *          Olivier Lapicque <olivierl@jps.net>,
  *          Adam Goode       <adam@evdebs.org> (endian and char fixes for PPC)
-*/
+ */
 
 #ifndef _STDAFX_H_
 #define _STDAFX_H_
+
+/* Autoconf detection of stdint/inttypes */
+#if defined(HAVE_CONFIG_H) && !defined(CONFIG_H_INCLUDED)
+# include "config.h"
+# define CONFIG_H_INCLUDED 1
+#endif
+#ifdef HAVE_INTTYPES_H
+# include <inttypes.h>
+#endif
+#ifdef HAVE_STDINT_H
+# include <stdint.h>
+#endif
 
 
 #ifdef _WIN32
@@ -32,16 +44,6 @@ inline void ProcessPlugins(int n) {}
 
 #else
 
-#if defined(HAVE_CONFIG_H) && !defined(CONFIG_H_INCLUDED)
-# include "config.h"
-# define CONFIG_H_INCLUDED 1
-#endif
-#ifdef HAVE_INTTYPES_H
-# include <inttypes.h>
-#endif
-#ifdef HAVE_STDINT_H
-# include <stdint.h>
-#endif
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
