@@ -1463,7 +1463,7 @@ static void	abc_add_chord(const char *p, ABCHANDLE *h, ABCTRACK *tp, uint32_t tr
 	char d[6];
 	char s[8];
 	int i;
-	char *n = " C D EF G A Bc d ef g a b";
+	const char *n = " C D EF G A Bc d ef g a b";
 	d[0] = d[1] =	d[2] = d[3] = d[4] = d[5] = 0;
 	d[cmdflag] = 1;
 	d[command] = cmdchord;
@@ -2888,7 +2888,7 @@ static uint32_t abc_tracktime(ABCTRACK *tp)
 	return tracktime;
 }
 
-static void abc_addchordname(const char *s, int len, int *notes)
+static void abc_addchordname(const char *s, int len, const int *notes)
 // adds chord name and note set to list of known chords
 {
 	int i, j;
@@ -2921,33 +2921,33 @@ static void abc_addchordname(const char *s, int len, int *notes)
 static void abc_setup_chordnames()
 // set up named guitar chords
 {
-	static int list_Maj[3] = { 0, 4, 7 };
-	static int list_m[3] = { 0, 3, 7 };
-	static int list_7[4] = { 0, 4, 7, 10 };
-	static int list_m7[4] = { 0, 3, 7, 10 };
-	static int list_maj7[4] = { 0, 4, 7, 11 };
-	static int list_M7[4] = { 0, 4, 7, 11 };
-	static int list_6[4] = { 0, 4, 7, 9 };
-	static int list_m6[4] = { 0, 3, 7, 9 };
-	static int list_aug[3] = { 0, 4, 8 };
-	static int list_plus[3] = { 0, 4, 8 };
-	static int list_aug7[4] = { 0, 4, 8, 10 };
-	static int list_dim[3] = { 0, 3, 6 };
-	static int list_dim7[4] = { 0, 3, 6, 9 };
-	static int list_9[5] = { 0, 4, 7, 10, 2 };
-	static int list_m9[5] = { 0, 3, 7, 10, 2 };
-	static int list_maj9[5] = { 0, 4, 7, 11, 2 };
-	static int list_M9[5] = { 0, 4, 7, 11, 2 };
-	static int list_11[6] = { 0, 4, 7, 10, 2, 5 };
-	static int list_dim9[5] = { 0, 4, 7, 10, 13 };
-	static int list_sus[3] = { 0, 5, 7 };
-	static int list_sus9[3] = { 0, 2, 7 };
-	static int list_7sus[4] = { 0, 5, 7, 10 };
-	static int list_7sus4[4] = { 0, 5, 7, 10 };
-	static int list_7sus9[4] = { 0, 2, 7, 10 };
-	static int list_9sus4[5] = { 0, 5, 10, 14, 19 };
-	static int list_5[2] = { 0, 7 };
-	static int list_13[6] = { 0, 4, 7, 10, 16, 21 };
+	static const int list_Maj[3] = { 0, 4, 7 };
+	static const int list_m[3] = { 0, 3, 7 };
+	static const int list_7[4] = { 0, 4, 7, 10 };
+	static const int list_m7[4] = { 0, 3, 7, 10 };
+	static const int list_maj7[4] = { 0, 4, 7, 11 };
+	static const int list_M7[4] = { 0, 4, 7, 11 };
+	static const int list_6[4] = { 0, 4, 7, 9 };
+	static const int list_m6[4] = { 0, 3, 7, 9 };
+	static const int list_aug[3] = { 0, 4, 8 };
+	static const int list_plus[3] = { 0, 4, 8 };
+	static const int list_aug7[4] = { 0, 4, 8, 10 };
+	static const int list_dim[3] = { 0, 3, 6 };
+	static const int list_dim7[4] = { 0, 3, 6, 9 };
+	static const int list_9[5] = { 0, 4, 7, 10, 2 };
+	static const int list_m9[5] = { 0, 3, 7, 10, 2 };
+	static const int list_maj9[5] = { 0, 4, 7, 11, 2 };
+	static const int list_M9[5] = { 0, 4, 7, 11, 2 };
+	static const int list_11[6] = { 0, 4, 7, 10, 2, 5 };
+	static const int list_dim9[5] = { 0, 4, 7, 10, 13 };
+	static const int list_sus[3] = { 0, 5, 7 };
+	static const int list_sus9[3] = { 0, 2, 7 };
+	static const int list_7sus[4] = { 0, 5, 7, 10 };
+	static const int list_7sus4[4] = { 0, 5, 7, 10 };
+	static const int list_7sus9[4] = { 0, 2, 7, 10 };
+	static const int list_9sus4[5] = { 0, 5, 10, 14, 19 };
+	static const int list_5[2] = { 0, 7 };
+	static const int list_13[6] = { 0, 4, 7, 10, 16, 21 };
 	
 	chordsnamed = 0;
 	abc_addchordname("", 3, list_Maj);
@@ -3488,7 +3488,7 @@ static void abc_MIDI_beat(ABCHANDLE *h, const char *p)
 // and sixth notes in the bar, we could use the following 
 //
 // %%MIDI beatstring fppmpmp
-static void abc_MIDI_beatstring(ABCHANDLE *h, char *p)
+static void abc_MIDI_beatstring(ABCHANDLE *h, const char *p)
 {
 	while( isspace(*p) ) p++;
 	if( h->beatstring ) _mm_free(h->allochandle, h->beatstring);

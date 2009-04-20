@@ -1,7 +1,7 @@
 AM_CPPFLAGS = -I$(top_srcdir)/src/libmodplug
 lib_LTLIBRARIES = libmodplug.la
 libmodplug_la_LIBADD = -lm
-libmodplug_la_SOURCES = tables.cpp         \
+libmodplug_la_SOURCES = tables.h         \
                         sndmix.cpp         \
                         sndfile.cpp        \
                         snd_fx.cpp         \

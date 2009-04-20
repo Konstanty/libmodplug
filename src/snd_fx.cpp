@@ -6,27 +6,11 @@
 
 #include "stdafx.h"
 #include "sndfile.h"
+#include "tables.h"
 
 #ifdef MSC_VER
 #pragma warning(disable:4244)
 #endif
-
-// Tables defined in tables.cpp
-extern BYTE ImpulseTrackerPortaVolCmd[16];
-extern WORD S3MFineTuneTable[16];
-extern WORD ProTrackerPeriodTable[6*12];
-extern WORD ProTrackerTunedPeriods[15*12];
-extern WORD FreqS3MTable[];
-extern WORD XMPeriodTable[96+8];
-extern UINT XMLinearTable[768];
-extern DWORD FineLinearSlideUpTable[16];
-extern DWORD FineLinearSlideDownTable[16];
-extern DWORD LinearSlideUpTable[256];
-extern DWORD LinearSlideDownTable[256];
-extern signed char retrigTable1[16];
-extern signed char retrigTable2[16];
-extern short int ModRandomTable[64];
-
 
 ////////////////////////////////////////////////////////////
 // Length

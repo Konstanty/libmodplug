@@ -6,6 +6,7 @@
 
 #include <libmodplug/stdafx.h>
 #include <libmodplug/sndfile.h>
+#include "tables.h"
 
 #ifdef MODPLUG_TRACKER
 #define ENABLE_STEREOVU
@@ -52,15 +53,6 @@ extern VOID MPPASMCALL X86_InterleaveFrontRear(int *pFrontBuf, int *pRearBuf, DW
 extern VOID MPPASMCALL X86_StereoFill(int *pBuffer, UINT nSamples, LPLONG lpROfs, LPLONG lpLOfs);
 extern VOID MPPASMCALL X86_MonoFromStereo(int *pMixBuf, UINT nSamples);
 
-extern short int ModSinusTable[64];
-extern short int ModRampDownTable[64];
-extern short int ModSquareTable[64];
-extern short int ModRandomTable[64];
-extern DWORD LinearSlideUpTable[256];
-extern DWORD LinearSlideDownTable[256];
-extern DWORD FineLinearSlideUpTable[16];
-extern DWORD FineLinearSlideDownTable[16];
-extern signed char ft2VibratoTable[256];	// -64 .. +64
 extern int MixSoundBuffer[MIXBUFFERSIZE*4];
 extern int MixRearBuffer[MIXBUFFERSIZE*2];
 UINT gnReverbSend;
