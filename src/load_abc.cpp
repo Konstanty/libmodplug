@@ -276,7 +276,7 @@ static void setenv(const char *name, const char *value, int overwrite)
 
 
 static int abc_isvalidchar(char c) {
-	return(isalpha(c) || isspace(c) || c == '%' || c == ':');
+	return(isalpha(c) || isdigit(c) || isspace(c) || c == '%' || c == ':');
 }
 
 
@@ -2294,7 +2294,6 @@ BOOL CSoundFile::TestABC(const BYTE *lpStream, DWORD dwMemLength)
 // =====================================================================================
 {
     char id[128];
-    char first = 1; 
     // scan file for first K: line (last in header)
 #ifdef NEWMIKMOD
     _mm_fseek(mmfile,0,SEEK_SET);
@@ -2306,17 +2305,15 @@ BOOL CSoundFile::TestABC(const BYTE *lpStream, DWORD dwMemLength)
     mmfseek(&mmfile,0,SEEK_SET);
 		while(abc_fgets(&mmfile,id,128)) {
 #endif
-		if (first) {
-			if (!abc_isvalidchar(id[0])  || !abc_isvalidchar(id[1])) {
-				return(0); // probably not an ABC.
-			}
+		if (id[0] == 0) continue; // blank line.
 
+		if (!abc_isvalidchar(id[0])  || !abc_isvalidchar(id[1])) {
+			return(0); // probably not an ABC.
 		}
 	    if(id[0]=='K' 
 			&& id[1]==':' 
 			&& (isalpha(id[2]) || isspace(id[2])) ) return 1;
 		}
-		printf("I am testing a supposed... ABC file\n");
     return 0;
 }
 
