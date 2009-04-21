@@ -1,5 +1,21 @@
 changes:
-date = 20-apr-2009 [Konstanty Bialkowski
+date = 21-apr-2009 [Konstanty Bialkowski/OpenMPT/Novell (Stanislav Brabec)]
+->file: src/load_amf.cpp
+		where: whole file
+		what: added const declarations to read only variables
+		what: fixed delete function
+->file: src/fastmix.cpp
+		where: X86_Convert32To24
+		what: conversion to 24bit was incorrect
+->file: src/load_mdl.cpp
+		where: init of m_lpszSongComments
+		what: fixed delete function to be array version (Reported by
+		David Binderman / Stanislav Brabec)
+->file: src/load_pat.cpp
+		where: memcpy to .reserved
+		what: changed fixed valid of 36 to sizeof(reserved)
+		(Reported by Manfred Tremmel / Stanislav Brabec)
+date = 20-apr-2009 [Konstanty Bialkowski]
 ->file: src/load_meb.cpp
 		where: LoadMED
 		what: fixed integer boundary condition checking code (fixing
