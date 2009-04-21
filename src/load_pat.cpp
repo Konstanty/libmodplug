@@ -1144,7 +1144,7 @@ static void PATinst(INSTRUMENTHEADER *d, int smp, int gm)
 		hw.envelope_offset[3] = 0;
 		hw.envelope_offset[4] = 0;
 		hw.envelope_offset[5] = 0;
-		strncpy(hw.reserved, midipat[gm-1], 36);
+		strncpy(hw.reserved, midipat[gm-1], sizeof(hw.reserved));
 		pat_setpat_inst(&hw, d, smp);
 	}
 	if( hw.reserved[0] )
