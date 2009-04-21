@@ -242,7 +242,7 @@ BOOL CSoundFile::ReadMDL(const BYTE *lpStream, DWORD dwMemLength)
 		case 0x454D:
 			if (blocklen)
 			{
-				if (m_lpszSongComments) delete m_lpszSongComments;
+				if (m_lpszSongComments) delete [] m_lpszSongComments;
 				m_lpszSongComments = new char[blocklen];
 				if (m_lpszSongComments)
 				{
