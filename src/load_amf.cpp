@@ -163,10 +163,10 @@ VOID AMF_Unpack(MODCOMMAND *pPat, const BYTE *pTrack, UINT nRows, UINT nChannels
 
 
 
-BOOL CSoundFile::ReadAMF(LPCBYTE lpStream, DWORD dwMemLength)
+BOOL CSoundFile::ReadAMF(LPCBYTE lpStream, const DWORD dwMemLength)
 //-----------------------------------------------------------
 {
-	AMFFILEHEADER *pfh = (AMFFILEHEADER *)lpStream;
+	const AMFFILEHEADER *pfh = (AMFFILEHEADER *)lpStream;
 	DWORD dwMemPos;
 	
 	if ((!lpStream) || (dwMemLength < 2048)) return FALSE;
@@ -251,6 +251,7 @@ BOOL CSoundFile::ReadAMF(LPCBYTE lpStream, DWORD dwMemLength)
 			MODINSTRUMENT *psmp = &Ins[iData+1];
 			if (psmp->nLength)
 			{
+				if (dwMemPos > dwMemLength) return FALSE;
 				dwMemPos += ReadSample(psmp, RS_PCM8S, (LPCSTR)(lpStream+dwMemPos), dwMemLength);
 			}
 		}
@@ -401,7 +402,7 @@ BOOL CSoundFile::ReadAMF(LPCBYTE lpStream, DWORD dwMemLength)
 			}
 		}
 	}
-	delete pTrackData;
+	delete[] pTrackData;
 	// Read Sample Data
 	for (UINT iSeek=1; iSeek<=maxsampleseekpos; iSeek++)
 	{
