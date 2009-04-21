@@ -1887,13 +1887,13 @@ DWORD MPPASMCALL X86_Convert32To24(LPVOID lp16, int *pBuffer, DWORD lSampleCount
 			vumax = n;
 		p = n >> (8-MIXING_ATTENUATION) ; // 24-bit signed
 #ifdef WORDS_BIGENDIAN
-		buf[i*3+0] = p & 0xFF0000 ;
-		buf[i*3+1] = p & 0x00FF00 ;
+		buf[i*3+0] = p & 0xFF0000 >> 24;
+		buf[i*3+1] = p & 0x00FF00 >> 16 ;
 		buf[i*3+2] = p & 0x0000FF ;
 #else
 		buf[i*3+0] = p & 0x0000FF ;
-		buf[i*3+1] = p & 0x00FF00 ;
-		buf[i*3+2] = p & 0xFF0000 ;
+		buf[i*3+1] = p & 0x00FF00 >> 16;
+		buf[i*3+2] = p & 0xFF0000 >> 24;
 #endif
 	}
 	*lpMin = vumin;
