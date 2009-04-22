@@ -57,7 +57,7 @@ VOID AMF_Unpack(MODCOMMAND *pPat, const BYTE *pTrack, UINT nRows, UINT nChannels
 {
 	UINT lastinstr = 0;
 	UINT nTrkSize = bswapLE16(*(USHORT *)pTrack);
-	nTrkSize += (UINT)pTrack[2] <<16;
+	nTrkSize += (UINT)pTrack[2] << 16;
 	pTrack += 3;
 	while (nTrkSize--)
 	{
@@ -372,7 +372,6 @@ BOOL CSoundFile::ReadAMF(LPCBYTE lpStream, const DWORD dwMemLength)
 	{
 		UINT nTrkSize = bswapLE16(*(USHORT *)(lpStream+dwMemPos));
 		nTrkSize += (UINT)lpStream[dwMemPos+2] << 16;
-
 		if (dwMemPos + nTrkSize * 3 + 3 <= dwMemLength)
 		{
 			pTrackData[iTrack] = (BYTE *)(lpStream + dwMemPos);
@@ -416,3 +415,4 @@ BOOL CSoundFile::ReadAMF(LPCBYTE lpStream, const DWORD dwMemLength)
 	}
 	return TRUE;
 }
+

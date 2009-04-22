@@ -98,7 +98,7 @@ DWORD CSoundFile::GetLength(BOOL bAdjust, BOOL bTotal)
 			UINT param = p->param;
 			UINT note = p->note;
 			if (p->instr) { instr[nChn] = p->instr; notes[nChn] = 0; vols[nChn] = 0xFF; }
-			if ((note) && (note <= 120)) notes[nChn] = note;
+			if ((note) && (note <= NOTE_MAX)) notes[nChn] = note;
 			if (p->volcmd == VOLCMD_VOLUME)	{ vols[nChn] = p->vol; }
 			if (command) switch (command)
 			{
@@ -190,7 +190,7 @@ DWORD CSoundFile::GetLength(BOOL bAdjust, BOOL bTotal)
 				break;
 			// Global Volume
 			case CMD_GLOBALVOLUME:
-				if (m_nType != MOD_TYPE_IT) param <<= 1;
+				if (!(m_nType & (MOD_TYPE_IT)) param <<= 1;
 				if (param > 128) param = 128;
 				nGlbVol = param << 1;
 				break;
@@ -304,13 +304,15 @@ void CSoundFile::InstrumentChange(MODCHANNEL *pChn, UINT instr, BOOL bPorta, BOO
 		bInstrumentChanged = TRUE;
 		pChn->pHeader = penv;
 	} else
-	// Special XM hack
-	if ((bPorta) && (m_nType & (MOD_TYPE_XM|MOD_TYPE_MT2)) && (penv)
-	 && (pChn->pInstrument) && (psmp != pChn->pInstrument))
 	{
-		// FT2 doesn't change the sample in this case,
-		// but still uses the sample info from the old one (bug?)
-		return;
+		// Special XM hack
+		if ((bPorta) && (m_nType & (MOD_TYPE_XM|MOD_TYPE_MT2)) && (penv)
+		&& (pChn->pInstrument) && (psmp != pChn->pInstrument))
+		{
+			// FT2 doesn't change the sample in this case,
+			// but still uses the sample info from the old one (bug?)
+			return;
+		}
 	}
 	// Instrument adjust
 	pChn->nNewIns = 0;
@@ -593,7 +595,7 @@ void CSoundFile::CheckNNA(UINT nChn, UINT instr, int note, BOOL bForceCut)
 //------------------------------------------------------------------------
 {
 	MODCHANNEL *pChn = &Chn[nChn];
-	INSTRUMENTHEADER *penv = pChn->pHeader, *pHeader;
+	INSTRUMENTHEADER *penv = pChn->pHeader, *pHeader = 0;
 	signed char *pSample;
 	if (note > 0x80) note = 0;
 	if (note < 1) return;
@@ -725,8 +727,9 @@ void CSoundFile::CheckNNA(UINT nChn, UINT instr, int note, BOOL bForceCut)
 BOOL CSoundFile::ProcessEffects()
 //-------------------------------
 {
-	int nBreakRow = -1, nPosJump = -1, nPatLoopRow = -1;
 	MODCHANNEL *pChn = Chn;
+	int nBreakRow = -1, nPosJump = -1, nPatLoopRow = -1;
+
 	for (UINT nChn=0; nChn<m_nChannels; nChn++, pChn++)
 	{
 		UINT instr = pChn->nRowInstr;
@@ -734,7 +737,7 @@ BOOL CSoundFile::ProcessEffects()
 		UINT vol = pChn->nRowVolume;
 		UINT cmd = pChn->nRowCommand;
 		UINT param = pChn->nRowParam;
-		BOOL bPorta = ((cmd != CMD_TONEPORTAMENTO) && (cmd != CMD_TONEPORTAVOL) && (volcmd != VOLCMD_TONEPORTAMENTO)) ? FALSE : TRUE;
+		bool bPorta = ((cmd != CMD_TONEPORTAMENTO) && (cmd != CMD_TONEPORTAVOL) && (volcmd != VOLCMD_TONEPORTAMENTO)) ? FALSE : TRUE;
 		UINT nStartTick = 0;
 
 		pChn->dwFlags &= ~CHN_FASTVOLRAMP;
@@ -1177,11 +1180,9 @@ BOOL CSoundFile::ProcessEffects()
 		// Midi Controller
 		case CMD_MIDI:
 			if (m_nTickCount) break;
-			if (param < 0x80)
-			{
+			if (param < 0x80){
 				ProcessMidiMacro(nChn, &m_MidiCfg.szMidiSFXExt[pChn->nActiveMacro << 5], param);
-			} else
-			{
+			} else {
 				ProcessMidiMacro(nChn, &m_MidiCfg.szMidiZXXExt[(param & 0x7F) << 5], 0);
 			}
 			break;
@@ -1267,7 +1268,7 @@ void CSoundFile::PortamentoUp(MODCHANNEL *pChn, UINT param)
 		return;
 	}
 	// Regular Slide
-	if (!(m_dwSongFlags & SONG_FIRSTTICK))
+	if (!(m_dwSongFlags & SONG_FIRSTTICK) || (m_nMusicSpeed == 1))  //rewbs.PortaA01fix
 	{
 		DoFreqSlide(pChn, -(int)(param * 4));
 	}
@@ -1293,7 +1294,9 @@ void CSoundFile::PortamentoDown(MODCHANNEL *pChn, UINT param)
 		}
 		return;
 	}
-	if (!(m_dwSongFlags & SONG_FIRSTTICK)) DoFreqSlide(pChn, (int)(param << 2));
+	if (!(m_dwSongFlags & SONG_FIRSTTICK) || (m_nMusicSpeed == 1)) { //rewbs.PortaA01fix
+		DoFreqSlide(pChn, (int)(param << 2));
+	}
 }
 
 
@@ -1811,7 +1814,7 @@ void CSoundFile::ProcessMidiMacro(UINT nChn, LPCSTR pszMidiMacro, UINT param)
 	MODCHANNEL *pChn = &Chn[nChn];
 	DWORD dwMacro = (*((LPDWORD)pszMidiMacro)) & 0x7F5F7F5F;
 	// Not Internal Device ?
-	if (dwMacro != 0x30463046)
+	if (dwMacro != 0x30463046 && dwMacro != 0x31463046)
 	{
 		UINT pos = 0, nNib = 0, nBytes = 0;
 		DWORD dwMidiCode = 0, dwByteCode = 0;
@@ -1950,7 +1953,7 @@ void CSoundFile::RetrigNote(UINT nChn, UINT param)
 		}
 		UINT nNote = pChn->nNewNote;
 		LONG nOldPeriod = pChn->nPeriod;
-		if ((nNote) && (nNote <= 120) && (pChn->nLength)) CheckNNA(nChn, 0, nNote, TRUE);
+		if ((nNote) && (nNote <= NOTE_MAX) && (pChn->nLength)) CheckNNA(nChn, 0, nNote, TRUE);
 		BOOL bResetEnv = FALSE;
 		if (m_nType & (MOD_TYPE_XM|MOD_TYPE_MT2))
 		{
@@ -2272,12 +2275,12 @@ UINT CSoundFile::GetNoteFromPeriod(UINT period) const
 		return 6*12+36;
 	} else
 	{
-		for (UINT i=1; i<120; i++)
+		for (UINT i=1; i<NOTE_MAX; i++)
 		{
 			LONG n = GetPeriodFromNote(i, 0, 0);
 			if ((n > 0) && (n <= (LONG)period)) return i;
 		}
-		return 120;
+		return NOTE_MAX;
 	}
 }
 
@@ -2306,7 +2309,7 @@ UINT CSoundFile::GetPeriodFromNote(UINT note, int nFineTune, UINT nC4Speed) cons
 		note -= 13;
 		if (m_dwSongFlags & SONG_LINEARSLIDES)
 		{
-			LONG l = ((120 - note) << 6) - (nFineTune / 2);
+			LONG l = ((NOTE_MAX - note) << 6) - (nFineTune / 2);
 			if (l < 1) l = 1;
 			return (UINT)l;
 		} else

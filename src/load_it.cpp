@@ -45,7 +45,7 @@ BOOL CSoundFile::ITInstrToMPT(const void *p, INSTRUMENTHEADER *penv, UINT trkver
 		memcpy(penv->filename, pis->filename, 12);
 		penv->nFadeOut = bswapLE16(pis->fadeout) << 6;
 		penv->nGlobalVol = 64;
-		for (UINT j=0; j<120; j++)
+		for (UINT j=0; j<NOTE_MAX; j++)
 		{
 			UINT note = pis->keyboard[j*2];
 			UINT ins = pis->keyboard[j*2+1];
@@ -84,7 +84,7 @@ BOOL CSoundFile::ITInstrToMPT(const void *p, INSTRUMENTHEADER *penv, UINT trkver
 		penv->nFadeOut = bswapLE16(pis->fadeout) << 5;
 		penv->nGlobalVol = pis->gbv >> 1;
 		if (penv->nGlobalVol > 64) penv->nGlobalVol = 64;
-		for (UINT j=0; j<120; j++)
+		for (UINT j=0; j<NOTE_MAX; j++)
 		{
 			UINT note = pis->keyboard[j*2];
 			UINT ins = pis->keyboard[j*2+1];
@@ -799,7 +799,7 @@ BOOL CSoundFile::SaveIT(LPCSTR lpszFileName, UINT nPacking)
 			iti.ifc = penv->nIFC;
 			iti.ifr = penv->nIFR;
 			iti.nos = 0;
-			for (UINT i=0; i<120; i++) if (penv->Keyboard[i] < MAX_SAMPLES)
+			for (UINT i=0; i<NOTE_MAX; i++) if (penv->Keyboard[i] < MAX_SAMPLES)
 			{
 				UINT smp = penv->Keyboard[i];
 				if ((smp) && (!smpcount[smp]))
@@ -857,7 +857,7 @@ BOOL CSoundFile::SaveIT(LPCSTR lpszFileName, UINT nPacking)
 		} else
 		// Save Empty Instrument
 		{
-			for (UINT i=0; i<120; i++) iti.keyboard[i*2] = i;
+			for (UINT i=0; i<NOTE_MAX; i++) iti.keyboard[i*2] = i;
 			iti.ppc = 5*12;
 			iti.gbv = 128;
 			iti.dfp = 0x20;

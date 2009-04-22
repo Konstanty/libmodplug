@@ -165,7 +165,7 @@ BOOL CSoundFile::ReadDBM(const BYTE *lpStream, DWORD dwMemLength)
 				else
 					penv->nPan = 128;
 				penv->nPPC = 5*12;
-				for (UINT i=0; i<120; i++)
+				for (UINT i=0; i<NOTE_MAX; i++)
 				{
 					penv->Keyboard[i] = nsmp;
 					penv->NoteMap[i] = i+1;
