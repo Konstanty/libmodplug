@@ -7,12 +7,11 @@
 
 #include "stdafx.h"
 #include "sndfile.h"
+#include "tables.h"
 
 #ifdef _MSC_VER
 //#pragma warning(disable:4244)
 #endif
-
-extern WORD S3MFineTuneTable[16];
 
 //////////////////////////////////////////////////////
 // ScreamTracker S3M file support

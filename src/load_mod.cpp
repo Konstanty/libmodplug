@@ -7,12 +7,11 @@
 
 #include "stdafx.h"
 #include "sndfile.h"
+#include "tables.h"
 
 #ifdef _MSC_VER
 //#pragma warning(disable:4244)
 #endif
-
-extern WORD ProTrackerPeriodTable[6*12];
 
 //////////////////////////////////////////////////////////
 // ProTracker / NoiseTracker MOD/NST file support
