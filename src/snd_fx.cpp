@@ -190,7 +190,7 @@ DWORD CSoundFile::GetLength(BOOL bAdjust, BOOL bTotal)
 				break;
 			// Global Volume
 			case CMD_GLOBALVOLUME:
-				if (!(m_nType & (MOD_TYPE_IT)) param <<= 1;
+				if (!(m_nType & (MOD_TYPE_IT))) param <<= 1;
 				if (param > 128) param = 128;
 				nGlbVol = param << 1;
 				break;
