@@ -26,6 +26,14 @@ AC_CHECK_FUNCS(setenv)
 CXXFLAGS="$CXXFLAGS -fno-exceptions -Wall -ffast-math -D_REENTRANT"
 # CXXFLAGS="-fno-exceptions -g -Wall -ffast-math -D_REENTRANT `glib-config --cflags`"
 
+AC_CANONICAL_HOST
+case "$host" in
+	*mingw32* )
+		MINGW32=yes
+		;;
+esac
+AM_CONDITIONAL([MINGW32], [test "x$MINGW32" = "xyes"])
+
 case ${target_os} in
 	*sun* | *solaris*)
 		CXXFLAGS="$CXXFLAGS -fpermissive"
