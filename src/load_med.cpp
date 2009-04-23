@@ -709,6 +709,7 @@ BOOL CSoundFile::ReadMed(const BYTE *lpStream, DWORD dwMemLength)
 		{
 			if (songnamelen > 31) songnamelen = 31;
 			memcpy(m_szNames[0], lpStream+songname, songnamelen);
+			m_szNames[0][31] = '\0';
 		}
 		// Sample Names
 		DWORD smpinfoex = bswapBE32(pmex->iinfo);
@@ -718,14 +719,18 @@ BOOL CSoundFile::ReadMed(const BYTE *lpStream, DWORD dwMemLength)
 			UINT ientries = bswapBE16(pmex->i_ext_entries);
 			UINT ientrysz = bswapBE16(pmex->i_ext_entrsz);
 
-			if ((iinfoptr) && (ientrysz < 256) && (iinfoptr + ientries*ientrysz < dwMemLength))
+			if ((iinfoptr) && (ientrysz < 256) && 
+			 (ientries*ientrysz < dwMemLength) && 
+			 (iinfoptr < dwMemLength - (ientries*ientrysz)))
 			{
 				LPCSTR psznames = (LPCSTR)(lpStream + iinfoptr);
 				UINT maxnamelen = ientrysz;
+				// copy a max of 32 bytes.
 				if (maxnamelen > 32) maxnamelen = 32;
 				for (UINT i=0; i<ientries; i++) if (i < m_nSamples)
 				{
 					lstrcpyn(m_szNames[i+1], psznames + i*ientrysz, maxnamelen);
+					m_szNames[i+1][31] = '\0';
 				}
 			}
 		}
@@ -756,6 +761,7 @@ BOOL CSoundFile::ReadMed(const BYTE *lpStream, DWORD dwMemLength)
 					if ((trknameofs) && (trknameofs + trknamelen < dwMemLength))
 					{
 						lstrcpyn(ChnSettings[i].szName, (LPCSTR)(lpStream+trknameofs), MAX_CHANNELNAME);
+						ChnSettings[i].szName[MAX_CHANNELNAME-1] = '\0';
 					}
 				}
 			}
