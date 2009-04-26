@@ -107,7 +107,7 @@ VOID AMF_Unpack(MODCOMMAND *pPat, const BYTE *pTrack, UINT nRows, UINT nChannels
 						else param = (param&0x0F)<<4;
 						break;
 			// 0x04: Porta Up/Down
-			case 0x04:	if (param & 0x80) { command = CMD_PORTAMENTOUP; param = -(signed char)param; }
+			case 0x04:	if (param & 0x80) { command = CMD_PORTAMENTOUP; param = (-(signed char)param)&0x7F; }
 						else { command = CMD_PORTAMENTODOWN; } break;
 			// 0x06: Tone Portamento
 			case 0x06:	command = CMD_TONEPORTAMENTO; break;
