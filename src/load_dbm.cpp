@@ -97,7 +97,7 @@ typedef struct DBMSAMPLE
 BOOL CSoundFile::ReadDBM(const BYTE *lpStream, DWORD dwMemLength)
 //---------------------------------------------------------------
 {
-	DBMFILEHEADER *pfh = (DBMFILEHEADER *)lpStream;
+	const DBMFILEHEADER *pfh = (DBMFILEHEADER *)lpStream;
 	DWORD dwMemPos;
 	UINT nOrders, nSamples, nInstruments, nPatterns;
 	

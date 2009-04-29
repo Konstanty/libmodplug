@@ -310,7 +310,7 @@ typedef struct AMS2SAMPLE
 BOOL CSoundFile::ReadAMS2(LPCBYTE lpStream, DWORD dwMemLength)
 //------------------------------------------------------------
 {
-	AMS2FILEHEADER *pfh = (AMS2FILEHEADER *)lpStream;
+	const AMS2FILEHEADER *pfh = (AMS2FILEHEADER *)lpStream;
 	AMS2SONGHEADER *psh;
 	DWORD dwMemPos;
 	BYTE smpmap[16];
@@ -623,6 +623,6 @@ void AMSUnpack(const char *psrc, UINT inputlen, char *pdest, UINT dmax, char pac
 			pdest[i] = old;
 		}
 	}
-	delete amstmp;
+	delete[] amstmp;
 }
 
