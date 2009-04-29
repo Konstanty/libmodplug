@@ -898,7 +898,7 @@ BOOL CSoundFile::ReadMed(const BYTE *lpStream, DWORD dwMemLength)
 					{
 						int rnote = note + playtransp;
 						if (rnote < 1) rnote = 1;
-						if (rnote > 120) rnote = 120;
+						if (rnote > NOTE_MAX) rnote = NOTE_MAX;
 						p->note = (BYTE)rnote;
 					}
 					p->instr = s[1];
