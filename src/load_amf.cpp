@@ -196,6 +196,7 @@ BOOL CSoundFile::ReadAMF(LPCBYTE lpStream, const DWORD dwMemLength)
 		{
 			MODINSTRUMENT *psmp = &Ins[iSmp+1];
 			memcpy(m_szNames[iSmp+1], lpStream+dwMemPos, 22);
+			m_szNames[iSmp+1][21] = '\0';
 			psmp->nFineTune = MOD2XMFineTune(lpStream[dwMemPos+22]);
 			psmp->nVolume = lpStream[dwMemPos+23];
 			psmp->nGlobalVol = 64;
@@ -252,7 +253,7 @@ BOOL CSoundFile::ReadAMF(LPCBYTE lpStream, const DWORD dwMemLength)
 			if (psmp->nLength)
 			{
 				if (dwMemPos > dwMemLength) return FALSE;
-				dwMemPos += ReadSample(psmp, RS_PCM8S, (LPCSTR)(lpStream+dwMemPos), dwMemLength);
+				dwMemPos += ReadSample(psmp, RS_PCM8S, (LPCSTR)(lpStream+dwMemPos), dwMemLength-dwMemPos);
 			}
 		}
 		return TRUE;
@@ -269,6 +270,7 @@ BOOL CSoundFile::ReadAMF(LPCBYTE lpStream, const DWORD dwMemLength)
 	 || (pfh->numchannels < 4) || (pfh->numchannels > 32))
 		return FALSE;
 	memcpy(m_szNames[0], pfh->title, 32);
+	m_szNames[0][31] = '\0';
 	dwMemPos = sizeof(AMFFILEHEADER);
 	m_nType = MOD_TYPE_AMF;
 	m_nChannels = pfh->numchannels;
@@ -331,7 +333,9 @@ BOOL CSoundFile::ReadAMF(LPCBYTE lpStream, const DWORD dwMemLength)
 
 		dwMemPos += sizeof(AMFSAMPLE);
 		memcpy(m_szNames[iIns+1], psh->samplename, 32);
+		m_szNames[iIns+1][31] = '\0';
 		memcpy(pins->name, psh->filename, 13);
+		pins->name[12] = '\0';
 		pins->nLength = bswapLE32(psh->length);
 		pins->nC4Speed = bswapLE16(psh->c2spd);
 		pins->nGlobalVol = 64;
