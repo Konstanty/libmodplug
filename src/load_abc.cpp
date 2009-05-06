@@ -268,9 +268,10 @@ static int abc_patno(ABCHANDLE *h, uint32_t tracktime);
 static void setenv(const char *name, const char *value, int overwrite)
 {
 	int len = strlen(name)+1+strlen(value)+1;
-	char *str = (char *)alloca(len);
+	char *str = (char *)malloc(len);
 	sprintf(str, "%s=%s", name, value);
 	putenv(str);
+	free(str);
 }
 #endif
 

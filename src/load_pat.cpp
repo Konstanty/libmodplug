@@ -158,6 +158,13 @@ typedef struct _PATHANDLE
 	int samples;
 } PATHANDLE;
 
+#ifndef HAVE_SINF
+static inline float sinf(float x) {
+/* default to double version */
+	return((float)sin((double)x));
+}
+#endif
+
 // local prototypes
 static int pat_getopt(const char *s, const char *o, int dflt);
 
