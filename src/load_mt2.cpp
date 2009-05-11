@@ -124,7 +124,7 @@ typedef struct _MT2GROUP
 #pragma pack()
 
 
-static VOID ConvertMT2Command(CSoundFile *that, MODCOMMAND *m, MT2COMMAND *p)
+static VOID ConvertMT2Command(CSoundFile *that, MODCOMMAND *m, const MT2COMMAND *p)
 //---------------------------------------------------------------------------
 {
 	// Note
@@ -183,12 +183,12 @@ static VOID ConvertMT2Command(CSoundFile *that, MODCOMMAND *m, MT2COMMAND *p)
 BOOL CSoundFile::ReadMT2(LPCBYTE lpStream, DWORD dwMemLength)
 //-----------------------------------------------------------
 {
-	MT2FILEHEADER *pfh = (MT2FILEHEADER *)lpStream;
+	const MT2FILEHEADER *pfh = (MT2FILEHEADER *)lpStream;
 	DWORD dwMemPos, dwDrumDataPos, dwExtraDataPos;
 	UINT nDrumDataLen, nExtraDataLen;
-	MT2DRUMSDATA *pdd;
-	MT2INSTRUMENT *InstrMap[255];
-	MT2SAMPLE *SampleMap[256];
+	const MT2DRUMSDATA *pdd;
+	const MT2INSTRUMENT *InstrMap[255];
+	const MT2SAMPLE *SampleMap[256];
 
 	if ((!lpStream) || (dwMemLength < sizeof(MT2FILEHEADER))
 	 || (pfh->dwMT20 != 0x3032544D)
@@ -271,7 +271,7 @@ BOOL CSoundFile::ReadMT2(LPCBYTE lpStream, DWORD dwMemLength)
 	dwMemPos = dwExtraDataPos + nExtraDataLen;
 	for (UINT iPat=0; iPat<pfh->wPatterns; iPat++) if (dwMemPos < dwMemLength-6)
 	{
-		MT2PATTERN *pmp = (MT2PATTERN *)(lpStream+dwMemPos);
+		const MT2PATTERN *pmp = (MT2PATTERN *)(lpStream+dwMemPos);
 		UINT wDataLen = (pmp->wDataLen + 1) & ~1;
 		dwMemPos += 6;
 		if (dwMemPos + wDataLen > dwMemLength) break;
@@ -331,7 +331,7 @@ BOOL CSoundFile::ReadMT2(LPCBYTE lpStream, DWORD dwMemLength)
 				}
 			} else
 			{
-				MT2COMMAND *p = (MT2COMMAND *)(lpStream+dwMemPos);
+				const MT2COMMAND *p = (MT2COMMAND *)(lpStream+dwMemPos);
 				UINT n = 0;
 				while ((len > sizeof(MT2COMMAND)) && (n < m_nChannels*nLines))
 				{
@@ -374,7 +374,7 @@ BOOL CSoundFile::ReadMT2(LPCBYTE lpStream, DWORD dwMemLength)
 		for (UINT iAuto=0; iAuto<nAutoCount; iAuto++)
 		{
 			if (dwMemPos+12 >= dwMemLength) return TRUE;
-			MT2AUTOMATION *pma = (MT2AUTOMATION *)(lpStream+dwMemPos);
+			const MT2AUTOMATION *pma = (MT2AUTOMATION *)(lpStream+dwMemPos);
 			dwMemPos += (pfh->wVersion <= 0x201) ? 4 : 8;
 			for (UINT iEnv=0; iEnv<14; iEnv++)
 			{
@@ -398,7 +398,7 @@ BOOL CSoundFile::ReadMT2(LPCBYTE lpStream, DWORD dwMemLength)
 	for (UINT iIns=1; iIns<=255; iIns++)
 	{
 		if (dwMemPos+36 > dwMemLength) return TRUE;
-		MT2INSTRUMENT *pmi = (MT2INSTRUMENT *)(lpStream+dwMemPos);
+		const MT2INSTRUMENT *pmi = (MT2INSTRUMENT *)(lpStream+dwMemPos);
 		INSTRUMENTHEADER *penv = NULL;
 		if (iIns <= m_nInstruments)
 		{
@@ -419,7 +419,7 @@ BOOL CSoundFile::ReadMT2(LPCBYTE lpStream, DWORD dwMemLength)
 	#ifdef MT2DEBUG
 		if (iIns <= pfh->wInstruments) Log("  Instrument #%d at offset %04X: %d bytes\n", iIns, dwMemPos, pmi->dwDataLen);
 	#endif
-		if (((LONG)pmi->dwDataLen > 0) && (dwMemPos + pmi->dwDataLen + 40 <= dwMemLength))
+		if (((LONG)pmi->dwDataLen > 0) && (dwMemPos <= dwMemLength - 40) && (pmi->dwDataLen <= dwMemLength - (dwMemPos + 40)))
 		{
 			InstrMap[iIns-1] = pmi;
 			if (penv)
@@ -459,7 +459,7 @@ BOOL CSoundFile::ReadMT2(LPCBYTE lpStream, DWORD dwMemLength)
 				// Load envelopes
 				for (UINT iEnv=0; iEnv<4; iEnv++) if (pehdr[iEnv])
 				{
-					MT2ENVELOPE *pme = pehdr[iEnv];
+					const MT2ENVELOPE *pme = pehdr[iEnv];
 					WORD *pEnvPoints = NULL;
 					BYTE *pEnvData = NULL;
 				#ifdef MT2DEBUG
@@ -532,7 +532,7 @@ BOOL CSoundFile::ReadMT2(LPCBYTE lpStream, DWORD dwMemLength)
 	for (UINT iSmp=1; iSmp<=256; iSmp++)
 	{
 		if (dwMemPos+36 > dwMemLength) return TRUE;
-		MT2SAMPLE *pms = (MT2SAMPLE *)(lpStream+dwMemPos);
+		const MT2SAMPLE *pms = (MT2SAMPLE *)(lpStream+dwMemPos);
 	#ifdef MT2DEBUG
 		if (iSmp <= m_nSamples) Log("  Sample #%d at offset %04X: %d bytes\n", iSmp, dwMemPos, pms->dwDataLen);
 	#endif
@@ -573,14 +573,14 @@ BOOL CSoundFile::ReadMT2(LPCBYTE lpStream, DWORD dwMemLength)
 	for (UINT iMap=0; iMap<255; iMap++) if (InstrMap[iMap])
 	{
 		if (dwMemPos+8 > dwMemLength) return TRUE;
-		MT2INSTRUMENT *pmi = InstrMap[iMap];
+		const MT2INSTRUMENT *pmi = InstrMap[iMap];
 		INSTRUMENTHEADER *penv = NULL;
 		if (iMap<m_nInstruments) penv = Headers[iMap+1];
 		for (UINT iGrp=0; iGrp<pmi->wSamples; iGrp++)
 		{
 			if (penv)
 			{
-				MT2GROUP *pmg = (MT2GROUP *)(lpStream+dwMemPos);
+				const MT2GROUP *pmg = (MT2GROUP *)(lpStream+dwMemPos);
 				for (UINT i=0; i<96; i++)
 				{
 					if (pmi->GroupsMapping[i] == iGrp)
@@ -605,7 +605,7 @@ BOOL CSoundFile::ReadMT2(LPCBYTE lpStream, DWORD dwMemLength)
 #endif
 	for (UINT iData=0; iData<256; iData++) if ((iData < m_nSamples) && (SampleMap[iData]))
 	{
-		MT2SAMPLE *pms = SampleMap[iData];
+		const MT2SAMPLE *pms = SampleMap[iData];
 		MODINSTRUMENT *psmp = &Ins[iData+1];
 		if (!(pms->nFlags & 5))
 		{

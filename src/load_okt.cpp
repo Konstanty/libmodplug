@@ -41,7 +41,7 @@ typedef struct OKTSAMPLE
 BOOL CSoundFile::ReadOKT(const BYTE *lpStream, DWORD dwMemLength)
 //---------------------------------------------------------------
 {
-	OKTFILEHEADER *pfh = (OKTFILEHEADER *)lpStream;
+	const OKTFILEHEADER *pfh = (OKTFILEHEADER *)lpStream;
 	DWORD dwMemPos = sizeof(OKTFILEHEADER);
 	UINT nsamples = 0, npatterns = 0, norders = 0;
 

@@ -181,8 +181,8 @@ BOOL CSoundFile::ReadMDL(const BYTE *lpStream, DWORD dwMemLength)
 {
 	DWORD dwMemPos, dwPos, blocklen, dwTrackPos;
 	const MDLSONGHEADER *pmsh = (const MDLSONGHEADER *)lpStream;
-	MDLINFOBLOCK *pmib;
-	MDLPATTERNDATA *pmpd;
+	const MDLINFOBLOCK *pmib;
+	const MDLPATTERNDATA *pmpd;
 	UINT i,j, norders = 0, npatterns = 0, ntracks = 0;
 	UINT ninstruments = 0, nsamples = 0;
 	WORD block;
@@ -395,7 +395,7 @@ BOOL CSoundFile::ReadMDL(const BYTE *lpStream, DWORD dwMemLength)
 				{
 					DWORD dwLen = *((DWORD *)(lpStream+dwPos));
 					dwPos += 4;
-					if ((dwPos+dwLen <= dwMemLength) && (dwLen > 4))
+					if ((dwLen < dwMemLength) && (dwLen <= dwMemLength - dwPos) && (dwLen > 4))
 					{
 						flags = (pins->uFlags & CHN_16BIT) ? RS_MDL16 : RS_MDL8;
 						ReadSample(pins, flags, (LPSTR)(lpStream+dwPos), dwLen);

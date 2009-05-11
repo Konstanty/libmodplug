@@ -517,7 +517,7 @@ BOOL CSoundFile::ReadMed(const BYTE *lpStream, DWORD dwMemLength)
 	dwBlockArr = bswapBE32(pmmh->blockarr);
 	dwSmplArr = bswapBE32(pmmh->smplarr);
 	dwExpData = bswapBE32(pmmh->expdata);
-	if ((dwExpData) && (dwExpData+sizeof(MMD0EXP) < dwMemLength))
+	if ((dwExpData) && (dwExpData < dwMemLength - sizeof(MMD0EXP)))
 		pmex = (MMD0EXP *)(lpStream+dwExpData);
 	else
 		pmex = NULL;
@@ -655,13 +655,13 @@ BOOL CSoundFile::ReadMed(const BYTE *lpStream, DWORD dwMemLength)
 			}
 			UINT pseq = 0;
 			
-			if ((playseqtable) && (playseqtable + nplayseq*4 < dwMemLength))
+			if ((playseqtable) && (playseqtable < dwMemLength) && (nplayseq*4 < dwMemLength - playseqtable))
 			{
 				pseq = bswapBE32(((LPDWORD)(lpStream+playseqtable))[nplayseq]);
 			}
 			if ((pseq) && (pseq < dwMemLength - sizeof(MMD2PLAYSEQ)))
 			{
-				MMD2PLAYSEQ *pmps = (MMD2PLAYSEQ *)(lpStream + pseq);
+				const MMD2PLAYSEQ *pmps = (MMD2PLAYSEQ *)(lpStream + pseq);
 				if (!m_szNames[0][0]) memcpy(m_szNames[0], pmps->name, 31);
 				UINT n = bswapBE16(pmps->length);
 				if (pseq+n <= dwMemLength)
@@ -736,7 +736,7 @@ BOOL CSoundFile::ReadMed(const BYTE *lpStream, DWORD dwMemLength)
 		}
 		// Track Names
 		DWORD trackinfo_ofs = bswapBE32(pmex->trackinfo_ofs);
-		if ((trackinfo_ofs) && (trackinfo_ofs + m_nChannels * 4 < dwMemLength))
+		if ((trackinfo_ofs) && (trackinfo_ofs < dwMemLength) && (m_nChannels * 4 < dwMemLength - trackinfo_ofs))
 		{
 			DWORD *ptrktags = (DWORD *)(lpStream + trackinfo_ofs);
 			for (UINT i=0; i<m_nChannels; i++)
@@ -843,12 +843,12 @@ BOOL CSoundFile::ReadMed(const BYTE *lpStream, DWORD dwMemLength)
 			}
 		} else
 		{
-			MMD1BLOCK *pmb = (MMD1BLOCK *)(lpStream + dwPos);
+			const MMD1BLOCK *pmb = (MMD1BLOCK *)(lpStream + dwPos);
 		#ifdef MED_LOG
 			Log("MMD1BLOCK:   lines=%2d, tracks=%2d, offset=0x%04X\n",
 				bswapBE16(pmb->lines), bswapBE16(pmb->numtracks), bswapBE32(pmb->info));
 		#endif
-			MMD1BLOCKINFO *pbi = NULL;
+			const MMD1BLOCKINFO *pbi = NULL;
 			BYTE *pcmdext = NULL;
 			lines = (pmb->lines >> 8) + 1;
 			tracks = pmb->numtracks >> 8;
@@ -867,7 +867,7 @@ BOOL CSoundFile::ReadMed(const BYTE *lpStream, DWORD dwMemLength)
 				{
 					DWORD nameofs = bswapBE32(pbi->blockname);
 					UINT namelen = bswapBE32(pbi->blocknamelen);
-					if ((nameofs < dwMemLength) && (nameofs+namelen < dwMemLength))
+					if ((nameofs < dwMemLength) && (namelen < dwMemLength + nameofs))
 					{
 						SetPatternName(iBlk, (LPCSTR)(lpStream+nameofs));
 					}

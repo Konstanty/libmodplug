@@ -38,7 +38,7 @@ typedef struct tagSTMSAMPLE
 // Raw STM header struct:
 typedef struct tagSTMHEADER
 {
-        char songname[20];      // changed from CHAR
+	char songname[20];      // changed from CHAR
 	char trackername[8];	// !SCREAM! for ST 2.xx  // changed from CHAR
 	CHAR unused;			// 0x1A
 	CHAR filetype;			// 1=song, 2=module (only 2 is supported, of course) :)
@@ -59,7 +59,7 @@ typedef struct tagSTMHEADER
 BOOL CSoundFile::ReadSTM(const BYTE *lpStream, DWORD dwMemLength)
 //---------------------------------------------------------------
 {
-	STMHEADER *phdr = (STMHEADER *)lpStream;
+	const STMHEADER *phdr = (STMHEADER *)lpStream;
 	DWORD dwMemPos = 0;
 	
 	if ((!lpStream) || (dwMemLength < sizeof(STMHEADER))) return FALSE;
@@ -91,7 +91,7 @@ BOOL CSoundFile::ReadSTM(const BYTE *lpStream, DWORD dwMemLength)
 	for (UINT nIns=0; nIns<31; nIns++)
 	{
 		MODINSTRUMENT *pIns = &Ins[nIns+1];
-		STMSAMPLE *pStm = &phdr->sample[nIns];  // STM sample data
+		const STMSAMPLE *pStm = &phdr->sample[nIns];  // STM sample data
 		memcpy(pIns->name, pStm->filename, 13);
 		memcpy(m_szNames[nIns+1], pStm->filename, 12);
 		pIns->nC4Speed = bswapLE16(pStm->c2spd);
@@ -113,7 +113,7 @@ BOOL CSoundFile::ReadSTM(const BYTE *lpStream, DWORD dwMemLength)
 		PatternSize[nPat] = 64;
 		if ((Patterns[nPat] = AllocatePattern(64, m_nChannels)) == NULL) return TRUE;
 		MODCOMMAND *m = Patterns[nPat];
-		STMNOTE *p = (STMNOTE *)(lpStream + dwMemPos);
+		const STMNOTE *p = (const STMNOTE *)(lpStream + dwMemPos);
 		for (UINT n=0; n<64*4; n++, p++, m++)
 		{
 			UINT note,ins,vol,cmd;
