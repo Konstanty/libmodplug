@@ -329,7 +329,7 @@ BOOL CSoundFile::ReadAMF(LPCBYTE lpStream, const DWORD dwMemLength)
 	for (UINT iIns=0; iIns<m_nSamples; iIns++)
 	{
 		MODINSTRUMENT *pins = &Ins[iIns+1];
-		AMFSAMPLE *psh = (AMFSAMPLE *)(lpStream + dwMemPos);
+		const AMFSAMPLE *psh = (AMFSAMPLE *)(lpStream + dwMemPos);
 
 		dwMemPos += sizeof(AMFSAMPLE);
 		memcpy(m_szNames[iIns+1], psh->samplename, 32);
@@ -372,7 +372,7 @@ BOOL CSoundFile::ReadAMF(LPCBYTE lpStream, const DWORD dwMemLength)
 	// Store tracks positions
 	BYTE **pTrackData = new BYTE *[realtrackcnt];
 	memset(pTrackData, 0, sizeof(pTrackData));
-	for (UINT iTrack=0; iTrack<realtrackcnt; iTrack++) if (dwMemPos + 3 <= dwMemLength)
+	for (UINT iTrack=0; iTrack<realtrackcnt; iTrack++) if (dwMemPos <= dwMemLength - 3)
 	{
 		UINT nTrkSize = bswapLE16(*(USHORT *)(lpStream+dwMemPos));
 		nTrkSize += (UINT)lpStream[dwMemPos+2] << 16;
