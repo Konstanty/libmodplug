@@ -1970,7 +1970,7 @@ DWORD MPPASMCALL X86_Convert32To32(LPVOID lp16, int *pBuffer, DWORD lSampleCount
 {
 	UINT i ;
 	int vumin = *lpMin, vumax = *lpMax;
-	signed long *p = (signed long *)lp16;
+	int32_t *p = (int32_t *)lp16;
 	
 	for ( i=0; i<lSampleCount; i++)
 	{
