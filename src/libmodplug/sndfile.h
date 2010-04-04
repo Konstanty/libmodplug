@@ -678,6 +678,7 @@ public:
 public:
 	// Mixer Config
 	static BOOL InitPlayer(BOOL bReset=FALSE);
+	static BOOL SetMixConfig(UINT nStereoSeparation, UINT nMaxMixChannels);
 	static BOOL SetWaveConfig(UINT nRate,UINT nBits,UINT nChannels,BOOL bMMX=FALSE);
 	static BOOL SetResamplingMode(UINT nMode); // SRCMODE_XXXX
 	static BOOL IsStereo() { return (gnChannels > 1) ? TRUE : FALSE; }

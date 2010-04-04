@@ -80,6 +80,9 @@ typedef struct _ModPlug_Settings
 	int mBits;           /* Bits per sample - 8, 16, or 32 */
 	int mFrequency;      /* Sampling rate - 11025, 22050, or 44100 */
 	int mResamplingMode; /* One of MODPLUG_RESAMPLE_*, above */
+
+	int mStereoSeparation; /* Stereo separation, 1 - 256 */
+	int mMaxMixChannels; /* Maximum number of mixing channels (polyphony), 32 - 256 */
 	
 	int mReverbDepth;    /* Reverb level 0(quiet)-100(loud)      */
 	int mReverbDelay;    /* Reverb delay in ms, usually 40-200ms */

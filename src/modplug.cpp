@@ -30,6 +30,8 @@ namespace ModPlug
 		0,
 		0,
 		0,
+		0,
+		0,
 		0
 	};
 
@@ -60,8 +62,10 @@ namespace ModPlug
 		if(updateBasicConfig)
 		{
 			CSoundFile::SetWaveConfig(gSettings.mFrequency,
-			                          gSettings.mBits,
+                                                  gSettings.mBits,
 			                          gSettings.mChannels);
+			CSoundFile::SetMixConfig(gSettings.mStereoSeparation,
+                                                 gSettings.mMaxMixChannels);
 
 			gSampleSize = gSettings.mBits / 8 * gSettings.mChannels;
 		}
