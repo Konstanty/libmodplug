@@ -119,7 +119,7 @@ rneg:
 	}
 	return result;
 #else
-	return ((unsigned long long) a * (unsigned long long) b ) / c;
+	return ((uint64_t) a * (uint64_t) b ) / c;
 #endif
 }
 
@@ -170,7 +170,7 @@ rneg:
 	}
 	return result;
 #else
-	return ((unsigned long long) a * (unsigned long long) b + (c >> 1)) / c;
+	return ((uint64_t) a * (uint64_t) b + (c >> 1)) / c;
 #endif
 }
 

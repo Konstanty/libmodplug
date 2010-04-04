@@ -2337,7 +2337,7 @@ UINT MPPASMCALL X86_AGC(int *pBuffer, UINT nSamples, UINT nAGC)
 
 	while(nSamples)
 	{
-		x = ((long long int)(*pBuffer) * nAGC) >> AGC_PRECISION;
+		x = ((int64_t)(*pBuffer) * nAGC) >> AGC_PRECISION;
 
 		if((x < MIXING_LIMITMIN) || (x > MIXING_LIMITMAX))
 		nAGC--;
