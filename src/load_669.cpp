@@ -35,6 +35,15 @@ typedef struct tagSAMPLE669
 	BYTE loopend[4];
 } SAMPLE669;
 
+DWORD lengthArrayToDWORD(const BYTE length[4]) {
+	DWORD len = (length[3] << 24) +
+		(length[2] << 16) +
+		(length[1] << 8) +
+		(length[0]);
+
+	return(len);
+}
+
 
 BOOL CSoundFile::Read669(const BYTE *lpStream, DWORD dwMemLength)
 //---------------------------------------------------------------
@@ -53,7 +62,7 @@ BOOL CSoundFile::Read669(const BYTE *lpStream, DWORD dwMemLength)
 	if (dontfuckwithme > dwMemLength) return FALSE;
 	for (UINT ichk=0; ichk<pfh->samples; ichk++)
 	{
-		DWORD len = bswapLE32(*((DWORD *)(&psmp[ichk].length)));
+		DWORD len = lengthArrayToDWORD(psmp[ichk].length);
 		dontfuckwithme += len;
 	}
 	if (dontfuckwithme > dwMemLength) return FALSE;
@@ -69,9 +78,9 @@ BOOL CSoundFile::Read669(const BYTE *lpStream, DWORD dwMemLength)
 	m_nSamples = pfh->samples;
 	for (UINT nins=1; nins<=m_nSamples; nins++, psmp++)
 	{
-		DWORD len = bswapLE32(*((DWORD *)(&psmp->length)));
-		DWORD loopstart = bswapLE32(*((DWORD *)(&psmp->loopstart)));
-		DWORD loopend = bswapLE32(*((DWORD *)(&psmp->loopend)));
+		DWORD len = lengthArrayToDWORD(psmp->length);
+		DWORD loopstart = lengthArrayToDWORD(psmp->loopstart);
+		DWORD loopend = lengthArrayToDWORD(psmp->loopend);
 		if (len > MAX_SAMPLE_LENGTH) len = MAX_SAMPLE_LENGTH;
 		if ((loopend > len) && (!loopstart)) loopend = 0;
 		if (loopend > len) loopend = len;
