@@ -35,6 +35,12 @@ typedef struct _PSMCHUNK
 	DWORD listid;
 } PSMCHUNK;
 
+void swap_PSMCHUNK(PSMCHUNK* p){
+	p->id = bswapLE32(p->id);
+	p->len = bswapLE32(p->len);
+	p->listid = bswapLE32(p->listid);
+}
+
 typedef struct _PSMSONGHDR
 {
 	CHAR songname[8];	// "MAINSONG"
@@ -51,6 +57,12 @@ typedef struct _PSMPATTERN
 	WORD reserved1;
 	BYTE data[4];
 } PSMPATTERN;
+
+void swap_PSMPATTERN(PSMPATTERN* p){
+	p->size = bswapLE32(p->size);
+	p->name = bswapLE32(p->name);
+	p->rows = bswapLE16(p->rows);
+}
 
 typedef struct _PSMSAMPLE
 {
@@ -72,6 +84,14 @@ typedef struct _PSMSAMPLE
 	BYTE reserved6[19];
 } PSMSAMPLE;
 
+void swap_PSMSAMPLE(PSMSAMPLE* p){
+	p->smpid = bswapLE32(p->smpid);
+	p->length = bswapLE32(p->length);
+	p->loopstart = bswapLE32(p->loopstart);
+	p->loopend = bswapLE32(p->loopend);
+	p->samplerate = bswapLE32(p->samplerate);
+}
+
 #pragma pack()
 
 
@@ -84,7 +104,10 @@ BOOL CSoundFile::ReadPSM(LPCBYTE lpStream, DWORD dwMemLength)
 	DWORD patptrs[MAX_PATTERNS];
 	BYTE samplemap[MAX_SAMPLES];
 	UINT nPatterns;
-
+	
+	// Swap chunk
+	swap_PSMCHUNK(pfh);
+	
 	// Chunk0: "PSM ",filesize,"FILE"
 	if (dwMemLength < 256) return FALSE;
 	if (pfh->id == PSM_ID_OLD)
@@ -109,6 +132,7 @@ BOOL CSoundFile::ReadPSM(LPCBYTE lpStream, DWORD dwMemLength)
 	while (dwMemPos+8 < dwMemLength)
 	{
 		PSMCHUNK *pchunk = (PSMCHUNK *)(lpStream+dwMemPos);
+		swap_PSMCHUNK(pchunk);
 		if ((pchunk->len >= dwMemLength - 8) || (dwMemPos + pchunk->len + 8 > dwMemLength)) break;
 		dwMemPos += 8;
 		PUCHAR pdata = (PUCHAR)(lpStream+dwMemPos);
@@ -142,6 +166,7 @@ BOOL CSoundFile::ReadPSM(LPCBYTE lpStream, DWORD dwMemLength)
 				m_nSamples++;
 				MODINSTRUMENT *pins = &Ins[m_nSamples];
 				PSMSAMPLE *psmp = (PSMSAMPLE *)pdata;
+				swap_PSMSAMPLE(psmp);
 				smpnames[m_nSamples] = psmp->smpid;
 				memcpy(m_szNames[m_nSamples], psmp->samplename, 31);
 				m_szNames[m_nSamples][31] = 0;
@@ -193,6 +218,7 @@ BOOL CSoundFile::ReadPSM(LPCBYTE lpStream, DWORD dwMemLength)
 		while (dwMemPos + 8 < dwSongEnd)
 		{
 			PSMCHUNK *pchunk = (PSMCHUNK *)(lpStream+dwMemPos);
+			swap_PSMCHUNK(pchunk);
 			dwMemPos += 8;
 			if ((pchunk->len > dwSongEnd) || (dwMemPos + pchunk->len > dwSongEnd)) break;
 			PUCHAR pdata = (PUCHAR)(lpStream+dwMemPos);
@@ -251,6 +277,7 @@ BOOL CSoundFile::ReadPSM(LPCBYTE lpStream, DWORD dwMemLength)
 	for (UINT nPat=0; nPat<nPatterns; nPat++)
 	{
 		PSMPATTERN *pPsmPat = (PSMPATTERN *)(lpStream+patptrs[nPat]+8);
+		swap_PSMPATTERN(pPsmPat);
 		ULONG len = *(DWORD *)(lpStream+patptrs[nPat]+4) - 12;
 		UINT nRows = pPsmPat->rows;
 		if (len > pPsmPat->size) len = pPsmPat->size;
