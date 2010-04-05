@@ -485,6 +485,7 @@ BOOL CSoundFile::SetMixConfig(UINT nStereoSeparation, UINT nMaxMixChannels)
 {
 	m_nMaxMixChannels = nMaxMixChannels;
 	m_nStereoSeparation = nStereoSeparation;
+	return TRUE;
 }
 
 
