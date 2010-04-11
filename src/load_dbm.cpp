@@ -102,9 +102,9 @@ BOOL CSoundFile::ReadDBM(const BYTE *lpStream, DWORD dwMemLength)
 	UINT nOrders, nSamples, nInstruments, nPatterns;
 	
 	if ((!lpStream) || (dwMemLength <= sizeof(DBMFILEHEADER)) || (!pfh->channels)
-	 || (pfh->dbm_id != DBM_FILE_MAGIC) || (!pfh->songs) || (pfh->song_id != DBM_ID_SONG)
-	 || (pfh->name_id != DBM_ID_NAME) || (pfh->name_len != DBM_NAMELEN)
-	 || (pfh->info_id != DBM_ID_INFO) || (pfh->info_len != DBM_INFOLEN)) return FALSE;
+	 || (pfh->dbm_id != bswapLE32(DBM_FILE_MAGIC)) || (!pfh->songs) || (pfh->song_id != bswapLE32(DBM_ID_SONG))
+	 || (pfh->name_id != bswapLE32(DBM_ID_NAME)) || (pfh->name_len != bswapLE32(DBM_NAMELEN))
+	 || (pfh->info_id != bswapLE32(DBM_ID_INFO)) || (pfh->info_len != bswapLE32(DBM_INFOLEN))) return FALSE;
 	dwMemPos = sizeof(DBMFILEHEADER);
 	nOrders = bswapBE16(pfh->orders);
 	if (dwMemPos + 2 * nOrders + 8*3 >= dwMemLength) return FALSE;
@@ -134,7 +134,7 @@ BOOL CSoundFile::ReadDBM(const BYTE *lpStream, DWORD dwMemLength)
 		if ((dwMemPos + chunk_size > dwMemLength) || (chunk_size > dwMemLength)) break;
 		dwMemPos += chunk_size;
 		// Instruments
-		if (chunk_id == DBM_ID_INST)
+		if (chunk_id == bswapLE32(DBM_ID_INST))
 		{
 			if (nInstruments >= MAX_INSTRUMENTS) nInstruments = MAX_INSTRUMENTS-1;
 			for (UINT iIns=0; iIns<nInstruments; iIns++)
@@ -195,7 +195,7 @@ BOOL CSoundFile::ReadDBM(const BYTE *lpStream, DWORD dwMemLength)
 			}
 		} else
 		// Volume Envelopes
-		if (chunk_id == DBM_ID_VENV)
+		if (chunk_id == bswapLE32(DBM_ID_VENV))
 		{
 			UINT nEnvelopes = lpStream[chunk_pos+1];
 			
@@ -230,7 +230,7 @@ BOOL CSoundFile::ReadDBM(const BYTE *lpStream, DWORD dwMemLength)
 			}
 		} else
 		// Packed Pattern Data
-		if (chunk_id == DBM_ID_PATT)
+		if (chunk_id == bswapLE32(DBM_ID_PATT))
 		{
 			if (nPatterns > MAX_PATTERNS) nPatterns = MAX_PATTERNS;
 			for (UINT iPat=0; iPat<nPatterns; iPat++)
@@ -330,7 +330,7 @@ BOOL CSoundFile::ReadDBM(const BYTE *lpStream, DWORD dwMemLength)
 			}
 		} else
 		// Reading Sample Data
-		if (chunk_id == DBM_ID_SMPL)
+		if (chunk_id == bswapLE32(DBM_ID_SMPL))
 		{
 			if (nSamples >= MAX_SAMPLES) nSamples = MAX_SAMPLES-1;
 			m_nSamples = nSamples;
