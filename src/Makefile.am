@@ -4,6 +4,7 @@ if MINGW32
   AM_LDFLAGS = -no-undefined
 endif
 lib_LTLIBRARIES = libmodplug.la
+libmodplug_la_LDFLAGS = -version-info $(MODPLUG_LIBRARY_VERSION)
 libmodplug_la_LIBADD = -lm
 libmodplug_la_SOURCES = tables.h         \
                         sndmix.cpp         \
