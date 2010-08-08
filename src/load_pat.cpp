@@ -33,7 +33,9 @@
 #include <string.h>
 #include <math.h>
 #include <ctype.h>
+#ifndef _WIN32
 #include <unistd.h> // for sleep
+#endif
 
 #ifdef NEWMIKMOD
 #include "mikmod.h"

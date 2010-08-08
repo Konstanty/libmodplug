@@ -29,7 +29,9 @@
 #include <string.h>
 #include <math.h>
 #include <ctype.h>
+#ifndef _WIN32
 #include <unistd.h> // for sleep
+#endif // _WIN32
 
 #ifdef NEWMIKMOD
 #include "mikmod.h"
@@ -393,15 +395,15 @@ static void abc_dumptracks(ABCHANDLE *h, const char *p)
 #define _mm_fopen(name,mode)		fopen(name,mode)
 #define _mm_fgets(f,buf,sz)		fgets(buf,sz,f)
 #define _mm_fseek(f,pos,whence)		fseek(f,pos,whence)
-#define _mm_ftell(f)								ftell(f)
+#define _mm_ftell(f)			ftell(f)
 #define _mm_read_UBYTES(buf,sz,f)	fread(buf,sz,1,f)
 #define _mm_read_SBYTES(buf,sz,f)	fread(buf,sz,1,f)
-#define _mm_feof(f)									feof(f)
-#define _mm_fclose(f)								fclose(f)
+#define _mm_feof(f)			feof(f)
+#define _mm_fclose(f)			fclose(f)
 #define DupStr(h,buf,sz)		strdup(buf)
 #define _mm_calloc(h,n,sz)		calloc(n,sz)
 #define _mm_recalloc(h,buf,sz,elsz)	realloc(buf,sz)
-#define _mm_free(h,p)								free(p)
+#define _mm_free(h,p)			free(p)
 
 typedef struct {
 	char *mm;
@@ -2364,7 +2366,7 @@ static ABCHANDLE *ABC_Init(void)
 			}
 		}
 		else {
-			srandom(time(0));	// initialize random generator with seed
+			srandom((uint32_t)time(0));	// initialize random generator with seed
 			retval->pickrandom = 1+(int)(10000.0*random()/(RAND_MAX+1.0));
 			// can handle pickin' from songbooks with 10.000 songs
 #ifdef NEWMIKMOD
