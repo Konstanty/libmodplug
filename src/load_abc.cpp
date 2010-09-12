@@ -391,7 +391,11 @@ static void abc_dumptracks(ABCHANDLE *h, const char *p)
 
 #else
 
-#define MMSTREAM										FILE
+#if defined(WIN32) && defined(_mm_free)
+#undef _mm_free
+#endif
+
+#define MMSTREAM			FILE
 #define _mm_fopen(name,mode)		fopen(name,mode)
 #define _mm_fgets(f,buf,sz)		fgets(buf,sz,f)
 #define _mm_fseek(f,pos,whence)		fseek(f,pos,whence)

@@ -129,7 +129,7 @@ CzCUBICSPLINE::CzCUBICSPLINE( )
 			if( lut[_LIdx+1]>lut[_LMax] ) _LMax = _LIdx+1;
 			if( lut[_LIdx+2]>lut[_LMax] ) _LMax = _LIdx+2;
 			if( lut[_LIdx+3]>lut[_LMax] ) _LMax = _LIdx+3;
-			lut[_LMax] += (SPLINE_QUANTSCALE-_LSum);
+			lut[_LMax] += ((signed short)SPLINE_QUANTSCALE-_LSum);
 		}
 #endif
 	}
