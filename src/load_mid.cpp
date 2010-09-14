@@ -114,6 +114,10 @@ typedef struct _MIDTRACK
 
 #else
 
+#if defined(WIN32) && defined(_mm_free)
+#undef _mm_free
+#endif
+
 #define MMSTREAM										FILE
 #define _mm_fseek(f,pos,whence)			fseek(f,pos,whence)
 #define _mm_read_UBYTES(buf,sz,f)		fread(buf,sz,1,f)
@@ -1180,7 +1184,7 @@ static int MID_ReadPatterns(MODCOMMAND *pattern[], WORD psize[], MIDHANDLE *h, i
 								}
 							}
 							else {
-								m->param = modticks(h, e->tracktick - tt1);
+								m->param = (BYTE)modticks(h, e->tracktick - tt1);
 								if( m->param ) { // note delay
 									m->command = CMD_S3MCMDEX;
 									m->param  |= 0xD0;
@@ -1213,7 +1217,7 @@ static int MID_ReadPatterns(MODCOMMAND *pattern[], WORD psize[], MIDHANDLE *h, i
 							}
 							else {	// retrigger same note...
 								m->command = CMD_RETRIG;
-								m->param = modticks(h, el->tracktick - tt1);
+								m->param = (BYTE)modticks(h, el->tracktick - tt1);
 							}
 						}
 						else
