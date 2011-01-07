@@ -285,12 +285,12 @@ BOOL CSoundFile::Destroy()
 	m_nPatternNames = 0;
 	if (m_lpszPatternNames)
 	{
-		delete m_lpszPatternNames;
+		delete[] m_lpszPatternNames;
 		m_lpszPatternNames = NULL;
 	}
 	if (m_lpszSongComments)
 	{
-		delete m_lpszSongComments;
+		delete[] m_lpszSongComments;
 		m_lpszSongComments = NULL;
 	}
 	for (i=1; i<MAX_SAMPLES; i++)
