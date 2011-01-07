@@ -285,12 +285,12 @@ BOOL CSoundFile::Destroy()
 	m_nPatternNames = 0;
 	if (m_lpszPatternNames)
 	{
-		delete[] m_lpszPatternNames;
+		delete [] m_lpszPatternNames;
 		m_lpszPatternNames = NULL;
 	}
 	if (m_lpszSongComments)
 	{
-		delete[] m_lpszSongComments;
+		delete [] m_lpszSongComments;
 		m_lpszSongComments = NULL;
 	}
 	for (i=1; i<MAX_SAMPLES; i++)
@@ -1774,7 +1774,7 @@ BOOL CSoundFile::SetPatternName(UINT nPat, LPCSTR lpszName)
 		if (m_lpszPatternNames)
 		{
 			memcpy(p, m_lpszPatternNames, m_nPatternNames * MAX_PATTERNNAME);
-			delete m_lpszPatternNames;
+			delete [] m_lpszPatternNames;
 			m_lpszPatternNames = NULL;
 		}
 		m_lpszPatternNames = p;
