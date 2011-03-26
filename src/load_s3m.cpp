@@ -257,6 +257,10 @@ BOOL CSoundFile::ReadS3M(const BYTE *lpStream, DWORD dwMemLength)
 	patnum = npat = psfh.patnum;
 	if (patnum > MAX_PATTERNS) patnum = MAX_PATTERNS;
 	memset(ptr, 0, sizeof(ptr));
+
+	// Ignore file if it has a corrupted header.
+	if (nins+npat > 256) return FALSE;
+
 	if (nins+npat)
 	{
 		memcpy(ptr, lpStream+dwMemPos, 2*(nins+npat));
