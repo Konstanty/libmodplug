@@ -16,6 +16,7 @@
 //////////////////////////////////////////////////////
 // ScreamTracker S3M file support
 
+#pragma pack(1)
 typedef struct tagS3MSAMPLESTRUCT
 {
 	BYTE type;
@@ -189,7 +190,6 @@ BOOL CSoundFile::ReadS3M(const BYTE *lpStream, DWORD dwMemLength)
 	UINT insnum,patnum,nins,npat;
 	DWORD insfile[128];
 	WORD ptr[256];
-	BYTE s[1024];
 	DWORD dwMemPos;
 	BYTE insflags[128], inspack[128];
 	S3MFILEHEADER psfh = *(S3MFILEHEADER *)lpStream;
@@ -284,37 +284,37 @@ BOOL CSoundFile::ReadS3M(const BYTE *lpStream, DWORD dwMemLength)
 	{
 		UINT nInd = ((DWORD)ptr[iSmp-1])*16;
 		if ((!nInd) || (nInd + 0x50 > dwMemLength)) continue;
-		memcpy(s, lpStream+nInd, 0x50);
-		memcpy(Ins[iSmp].name, s+1, 12);
-		insflags[iSmp-1] = s[0x1F];
-		inspack[iSmp-1] = s[0x1E];
-		s[0x4C] = 0;
-		lstrcpy(m_szNames[iSmp], (LPCSTR)&s[0x30]);
-		if ((s[0]==1) && (s[0x4E]=='R') && (s[0x4F]=='S'))
+		S3MSAMPLESTRUCT pSmp;
+		memcpy(&pSmp, lpStream+nInd, 0x50);
+		memcpy(Ins[iSmp].name, &pSmp.dosname, 12);
+		insflags[iSmp-1] = pSmp.flags;
+		inspack[iSmp-1] = pSmp.pack;
+		memcpy(m_szNames[iSmp], pSmp.name, 28);
+		m_szNames[iSmp][28] = 0;
+		if ((pSmp.type==1) && (pSmp.scrs[2]=='R') && (pSmp.scrs[3]=='S'))
 		{
-			UINT j = bswapLE32(*((LPDWORD)(s+0x10)));
+			UINT j = bswapLE32(pSmp.length);
 			if (j > MAX_SAMPLE_LENGTH) j = MAX_SAMPLE_LENGTH;
 			if (j < 4) j = 0;
 			Ins[iSmp].nLength = j;
-			j = bswapLE32(*((LPDWORD)(s+0x14)));
+			j = bswapLE32(pSmp.loopbegin);
 			if (j >= Ins[iSmp].nLength) j = Ins[iSmp].nLength - 1;
 			Ins[iSmp].nLoopStart = j;
-			j = bswapLE32(*((LPDWORD)(s+0x18)));
+			j = bswapLE32(pSmp.loopend);
 			if (j > MAX_SAMPLE_LENGTH) j = MAX_SAMPLE_LENGTH;
 			if (j < 4) j = 0;
 			if (j > Ins[iSmp].nLength) j = Ins[iSmp].nLength;
 			Ins[iSmp].nLoopEnd = j;
-			j = s[0x1C];
+			j = pSmp.vol;
 			if (j > 64) j = 64;
 			Ins[iSmp].nVolume = j << 2;
 			Ins[iSmp].nGlobalVol = 64;
-			if (s[0x1F]&1) Ins[iSmp].uFlags |= CHN_LOOP;
-			j = bswapLE32(*((LPDWORD)(s+0x20)));
+			if (pSmp.flags&1) Ins[iSmp].uFlags |= CHN_LOOP;
+			j = bswapLE32(pSmp.finetune);
 			if (!j) j = 8363;
 			if (j < 1024) j = 1024;
 			Ins[iSmp].nC4Speed = j;
-			insfile[iSmp] = ((DWORD)bswapLE16(*((LPWORD)(s+0x0E)))) << 4;
-			insfile[iSmp] += ((DWORD)(BYTE)s[0x0D]) << 20;
+			insfile[iSmp] = (pSmp.hmem << 20) + (bswapLE16(pSmp.memseg) << 4);
 			if (insfile[iSmp] > dwMemLength) insfile[iSmp] &= 0xFFFF;
 			if ((Ins[iSmp].nLoopStart >= Ins[iSmp].nLoopEnd) || (Ins[iSmp].nLoopEnd - Ins[iSmp].nLoopStart < 8))
 				Ins[iSmp].nLoopStart = Ins[iSmp].nLoopEnd = 0;
