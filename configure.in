@@ -33,11 +33,14 @@ CXXFLAGS="$CXXFLAGS -fno-exceptions -Wall -ffast-math -D_REENTRANT"
 
 AC_CANONICAL_HOST
 case "$host" in
-	*mingw32* )
-		MINGW32=yes
+	*mingw* | *cygwin*)
+		LT_LDFLAGS="-no-undefined"
+		;;
+	*)
+		LT_LDFLAGS=""
 		;;
 esac
-AM_CONDITIONAL([MINGW32], [test "x$MINGW32" = "xyes"])
+AC_SUBST(LT_LDFLAGS)
 
 case ${target_os} in
 	*sun* | *solaris*)
