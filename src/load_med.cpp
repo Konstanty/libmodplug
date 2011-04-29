@@ -664,7 +664,7 @@ BOOL CSoundFile::ReadMed(const BYTE *lpStream, DWORD dwMemLength)
 				const MMD2PLAYSEQ *pmps = (MMD2PLAYSEQ *)(lpStream + pseq);
 				if (!m_szNames[0][0]) memcpy(m_szNames[0], pmps->name, 31);
 				UINT n = bswapBE16(pmps->length);
-				if (pseq+n <= dwMemLength)
+				if (n < (dwMemLength - (pseq + sizeof(*pmps)) + sizeof(pmps->seq)) / sizeof(pmps->seq[0]))
 				{
 					for (UINT i=0; i<n; i++)
 					{
@@ -745,7 +745,7 @@ BOOL CSoundFile::ReadMed(const BYTE *lpStream, DWORD dwMemLength)
 				DWORD trktagofs = bswapBE32(ptrktags[i]);
 				if (trktagofs)
 				{
-					while (trktagofs+8 < dwMemLength)
+					while (trktagofs < dwMemLength - 8)
 					{
 						DWORD ntag = bswapBE32(*(DWORD *)(lpStream + trktagofs));
 						if (ntag == MMDTAG_END) break;
@@ -758,7 +758,7 @@ BOOL CSoundFile::ReadMed(const BYTE *lpStream, DWORD dwMemLength)
 						trktagofs += 8;
 					}
 					if (trknamelen > MAX_CHANNELNAME) trknamelen = MAX_CHANNELNAME;
-					if ((trknameofs) && (trknameofs + trknamelen < dwMemLength))
+					if ((trknameofs) && (trknamelen < dwMemLength) && (trknameofs < dwMemLength - trknamelen))
 					{
 						lstrcpyn(ChnSettings[i].szName, (LPCSTR)(lpStream+trknameofs), MAX_CHANNELNAME);
 						ChnSettings[i].szName[MAX_CHANNELNAME-1] = '\0';
