@@ -2303,22 +2303,26 @@ BOOL CSoundFile::TestABC(const BYTE *lpStream, DWORD dwMemLength)
     char id[128];
     // scan file for first K: line (last in header)
 #ifdef NEWMIKMOD
-    _mm_fseek(mmfile,0,SEEK_SET);
+		_mm_fseek(mmfile,0,SEEK_SET);
 		while(abc_fgets(mmfile,id,128)) {
 #else
 		MMFILE mmfile;
 		mmfile.mm = (char *)lpStream;
 		mmfile.sz = dwMemLength;
-    mmfseek(&mmfile,0,SEEK_SET);
+		mmfseek(&mmfile,0,SEEK_SET);
+		int ppos = mmfile.pos;
+
 		while(abc_fgets(&mmfile,id,128)) {
 #endif
+
+		if (id[0] == 0 && mmfile.pos < ppos + 120) return(0); //probably binary
 		if (id[0] == 0) continue; // blank line.
 
 		if (!abc_isvalidchar(id[0])  || !abc_isvalidchar(id[1])) {
 			return(0); // probably not an ABC.
 		}
-	    if(id[0]=='K' 
-			&& id[1]==':' 
+	    if(id[0]=='K'
+			&& id[1]==':'
 			&& (isalpha(id[2]) || isspace(id[2])) ) return 1;
 		}
     return 0;
@@ -2332,7 +2336,7 @@ static ABCHANDLE *ABC_Init(void)
 		char buf[10];
 #ifdef NEWMIKMOD
     MM_ALLOC     *allochandle;
-    
+
 		allochandle = _mmalloc_create("Load_ABC", NULL);
     retval = (ABCHANDLE *)_mm_calloc(allochandle, 1,sizeof(ABCHANDLE));
 		if( !retval ) return NULL;
@@ -2480,7 +2484,7 @@ static void ABC_Cleanup(ABCHANDLE *handle)
 
 static int abc_is_global_event(ABCEVENT *e)
 {
-	return e->flg == 1 && (e->cmd == cmdtempo || e->cmd == cmdpartbrk); 
+	return e->flg == 1 && (e->cmd == cmdtempo || e->cmd == cmdpartbrk);
 }
 
 static ABCEVENT *abc_next_global(ABCEVENT *e)
@@ -2612,7 +2616,7 @@ static void ABC_ReadPatterns(UNIMOD *of, ABCHANDLE *h, int numpat)
 						utrk_write_note(of->ut, n); // <- normal note
 						pt_write_effect(of->ut, 0xc, vol);
 					}
-					else { 
+					else {
 						// two notes in one row, use FINEPITCHSLIDE runonce effect
 						// start first note on first tick and framedly runonce on seconds note tick
 						// use volume and instrument of last note
@@ -2763,7 +2767,7 @@ static int ABC_ReadPatterns(MODCOMMAND *pattern[], WORD psize[], ABCHANDLE *h, i
 						m->volcmd = VOLCMD_VOLUME;
 						m->vol    = vol;
 					}
-					else { 
+					else {
 						// two notes in one row, use FINEPITCHSLIDE runonce effect
 						// start first note on first tick and framedly runonce on seconds note tick
 						// use volume and instrument of last note
@@ -2887,7 +2891,7 @@ static uint32_t abc_tracktime(ABCTRACK *tp)
 	uint32_t tracktime;
 	if( tp->tail ) tracktime = tp->tail->tracktick;
 	else tracktime = 0;
-	if( tracktime < global_songstart ) 
+	if( tracktime < global_songstart )
 		tracktime = global_songstart;
 	return tracktime;
 }
@@ -3451,8 +3455,8 @@ static void abc_add_gchord(ABCHANDLE *h, uint32_t tracktime, uint32_t bartime)
 // c. a, b and c must be in the range 0-128. The parameter n determines which
 // notes are "strong". If the time signature is x/y, then each note is given
 // a position number k = 0, 1, 2 .. x-1 within each bar. Note that the units for
-// n are not the unit note length. If k is a multiple of n, then the note is 
-// "strong". The volume specifiers !ppp! to !fff! are equivalent to the 
+// n are not the unit note length. If k is a multiple of n, then the note is
+// "strong". The volume specifiers !ppp! to !fff! are equivalent to the
 // following :
 //
 // !ppp! = %%MIDI beat 30 20 10 1
@@ -3482,14 +3486,14 @@ static void abc_MIDI_beat(ABCHANDLE *h, const char *p)
 	if( h->beat[3] == 0 ) h->beat[3] = 1; // BB Ruud says: do not let you make mad
 }
 
-// 
+//
 // %%MIDI beatstring <string of f, m and p>
-// 
+//
 // This provides an alternative way of specifying where the strong and weak
-// stresses fall within a bar. 'f' means velocity a (normally strong), 'm' 
+// stresses fall within a bar. 'f' means velocity a (normally strong), 'm'
 // means velocity b (medium velocity) and 'p' means velocity c (soft velocity).
-// For example, if the time signature is 7/8 with stresses on the first, fourth 
-// and sixth notes in the bar, we could use the following 
+// For example, if the time signature is 7/8 with stresses on the first, fourth
+// and sixth notes in the bar, we could use the following
 //
 // %%MIDI beatstring fppmpmp
 static void abc_MIDI_beatstring(ABCHANDLE *h, const char *p)
@@ -3602,7 +3606,7 @@ static void abc_globalslide(ABCHANDLE *h, uint32_t tracktime, int slide)
 		if( tp->slidevol > -2 && slide < 2 )
 			tp->slidevol = slide;
 	}
-	if( h->track && h->track->tail 
+	if( h->track && h->track->tail
 	&& hslide != slide && slide == -2
 	&& h->track->tail->tracktick >= tracktime ) {
 		// need to update jumptypes in mastertrack from tracktime on...
@@ -3666,7 +3670,7 @@ static void abc_MIDI_command(ABCHANDLE *h, char *p, char delim) {
 		h->gchordon = abc_MIDI_gchord(p+6, h);
 		if( h->gchordon ) --h->gchordon;
 		else h->gchordon = t;
-	} 
+	}
 	if( !strncmp(p,"gchordoff",9)   && (p[9]=='\0' || p[9]==delim || isspace(p[9])) ) h->gchordon = 0;
 	if( !strncmp(p,"gchordon",8)    && (p[8]=='\0' || p[8]==delim || isspace(p[8])) ) h->gchordon = 1;
 	if( t != h->gchordon ) {
@@ -3757,7 +3761,7 @@ BOOL CSoundFile::ReadABC(const uint8_t *lpStream, DWORD dwMemLength)
 	int abcxcount=0, abcxwanted=0, abcxnumber=1;
 	int abckey, abcrate, abcchord, abcvol, abcbeatvol, abcnoslurs, abcnolegato, abcfermata, abcarpeggio, abcto;
 	int abctempo;
-	int cnotelen=0, cnotediv=0, snotelen, snotediv, mnotelen, mnotediv, notelen, notediv; 
+	int cnotelen=0, cnotediv=0, snotelen, snotediv, mnotelen, mnotediv, notelen, notediv;
 	// c for chords, s for standard L: setting, m for M: barlength
 	int abchornpipe, brokenrithm, tupletp, tupletq, tupletr;
 	int ktempo;
@@ -3999,7 +4003,7 @@ BOOL CSoundFile::ReadABC(const uint8_t *lpStream, DWORD dwMemLength)
 						if( snotelen == 0 ) {	// calculate default notelen from meter M:
 							if( mnotediv == 0 ) mnotediv = mnotelen = 1;	// do'nt get nuked
 							snotelen = 100 * mnotelen / mnotediv;
-							if( snotelen > 74 ) 
+							if( snotelen > 74 )
 								snotediv = 8;
 							else
 								snotediv = 16;
@@ -4226,7 +4230,7 @@ BOOL CSoundFile::ReadABC(const uint8_t *lpStream, DWORD dwMemLength)
 						while( p[2]==' ' || p[2]=='.' ) p++;	// skip blancs and dots
 						if( isupper(p[2]) )
 							global_part = p[2];
-						else 
+						else
 							global_part = ' ';
 						if(	global_part == ' ' )
 							partpat[26][0] = t;
@@ -4322,7 +4326,7 @@ BOOL CSoundFile::ReadABC(const uint8_t *lpStream, DWORD dwMemLength)
 										while( isspace(p[2]) || p[2]=='.' ) p++;	// skip blancs and dots
 										if( isupper(p[2]) )
 											global_part = p[2];
-										else 
+										else
 											global_part = ' ';
 										if(	global_part == ' ' )
 											partpat[26][0] = t;
