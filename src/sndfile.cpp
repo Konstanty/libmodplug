@@ -1550,7 +1550,9 @@ void CSoundFile::AdjustSampleLoop(MODINSTRUMENT *pIns)
 //----------------------------------------------------
 {
 	if (!pIns->pSample) return;
+	if (pIns->nLength > MAX_SAMPLE_LENGTH) pIns->nLength = MAX_SAMPLE_LENGTH;
 	if (pIns->nLoopEnd > pIns->nLength) pIns->nLoopEnd = pIns->nLength;
+	if (pIns->nLoopStart > pIns->nLength+2) pIns->nLoopStart = pIns->nLength+2;
 	if (pIns->nLoopStart+2 >= pIns->nLoopEnd)
 	{
 		pIns->nLoopStart = pIns->nLoopEnd = 0;
