@@ -183,6 +183,13 @@ void CSoundFile::S3MSaveConvert(UINT *pcmd, UINT *pprm, BOOL bIT) const
 	*pprm = param;
 }
 
+static DWORD boundInput(DWORD input, DWORD smin, DWORD smax)
+{
+	if (input > smax) input = smax;
+	else if (input < smin) input = 0;
+	return(input);
+}
+
 
 BOOL CSoundFile::ReadS3M(const BYTE *lpStream, DWORD dwMemLength)
 //---------------------------------------------------------------
@@ -293,24 +300,13 @@ BOOL CSoundFile::ReadS3M(const BYTE *lpStream, DWORD dwMemLength)
 		m_szNames[iSmp][28] = 0;
 		if ((pSmp.type==1) && (pSmp.scrs[2]=='R') && (pSmp.scrs[3]=='S'))
 		{
-			UINT j = bswapLE32(pSmp.length);
-			if (j > MAX_SAMPLE_LENGTH) j = MAX_SAMPLE_LENGTH;
-			if (j < 4) j = 0;
-			Ins[iSmp].nLength = j;
-			j = bswapLE32(pSmp.loopbegin);
-			if (j >= Ins[iSmp].nLength) j = Ins[iSmp].nLength - 1;
-			Ins[iSmp].nLoopStart = j;
-			j = bswapLE32(pSmp.loopend);
-			if (j > MAX_SAMPLE_LENGTH) j = MAX_SAMPLE_LENGTH;
-			if (j < 4) j = 0;
-			if (j > Ins[iSmp].nLength) j = Ins[iSmp].nLength;
-			Ins[iSmp].nLoopEnd = j;
-			j = pSmp.vol;
-			if (j > 64) j = 64;
-			Ins[iSmp].nVolume = j << 2;
+			Ins[iSmp].nLength = boundInput(bswapLE32(pSmp.length), 4, MAX_SAMPLE_LENGTH);
+			Ins[iSmp].nLoopStart = boundInput(bswapLE32(pSmp.loopbegin), 4, Ins[iSmp].nLength - 1);
+			Ins[iSmp].nLoopEnd = boundInput(bswapLE32(pSmp.loopend), 4, Ins[iSmp].nLength);
+			Ins[iSmp].nVolume = boundInput(pSmp.vol, 0, 64) << 2;
 			Ins[iSmp].nGlobalVol = 64;
 			if (pSmp.flags&1) Ins[iSmp].uFlags |= CHN_LOOP;
-			j = bswapLE32(pSmp.finetune);
+			UINT j = bswapLE32(pSmp.finetune);
 			if (!j) j = 8363;
 			if (j < 1024) j = 1024;
 			Ins[iSmp].nC4Speed = j;
