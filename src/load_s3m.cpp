@@ -389,7 +389,8 @@ BOOL CSoundFile::ReadS3M(const BYTE *lpStream, DWORD dwMemLength)
 		if (insflags[iRaw-1] & 2) flags |= RSF_STEREO;
 		if (inspack[iRaw-1] == 4) flags = RS_ADPCM4;
 		dwMemPos = insfile[iRaw];
-		dwMemPos += ReadSample(&Ins[iRaw], flags, (LPSTR)(lpStream + dwMemPos), dwMemLength - dwMemPos);
+		if (dwMemPos < dwMemLength)
+			dwMemPos += ReadSample(&Ins[iRaw], flags, (LPSTR)(lpStream + dwMemPos), dwMemLength - dwMemPos);
 	}
 	m_nMinPeriod = 64;
 	m_nMaxPeriod = 32767;
