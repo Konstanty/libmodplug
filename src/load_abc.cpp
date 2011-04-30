@@ -1022,10 +1022,12 @@ static void abc_remove_unnecessary_events(ABCHANDLE *h)
 				_mm_free(h->trackhandle,tp);
 				tp = ptp;
 			}
-			else {
+			else if (tp->next) {
 				h->track = tp->next;
 				_mm_free(h->trackhandle,tp);
 				tp = h->track;
+			} else {
+				break;
 			}
 		}
 		ptp = tp;	// remember previous track
