@@ -281,6 +281,41 @@ static int abc_isvalidchar(char c) {
 	return(isalpha(c) || isdigit(c) || isspace(c) || c == '%' || c == ':');
 }
 
+static const char *abc_skipspace(const char *p)
+{
+	while (*p && isspace(*p))
+		p++;
+	return p;
+}
+
+static void abc_extractkeyvalue(char *key, size_t key_max,
+								char *value, size_t value_max, const char *src)
+{
+	while (*src && isspace(*src))
+		src++;
+
+	size_t key_size;
+	for (key_size = 0; key_size < key_max - 1 && *src;) {
+		if (*src == '=') {
+			src++;
+			break;
+		}
+		key[key_size++] = *src++;
+	}
+	while (key_size > 0 && isspace(key[key_size - 1]))
+		key_size--;
+	key[key_size] = '\0';
+
+	while (*src && isspace(*src))
+		src++;
+
+	size_t value_size;
+	for (value_size = 0; value_size < value_max - 1 && *src;)
+		value[value_size++] = *src++;
+	while (value_size > 0 && isspace(value[value_size - 1]))
+		value_size--;
+	value[value_size] = '\0';
+}
 
 static void abc_message(const char *s1, const char *s2)
 {
@@ -453,7 +488,7 @@ static int mmfgetc(MMFILE *mmfile)
 	if( mmfeof(mmfile) ) return EOF;
 	b = mmfile->mm[mmfile->pos];
 	mmfile->pos++;
-	if( b=='\r' && mmfile->mm[mmfile->pos] == '\n' ) {
+	if( b=='\r' && !mmfeof(mmfile) && mmfile->mm[mmfile->pos] == '\n' ) {
 		b = '\n';
 		mmfile->pos++;
 	}
@@ -530,21 +565,13 @@ static void abc_new_macro(ABCHANDLE *h, const char *m)
 // =============================================================================
 {
     ABCMACRO *retval;
-		const char *p;
-		char buf[256],*q;
-		for( p=m; *p && isspace(*p); p++ ) ;
-		for( q=buf; *p && *p != '='; p++ )
-			*q++ = *p;
-		if( q != buf )
-			while( isspace(q[-1]) ) q--;
-		*q = '\0';
+	char key[256], value[256];
+	abc_extractkeyvalue(key, sizeof(key), value, sizeof(value), m);
+
     retval = (ABCMACRO *)_mm_calloc(h->macrohandle, 1,sizeof(ABCTRACK));
-    retval->name  = DupStr(h->macrohandle, buf,strlen(buf));
+    retval->name  = DupStr(h->macrohandle, key, strlen(key));
 		retval->n     = strrchr(retval->name, 'n'); // for transposing macro's
-		for( p++; *p && isspace(*p); p++ ) ;
-		strncpy(buf,p,200);
-		for( q=&buf[strlen(buf)-1]; q!=buf && isspace(*q); q-- ) *q = '\0';
-    retval->subst = DupStr(h->macrohandle, buf, strlen(buf));
+    retval->subst = DupStr(h->macrohandle, value, strlen(value));
 		retval->next  = h->macro;
 		h->macro      = retval;
 }
@@ -554,24 +581,15 @@ static void abc_new_umacro(ABCHANDLE *h, const char *m)
 // =============================================================================
 {
     ABCMACRO *retval, *mp;
-		const char *p;
-		char buf[256], let[2], *q;
-		for( p=m; *p && isspace(*p); p++ ) ;
-		for( q=buf; *p && *p != '='; p++ )
-			*q++ = *p;
-		if( q != buf )
-			while( isspace(q[-1]) ) q--;
-		*q = '\0';
-		if( strlen(buf) > 1 || strchr("~HIJKLMNOPQRSTUVWXY",toupper(buf[0])) == 0 || strchr("xy",buf[0]) ) return;
-		strcpy(let,buf);
-		for( p++; *p && isspace(*p); p++ ) ;
-		strncpy(buf,p,200);
-		for( q=&buf[strlen(buf)-1]; q!=buf && isspace(*q); q-- ) *q = '\0';
-		for( q=buf; *q; q++ )	if( *q == '!' ) *q = '+';	// translate oldstyle to newstyle
-		if( !strcmp(buf,"+nil+") ) { // delete a macro
+		char key[256], value[256];
+		abc_extractkeyvalue(key, sizeof(key), value, sizeof(value), m);
+		if( strlen(key) > 1 || strchr("~HIJKLMNOPQRSTUVWXY",toupper(key[0])) == 0 ) return;
+		while( char *q = strchr(key, '!') )
+			*q = '+'; // translate oldstyle to newstyle
+		if( !strcmp(key,"+nil+") ) { // delete a macro
 			mp = NULL;
 			for( retval=h->umacro; retval; retval = retval->next ) {
-				if( retval->name[0] == let[0] ) {	// delete this one
+				if( retval->name[0] == key[0] ) {	// delete this one
 					if( mp ) mp->next = retval->next;
 					else h->umacro = retval->next;
 					_mm_free(h->macrohandle, retval);
@@ -582,8 +600,8 @@ static void abc_new_umacro(ABCHANDLE *h, const char *m)
 			return;
 		}
     retval = (ABCMACRO *)_mm_calloc(h->macrohandle, 1,sizeof(ABCTRACK));
-    retval->name  = DupStr(h->macrohandle, let,1);
-    retval->subst = DupStr(h->macrohandle, buf, strlen(buf));
+    retval->name  = DupStr(h->macrohandle, key, 1);
+    retval->subst = DupStr(h->macrohandle, value, strlen(value));
 		retval->n     = 0;
 		retval->next  = h->umacro; // by placing it up front we mask out the old macro until we +nil+ it
 		h->umacro      = retval;
@@ -991,11 +1009,15 @@ static void abc_remove_unnecessary_events(ABCHANDLE *h)
 					case cmdsync:
 						if( el ) {
 							el->next = ep->next;
+							if( !el->next )
+								tp->tail = el;
 							_mm_free(h->trackhandle,ep);
 							ep = el->next;
 						}
 						else {
 							tp->head = ep->next;
+							if( !tp->head )
+								tp->tail = NULL;
 							_mm_free(h->trackhandle,ep);
 							ep = tp->head;
 						}
@@ -1493,7 +1515,7 @@ static void	abc_add_chord(const char *p, ABCHANDLE *h, ABCTRACK *tp, uint32_t tr
 			break;
 	}
 	d[chordbase] = d[chordnote];
-	for( i=0; p[i] && p[i] != '"' && p[i] != '/' && p[i] != '(' && p[i] != ')' && p[i] != ' '; i++ ) s[i] = p[i];
+	for( i=0; i < sizeof(s) - 1 && p[i] && p[i] != '"' && p[i] != '/' && p[i] != '(' && p[i] != ')' && p[i] != ' '; i++ ) s[i] = p[i];
 	s[i] = '\0';
 	p = &p[i];
 	if( *p=='/' ) {
@@ -2102,7 +2124,7 @@ static void abc_song_to_parts(ABCHANDLE *h, char **abcparts, BYTE partp[27][2])
 						else
 							x++;
 					}
-					if( fading && partno < 26 && i < 255 ) {	// add single part with fading tracks
+					if( fading && partno < 25 && i < 254 ) {	// add single part with fading tracks
 						partno++;
 						ptt[partno] = e->tracktick;
 						buf[i] = '\0'; // close up pfade with zero byte
@@ -2181,7 +2203,7 @@ static char *abc_fgetbytes(MMFILE *mmfile, char buf[], unsigned int bufsz)
 			break;
 		}
 	}
-	if( buf[i] == '\n' ) i++;
+	if( i != bufsz-2 && buf[i] == '\n' ) i++;
 	buf[i] = '\0';
 	return buf;
 }
@@ -2214,15 +2236,15 @@ static void abc_substitute(ABCHANDLE *h, char *target, char *s)
 static void abc_preprocess(ABCHANDLE *h, ABCMACRO *m)
 {
 	int i, j, k, l, a, b;
-	char t[32];
-	char s[200],*p;
 	if( m->n ) {
 		k = m->n - m->name;
 		for( i=0; i<14; i++ ) {
-			strncpy(t, m->name, 32);
+			char t[strlen(m->name) + 1];
+			strcpy(t, m->name);
 			t[k] = "CDEFGABcdefgab"[i];
 			l = strlen(m->subst);
-			p = s;
+			char s[2 * l + 1];
+			char *p = s;
 			for( j=0; j<l; j++ ) {
 				a = m->subst[j];
 				if( a > 'g' && islower(a) ) {
@@ -2231,7 +2253,7 @@ static void abc_preprocess(ABCHANDLE *h, ABCMACRO *m)
 					*p++ = a;
 					if( i+b < 0 )
 						*p++ = ',';
-					if( i+b > 13 )
+					else if( i+b > 13 )
 						*p++ = '\'';
 				}
 				else *p++ = a;
@@ -4321,7 +4343,8 @@ BOOL CSoundFile::ReadABC(const uint8_t *lpStream, DWORD dwMemLength)
 								if( !strncmp(p,"P:",2) ) {	// a [P:X] field inline
 									if( abcparts != NULL ) {
 										// make h->tracktime start of a new age...
-										abc_add_partbreak(h, h->track, h->tracktime);
+										if( h->track )
+											abc_add_partbreak(h, h->track, h->tracktime);
 										t = abc_patno(h, h->tracktime);
 										if(	global_part == ' ' )
 											partpat[26][1] = t;
@@ -4344,7 +4367,8 @@ BOOL CSoundFile::ReadABC(const uint8_t *lpStream, DWORD dwMemLength)
 								if( !strncmp(p,"Q:",2) ) {
 									abctempo = abc_extract_tempo(p+2,1);
 									for( ; *p && *p != ']'; p++ ) ;
-									abc_add_tempo_event(h, h->track, h->tracktime, abctempo);
+									if( h->track )
+										abc_add_tempo_event(h, h->track, h->tracktime, abctempo);
 									break;
 								}
 								if( !strncmp(p,"I:",2) ) { // interpret some of the possibilitys
@@ -5104,6 +5128,8 @@ BOOL CSoundFile::ReadABC(const uint8_t *lpStream, DWORD dwMemLength)
 	}
 	// ============================================================
 	// set panning positions
+	if( m_nChannels > MAX_BASECHANNELS )
+		m_nChannels = MAX_BASECHANNELS;
 	for(t=0; t<m_nChannels; t++) {
 		ChnSettings[t].nPan = 0x30+((t+2)%5)*((0xD0 - 0x30)/5);     // 0x30 = std s3m val
 		ChnSettings[t].nVolume = 64;
