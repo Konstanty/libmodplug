@@ -67,9 +67,11 @@ static uint32_t BS2WORD(uint16_t w[2]) {
 BOOL CSoundFile::ReadPTM(const BYTE *lpStream, DWORD dwMemLength)
 //---------------------------------------------------------------
 {
-	PTMFILEHEADER pfh = *(LPPTMFILEHEADER)lpStream;
 	DWORD dwMemPos;
 	UINT nOrders;
+
+	if ((!lpStream) || (dwMemLength < 1024)) return FALSE;
+	PTMFILEHEADER pfh = *(LPPTMFILEHEADER)lpStream;
 
 	pfh.norders = bswapLE16(pfh.norders);
 	pfh.nsamples = bswapLE16(pfh.nsamples);
@@ -83,7 +85,6 @@ BOOL CSoundFile::ReadPTM(const BYTE *lpStream, DWORD dwMemLength)
 	        pfh.patseg[j] = bswapLE16(pfh.patseg[j]);
 	}
 
-	if ((!lpStream) || (dwMemLength < 1024)) return FALSE;
 	if ((pfh.ptmf_id != 0x464d5450) || (!pfh.nchannels)
 	 || (pfh.nchannels > 32)
 	 || (pfh.norders > 256) || (!pfh.norders)

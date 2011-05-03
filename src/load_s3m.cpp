@@ -199,6 +199,8 @@ BOOL CSoundFile::ReadS3M(const BYTE *lpStream, DWORD dwMemLength)
 	WORD ptr[256];
 	DWORD dwMemPos;
 	BYTE insflags[128], inspack[128];
+
+	if ((!lpStream) || (dwMemLength <= sizeof(S3MFILEHEADER)+sizeof(S3MSAMPLESTRUCT)+64)) return FALSE;
 	S3MFILEHEADER psfh = *(S3MFILEHEADER *)lpStream;
 
 	psfh.reserved1 = bswapLE16(psfh.reserved1);
@@ -211,7 +213,6 @@ BOOL CSoundFile::ReadS3M(const BYTE *lpStream, DWORD dwMemLength)
 	psfh.scrm = bswapLE32(psfh.scrm);
 	psfh.special = bswapLE16(psfh.special);
 
-	if ((!lpStream) || (dwMemLength <= sizeof(S3MFILEHEADER)+sizeof(S3MSAMPLESTRUCT)+64)) return FALSE;
 	if (psfh.scrm != 0x4D524353) return FALSE;
 	dwMemPos = 0x60;
 	m_nType = MOD_TYPE_S3M;

@@ -159,13 +159,15 @@ BOOL CSoundFile::ITInstrToMPT(const void *p, INSTRUMENTHEADER *penv, UINT trkver
 BOOL CSoundFile::ReadIT(const BYTE *lpStream, DWORD dwMemLength)
 //--------------------------------------------------------------
 {
-	ITFILEHEADER pifh = *(ITFILEHEADER *)lpStream;
 	DWORD dwMemPos = sizeof(ITFILEHEADER);
 	DWORD inspos[MAX_INSTRUMENTS];
 	DWORD smppos[MAX_SAMPLES];
 	DWORD patpos[MAX_PATTERNS];
 	BYTE chnmask[64], channels_used[64];
 	MODCOMMAND lastvalue[64];
+
+	if ((!lpStream) || (dwMemLength < 0x100)) return FALSE;
+	ITFILEHEADER pifh = *(ITFILEHEADER *)lpStream;
 
 	pifh.id = bswapLE32(pifh.id);
 	pifh.reserved1 = bswapLE16(pifh.reserved1);
@@ -181,7 +183,6 @@ BOOL CSoundFile::ReadIT(const BYTE *lpStream, DWORD dwMemLength)
 	pifh.msgoffset = bswapLE32(pifh.msgoffset);
 	pifh.reserved2 = bswapLE32(pifh.reserved2);
 
-	if ((!lpStream) || (dwMemLength < 0x100)) return FALSE;
 	if ((pifh.id != 0x4D504D49) || (pifh.insnum >= MAX_INSTRUMENTS)
 	 || (!pifh.smpnum) || (pifh.smpnum >= MAX_INSTRUMENTS) || (!pifh.ordnum)) return FALSE;
 	if (dwMemPos + pifh.ordnum + pifh.insnum*4
