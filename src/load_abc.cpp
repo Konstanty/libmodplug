@@ -1751,6 +1751,8 @@ static int abc_extract_tempo(const char *p, int invoice)
 	}
 	if( !nd ) tempo = 120;
 	else tempo = ns * nl * 4 / nd; // mod tempo is really BPM where one B is equal to a quartnote
+	if( tempo <= 0 )
+		tempo = 120;
 	if( invoice ) {
 		nl = global_tempo_factor;
 		nd = global_tempo_divider;
