@@ -846,7 +846,7 @@ static ABCTRACK *abc_locate_track(ABCHANDLE *h, const char *voice, int pos)
 	char vc[21];
 	int i, trans=0, voiceno=0, instrno = 1, channo = 0;
 	for( ; *voice == ' '; voice++ ) ;	// skip leading spaces
-	for( i=0; *voice && *voice != ']' && *voice != '%' && !isspace(*voice); voice++ )	// can work with inline voice instructions
+	for( i=0; i+1 < sizeof(vc) && *voice && *voice != ']' && *voice != '%' && !isspace(*voice); voice++ )	// can work with inline voice instructions
 		vc[i++] = *voice;
 	vc[i] = '\0';
 	prev = NULL;
@@ -1839,6 +1839,8 @@ static void	abc_set_parts(char **d, char *p)
 		}
 		if( isdigit(p[i]) ) {
 			n=abc_getnumber(p+i,&k);
+			if( k == 0 )
+				k = 1;
 			if( p[i-1] == ')' )
 				j *= k;	// never mind multiple parens, just take the worst case
 			else
@@ -1858,8 +1860,10 @@ static void	abc_set_parts(char **d, char *p)
 					for( k = n; k<j; k++ ) q[k-1] = q[k];	// shift to the left...
 					j--;
 				}
-				else
+				else {
 					abc_message("Warning: Unbalanced right parens in P: definition %s",p);
+					break;
+				}
 				n = j - n + 1;	// number of repeatable characters
 				i += abc_getnumber(p+i+1,&k);
 				while( k-- > 1 ) {
@@ -2214,7 +2218,7 @@ static void abc_substitute(ABCHANDLE *h, char *target, char *s)
 	int i;
 	int l = strlen(target);
 	int n = strlen(s);
-    if (l <= 0 ||n <= 0)
+    if (l <= 0 ||n <= 0 || strstr(s, target))
         return;
 	while( (p=strstr(h->line, target)) ) {
 		if( (i=strlen(h->line)) + n - l >= (int)h->len ) {
@@ -4070,9 +4074,10 @@ BOOL CSoundFile::ReadABC(const uint8_t *lpStream, DWORD dwMemLength)
 						abcstate = INBETWEEN;
 					break;
 				case INSKIPFORQUOTE:
-						while( (ch=*p++) && (ch != '"') )
-							;
-						if( !ch ) break;
+						while( *p && *p != '"' )
+							p++;
+						if( *p == '\0' )
+							break;
 						abcstate = INBODY;
 						// fall through
 				case INBODY:
@@ -4289,7 +4294,7 @@ BOOL CSoundFile::ReadABC(const uint8_t *lpStream, DWORD dwMemLength)
 					if( h->tpr ) abc_add_drum_sync(h, h->tpr, h->tracktime); // don't start drumming from the beginning of time!
 				}
 				if( h->tpr && !h->drumon ) h->tpr = NULL;
-				if( *p != '%' ) {	// skip uninteresting lines
+				if( *p && *p != '%' ) {	// skip uninteresting lines
 					// plough thru the songline gathering mos....
 					ch0 = ' ';
 					pp = 0;
@@ -4299,7 +4304,8 @@ BOOL CSoundFile::ReadABC(const uint8_t *lpStream, DWORD dwMemLength)
 								if( ch == mp->name[0] ) {
 									pp = p;
 									p = mp->subst;
-									ch = *p++;
+									ch = *p;
+                                    if( ch ) p++;
 									break;
 								}
 							}
@@ -4400,7 +4406,7 @@ BOOL CSoundFile::ReadABC(const uint8_t *lpStream, DWORD dwMemLength)
 										p += abc_notelen(p, &notelen, &notediv);
 										if( *p == '-' ) {
 											p++;
-											if( h->tp->tail->flg != 1 )
+											if( h->tp->tail && h->tp->tail->flg != 1 )
 											h->tp->tienote = h->tp->tail;
 										}
 										if( abcchord<8 ) {
@@ -4444,7 +4450,8 @@ BOOL CSoundFile::ReadABC(const uint8_t *lpStream, DWORD dwMemLength)
 										if( thistime > abcticks(h->speed) ) thistime = abcticks(h->speed);
 										for( nl0=1; nl0<abcchord; nl0++ ) {
 											h->tp = abc_locate_track(h, h->tp->v, nl0+DRONEPOS2);
-											h->tp->tail->tracktick = h->tracktime + thistime * nl0;
+											if( h->tp->tail )
+												h->tp->tail->tracktick = h->tracktime + thistime * nl0;
 										}
 									}	
 									notelen *= cnotelen;
@@ -4476,7 +4483,7 @@ BOOL CSoundFile::ReadABC(const uint8_t *lpStream, DWORD dwMemLength)
 											 	+ (thistime * cnl[abcchord] * cnotediv)/(cnd[abcchord] * cnotelen) );
 										}
 										else {
-											if( ch=='-' && h->tp->tail->flg != 1 )
+											if( ch=='-' && h->tp->tail && h->tp->tail->flg != 1 )
 												h->tp->tienote = h->tp->tail;	// copy noteon event to tienote in track
 											if( thistime > abcticks(h->speed) )
 												abc_add_noteoff(h, h->tp, h->tracktime - abcnoslurs);
@@ -4659,8 +4666,7 @@ BOOL CSoundFile::ReadABC(const uint8_t *lpStream, DWORD dwMemLength)
 								if( !ch ) abcstate = INSKIPFORQUOTE;
 								break;
 							case '\\':	// skip the rest of this line, should be the end of the line anyway
-								while( (ch=*p++) )
-									;
+								while( *p ) p++;
 								ch = '\\'; // remember for invoice tempo changes....
 								break;
 							case '!':	// line break, or deprecated old style decoration
@@ -4870,7 +4876,7 @@ BOOL CSoundFile::ReadABC(const uint8_t *lpStream, DWORD dwMemLength)
 									p += abc_notelen(p, &notelen, &notediv);
 									if( *p=='-' ) {
 										p++;
-										if( h->tp->tail->flg != 1 )
+										if( h->tp->tail && h->tp->tail->flg != 1 )
 										h->tp->tienote = h->tp->tail;
 									}
 									tupletr = abc_tuplet(&notelen, &notediv, tupletp, tupletq, tupletr);
@@ -4984,7 +4990,7 @@ BOOL CSoundFile::ReadABC(const uint8_t *lpStream, DWORD dwMemLength)
 	ABC_CleanupMacros(h);	// we dont need them anymore
 	if( !h->track ) {
 		char buf[10];
-		sprintf(buf,"%d",abcxnumber);
+		sprintf(buf,"%u",abcxnumber);
 		abc_message("abc X:%s has no body", buf);
 		h->track = abc_check_track(h, h->track); // for sanity...
 	}
@@ -5078,14 +5084,19 @@ BOOL CSoundFile::ReadABC(const uint8_t *lpStream, DWORD dwMemLength)
 #else
 	m_nType         = MOD_TYPE_ABC;
 	numpat          = 1+(modticks(h->tracktime) / h->speed / 64);
+	if( numpat > MAX_PATTERNS )
+		numpat = MAX_PATTERNS;
 	m_nDefaultSpeed = h->speed;
 	m_nChannels     = abc_numtracks(h);
 	m_dwSongFlags   = SONG_LINEARSLIDES;
 	m_nMinPeriod    = 28 << 2;
 	m_nMaxPeriod    = 1712 << 3;
 	// orderlist
-	for(t=0; t < (uint32_t)orderlen; t++)
+	for(t=0; t < (uint32_t)orderlen; t++){
+		if( t >= MAX_ORDERS )
+			break;
 		Order[t] = orderlist[t];
+	}
 	free(orderlist);	// get rid of orderlist memory
 #endif
 #ifdef NEWMIKMOD
