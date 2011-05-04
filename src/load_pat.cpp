@@ -409,14 +409,16 @@ void pat_init_patnames(void)
 	for( i=0; i<MAXSMP; i++ )	{
 		if( midipat[i][0] ) q = midipat[i];
 		else {
-			strcpy(midipat[i],q);
+			if( midipat[i] != q)
+				strcpy(midipat[i],q);
 			if( midipat[i][0] == '\0' ) j++;
 		}
 	}
 	if( j ) {
 		for( i=MAXSMP; i-- > 0; )	{
 			if( midipat[i][0] ) q = midipat[i];
-			else strcpy(midipat[i],q);
+			else if( midipat[i] != q )
+				strcpy(midipat[i],q);
 		}
 	}
 }
