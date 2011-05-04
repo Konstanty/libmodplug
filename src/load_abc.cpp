@@ -1626,7 +1626,7 @@ static int abc_getexpr(const char *p, int *number)
 	while( isspace(p[i]) )
 		i++;
 	while( p[i] == '+' ) {
-		i += abc_getexpr(p+i+1, &term);
+		i += 1 + abc_getexpr(p+i+1, &term);
 		total += term;
 		while( isspace(p[i]) )
 			i++;
