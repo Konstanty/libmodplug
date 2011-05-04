@@ -2844,7 +2844,7 @@ static int ABC_ReadPatterns(MODCOMMAND *pattern[], WORD psize[], ABCHANDLE *h, i
 static int ABC_Key(const char *p)
 {
 	int i,j;
-	char c[8];
+	char c[8] = {0};
 	const char *q;
 	while( isspace(*p) ) p++;
 	i = 0;
