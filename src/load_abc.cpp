@@ -277,7 +277,6 @@ static void setenv(const char *name, const char *value, int overwrite)
 }
 #endif
 
-
 static int abc_isvalidchar(char c) {
 	return(isalpha(c) || isdigit(c) || isspace(c) || c == '%' || c == ':');
 }
@@ -2191,6 +2190,8 @@ static void abc_substitute(ABCHANDLE *h, char *target, char *s)
 	int i;
 	int l = strlen(target);
 	int n = strlen(s);
+    if (l <= 0 ||n <= 0)
+        return;
 	while( (p=strstr(h->line, target)) ) {
 		if( (i=strlen(h->line)) + n - l >= (int)h->len ) {
 			h->line = (char *)_mm_recalloc(h->allochandle, h->line, h->len<<1, sizeof(char));
