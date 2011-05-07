@@ -70,7 +70,7 @@ BOOL CSoundFile::ReadPTM(const BYTE *lpStream, DWORD dwMemLength)
 	DWORD dwMemPos;
 	UINT nOrders;
 
-	if ((!lpStream) || (dwMemLength < 1024)) return FALSE;
+	if ((!lpStream) || (dwMemLength < sizeof(PTMFILEHEADER))) return FALSE;
 	PTMFILEHEADER pfh = *(LPPTMFILEHEADER)lpStream;
 
 	pfh.norders = bswapLE16(pfh.norders);

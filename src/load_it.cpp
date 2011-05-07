@@ -166,7 +166,7 @@ BOOL CSoundFile::ReadIT(const BYTE *lpStream, DWORD dwMemLength)
 	BYTE chnmask[64], channels_used[64];
 	MODCOMMAND lastvalue[64];
 
-	if ((!lpStream) || (dwMemLength < 0x100)) return FALSE;
+	if ((!lpStream) || (dwMemLength < sizeof(ITFILEHEADER))) return FALSE;
 	ITFILEHEADER pifh = *(ITFILEHEADER *)lpStream;
 
 	pifh.id = bswapLE32(pifh.id);
