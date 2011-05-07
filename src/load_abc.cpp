@@ -4299,7 +4299,7 @@ BOOL CSoundFile::ReadABC(const uint8_t *lpStream, DWORD dwMemLength)
 					ch0 = ' ';
 					pp = 0;
 					while( (ch = *p++) ) {
-						if( isalpha(ch) && *p != ':' ) { // maybe a macro
+						if( !pp && isalpha(ch) && *p != ':' ) { // maybe a macro
 							for( mp=h->umacro; mp; mp=mp->next ) {
 								if( ch == mp->name[0] ) {
 									pp = p;
