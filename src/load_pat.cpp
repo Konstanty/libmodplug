@@ -67,7 +67,8 @@ typedef UWORD WORD;
 
 // 128 gm and 63 drum
 #define MAXSMP				191
-static char midipat[MAXSMP][40];
+static int isabspath = 0;
+static char midipat[MAXSMP][128];
 static char pathforpat[128];
 static char timiditycfg[128];
 
@@ -360,7 +361,7 @@ static void mmreadSBYTES(char *buf, long sz, MMFILE *mmfile)
 
 void pat_init_patnames(void)
 {
-	int i,j;
+	int i,j, pfnlen, ndir;
 	char *p, *q;
 	char line[PATH_MAX];
 	MMSTREAM *mmcfg;
@@ -383,20 +384,32 @@ void pat_init_patnames(void)
 		j = 0;
 		_mm_fgets(mmcfg, line, PATH_MAX);
 		while( !_mm_feof(mmcfg) ) {
-			if( isdigit(line[0]) ) {
+			if( isdigit(line[0]) || (line[0] == '\t' && isdigit(line[1])) ) {
 				i = atoi(line);
 				if( i < MAXSMP && i >= 0 ) {
-					p = strchr(line,'/')+1;
+					p = strchr(line,'/') + 1;
 					if(j) 
 						q = midipat[pat_gm_drumnr(i)-1];
 					else
 						q = midipat[i];
-					while( *p && !isspace(*p) )	*q++ = *p++;
-					if( isspace(*p) ) {
+					pfnlen = 0;
+					ndir = 0;
+					while( *p && !isspace(*p) && pfnlen < 128 ) {
+						if (*p == DIRDELIM) ndir++;
+						pfnlen ++;
+						*q++ = *p++;
+					}
+					if (ndir > 2) isabspath = 1;
+					if( isblank(*p) && *(p+1) != '#' && pfnlen < 128 ) {
 						*q++ = ':';
 						while( isspace(*p) ) {
 							while( isspace(*p) ) p++;
-							while( *p && !isspace(*p) ) *q++ = *p++;
+							if ( *p == '#' ) { // comment
+								
+							} else while( *p && !isspace(*p) && pfnlen < 128 ) {
+								pfnlen ++;
+								*q++ = *p++;
+							}
 							if( isspace(*p) ) *q++ = ' ';
 						}
 					}
@@ -410,6 +423,7 @@ void pat_init_patnames(void)
 	}
 	q = midipat[0];
 	j = 0;
+	// make all empty patches duplicate the previous valid one.
 	for( i=0; i<MAXSMP; i++ )	{
 		if( midipat[i][0] ) q = midipat[i];
 		else {
@@ -431,12 +445,13 @@ static char *pat_build_path(char *fname, int pat)
 {
 	char *ps;
 	ps = strrchr(midipat[pat], ':');
+	
 	if( ps ) {
-		sprintf(fname, "%s%c%s", pathforpat, DIRDELIM, midipat[pat]);
+		sprintf(fname, "%s%c%s", isabspath ? "" : pathforpat, DIRDELIM, midipat[pat]);
 		strcpy(strrchr(fname, ':'), ".pat");
 		return ps;
 	}
-	sprintf(fname, "%s%c%s.pat", pathforpat, DIRDELIM, midipat[pat]);
+	sprintf(fname, "%s%c%s.pat", isabspath ? "" : pathforpat, DIRDELIM, midipat[pat]);
 	return 0;
 }
 
@@ -1236,7 +1251,7 @@ static void PATsample(CSoundFile *cs, MODINSTRUMENT *q, int smp, int gm)
 #endif
 {
 	WaveHeader hw;
-	char s[32];
+	char s[256];
 	sprintf(s, "%d:%s", smp-1, midipat[gm-1]);
 #ifdef NEWMIKMOD
 	q->samplename = DupStr(of->allochandle, s,28);
