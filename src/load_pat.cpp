@@ -34,7 +34,11 @@
 #include <math.h>
 #include <ctype.h>
 #ifndef _WIN32
+#include <limits.h> // for PATH_MAX
 #include <unistd.h> // for sleep
+#endif
+#ifndef PATH_MAX
+#define PATH_MAX 256
 #endif
 
 #ifdef NEWMIKMOD
@@ -358,7 +362,7 @@ void pat_init_patnames(void)
 {
 	int i,j;
 	char *p, *q;
-	char line[80];
+	char line[PATH_MAX];
 	MMSTREAM *mmcfg;
 	strcpy(pathforpat, PATHFORPAT);
 	strcpy(timiditycfg, TIMIDITYCFG);
@@ -377,7 +381,7 @@ void pat_init_patnames(void)
 	else {
 		// read in bank 0 and drum patches
 		j = 0;
-		_mm_fgets(mmcfg, line, 80);
+		_mm_fgets(mmcfg, line, PATH_MAX);
 		while( !_mm_feof(mmcfg) ) {
 			if( isdigit(line[0]) ) {
 				i = atoi(line);
@@ -400,7 +404,7 @@ void pat_init_patnames(void)
 				}
 			}
 			if( !strncmp(line,"drumset",7) ) j = 1;
-			_mm_fgets(mmcfg, line, 80);
+			_mm_fgets(mmcfg, line, PATH_MAX);
 		}
 		_mm_fclose(mmcfg);
 	}
