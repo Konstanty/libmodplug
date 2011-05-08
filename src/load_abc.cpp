@@ -342,6 +342,7 @@ static uint32_t abcticks(uint32_t modticks)
 static uint32_t notelen_notediv_to_ticks(int speed, int len, int div)
 {
 	uint32_t u;
+	if (div == 0) return 0;
 	u = (ROWSPERNOTE * RESOLUTION * speed * len * global_tempo_factor) / (div * global_tempo_divider);
 	return u;
 }
