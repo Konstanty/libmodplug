@@ -67,7 +67,6 @@ typedef UWORD WORD;
 
 // 128 gm and 63 drum
 #define MAXSMP				191
-static int isabspath = 0;
 static char midipat[MAXSMP][128];
 static char pathforpat[128];
 static char timiditycfg[128];
@@ -361,7 +360,7 @@ static void mmreadSBYTES(char *buf, long sz, MMFILE *mmfile)
 
 void pat_init_patnames(void)
 {
-	int i,j, pfnlen, ndir;
+	int i, isdrumset, nskip, pfnlen;
 	char *p, *q;
 	char line[PATH_MAX];
 	MMSTREAM *mmcfg;
@@ -381,62 +380,61 @@ void pat_init_patnames(void)
 	}
 	else {
 		// read in bank 0 and drum patches
-		j = 0;
+		isdrumset = 0;
 		_mm_fgets(mmcfg, line, PATH_MAX);
 		while( !_mm_feof(mmcfg) ) {
-			if( isdigit(line[0]) || (line[0] == '\t' && isdigit(line[1])) ) {
-				i = atoi(line);
-				if( i < MAXSMP && i >= 0 ) {
-					p = strchr(line,'/') + 1;
-					if(j) 
-						q = midipat[pat_gm_drumnr(i)-1];
-					else
-						q = midipat[i];
+			if( isdigit(line[0]) || (isblank(line[0]) && isdigit(line[1])) ) {
+				p = line;
+				// get pat number
+				while ( isspace(*p) ) p ++;
+				i = atoi(p);
+				while ( isdigit(*p) ) p ++;
+				while ( isspace(*p) ) p ++;
+				// get pat file name
+				if( *p && i < MAXSMP && i >= 0 && *p != '#' ) {
+					q = isdrumset ? midipat[pat_gm_drumnr(i)-1] : midipat[i];
 					pfnlen = 0;
-					ndir = 0;
-					while( *p && !isspace(*p) && pfnlen < 128 ) {
-						if (*p == DIRDELIM) ndir++;
+					while( *p && !isspace(*p) && *p != '#' && pfnlen < 128 ) {
 						pfnlen ++;
 						*q++ = *p++;
 					}
-					if (ndir > 2) isabspath = 1;
 					if( isblank(*p) && *(p+1) != '#' && pfnlen < 128 ) {
-						*q++ = ':';
+						*q++ = ':'; pfnlen ++;
 						while( isspace(*p) ) {
 							while( isspace(*p) ) p++;
 							if ( *p == '#' ) { // comment
-								
+
 							} else while( *p && !isspace(*p) && pfnlen < 128 ) {
 								pfnlen ++;
 								*q++ = *p++;
 							}
-							if( isspace(*p) ) *q++ = ' ';
+							if( isspace(*p) ) { *q++ = ' '; pfnlen++; }
 						}
 					}
 					*q++ = '\0';
 				}
 			}
-			if( !strncmp(line,"drumset",7) ) j = 1;
+			if( !strncmp(line,"drumset",7) ) isdrumset = 1;
 			_mm_fgets(mmcfg, line, PATH_MAX);
 		}
 		_mm_fclose(mmcfg);
 	}
 	q = midipat[0];
-	j = 0;
-	// make all empty patches duplicate the previous valid one.
+	nskip = 0;
+	// make all empty patches duplicates the previous valid one.
 	for( i=0; i<MAXSMP; i++ )	{
 		if( midipat[i][0] ) q = midipat[i];
 		else {
 			if( midipat[i] != q)
-				strcpy(midipat[i],q);
-			if( midipat[i][0] == '\0' ) j++;
+				strcpy(midipat[i], q);
+			if( midipat[i][0] == '\0' ) nskip++;
 		}
 	}
-	if( j ) {
+	if( nskip ) {
 		for( i=MAXSMP; i-- > 0; )	{
 			if( midipat[i][0] ) q = midipat[i];
 			else if( midipat[i] != q )
-				strcpy(midipat[i],q);
+				strcpy(midipat[i], q);
 		}
 	}
 }
@@ -444,14 +442,16 @@ void pat_init_patnames(void)
 static char *pat_build_path(char *fname, int pat)
 {
 	char *ps;
-	ps = strrchr(midipat[pat], ':');
-	
+	char *patfile = midipat[pat];
+	int isabspath = (patfile[0] == '/');
+	if ( isabspath ) patfile ++;
+	ps = strrchr(patfile, ':');
 	if( ps ) {
-		sprintf(fname, "%s%c%s", isabspath ? "" : pathforpat, DIRDELIM, midipat[pat]);
+		sprintf(fname, "%s%c%s", isabspath ? "" : pathforpat, DIRDELIM, patfile);
 		strcpy(strrchr(fname, ':'), ".pat");
 		return ps;
 	}
-	sprintf(fname, "%s%c%s.pat", isabspath ? "" : pathforpat, DIRDELIM, midipat[pat]);
+	sprintf(fname, "%s%c%s.pat", isabspath ? "" : pathforpat, DIRDELIM, patfile);
 	return 0;
 }
 
@@ -603,7 +603,7 @@ static void pat_amplify(char *b, int num, int amp, int m)
 			for( i=0; i<n; i++ ) {
 				v = (((int)(*pw) - 0x8000) * amp) / 100;
 				if( v < -0x8000 ) v = -0x8000;
-				if( v >  0x7fff ) v =  0x7fff; 
+				if( v >  0x7fff ) v =  0x7fff;
 				*pw++ = v + 0x8000;
 			}
 		}
@@ -612,7 +612,7 @@ static void pat_amplify(char *b, int num, int amp, int m)
 			for( i=0; i<n; i++ ) {
 				v = ((*pi) * amp) / 100;
 				if( v < -0x8000 ) v = -0x8000;
-				if( v >  0x7fff ) v =  0x7fff; 
+				if( v >  0x7fff ) v =  0x7fff;
 				*pi++ = v;
 			}
 		}
@@ -797,7 +797,7 @@ static PATHANDLE *PAT_Init(void)
     PATHANDLE   *retval;
 #ifdef NEWMIKMOD
     MM_ALLOC     *allochandle;
-    
+
 		allochandle = _mmalloc_create("Load_PAT", NULL);
     retval = (PATHANDLE *)_mm_calloc(allochandle, 1,sizeof(PATHANDLE));
 		if( !retval ) return NULL;
@@ -1057,7 +1057,7 @@ static void pat_setpat_inst(WaveHeader *hw, INSTRUMENT *d, int smp)
 {
 	int u, inuse;
 	int envpoint[6], envvolume[6];
-	for(u=0; u<120; u++) {        
+	for(u=0; u<120; u++) {
 		d->samplenumber[u] = smp;
 		d->samplenote[u] = smp;
 	}
@@ -1269,7 +1269,7 @@ static void PATsample(CSoundFile *cs, MODINSTRUMENT *q, int smp, int gm)
 
 		// Enable aggressive declicking for songs that do not loop and that
 		// are long enough that they won't be adversely affected.
-		
+
 		q->flags  |= SL_LOOP;
 		q->format |= SF_16BITS;
 		q->format |= SF_SIGNED;
@@ -1475,7 +1475,7 @@ BOOL CSoundFile::ReadPAT(const BYTE *lpStream, DWORD dwMemLength)
 	m_nDefaultSpeed = 6;
 	m_nChannels     = h->samples;
 	numpat          = t;
-	
+
 	m_dwSongFlags   = SONG_LINEARSLIDES;
 	m_nMinPeriod    = 28 << 2;
 	m_nMaxPeriod    = 1712 << 3;
