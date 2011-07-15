@@ -195,10 +195,10 @@ BOOL CSoundFile::ReadS3M(const BYTE *lpStream, DWORD dwMemLength)
 //---------------------------------------------------------------
 {
 	UINT insnum,patnum,nins,npat;
-	DWORD insfile[128];
+	DWORD insfile[MAX_SAMPLES];
 	WORD ptr[256];
 	DWORD dwMemPos;
-	BYTE insflags[128], inspack[128];
+	BYTE insflags[MAX_SAMPLES], inspack[MAX_SAMPLES];
 
 	if ((!lpStream) || (dwMemLength <= sizeof(S3MFILEHEADER)+sizeof(S3MSAMPLESTRUCT)+64)) return FALSE;
 	S3MFILEHEADER psfh = *(S3MFILEHEADER *)lpStream;
@@ -312,7 +312,14 @@ BOOL CSoundFile::ReadS3M(const BYTE *lpStream, DWORD dwMemLength)
 			if (j < 1024) j = 1024;
 			Ins[iSmp].nC4Speed = j;
 			insfile[iSmp] = (pSmp.hmem << 20) + (bswapLE16(pSmp.memseg) << 4);
-			if (insfile[iSmp] > dwMemLength) insfile[iSmp] &= 0xFFFF;
+			// offset is invalid - ignore this sample.
+			if (insfile[iSmp] > dwMemLength) insfile[iSmp] = 0;
+			else if (insfile[iSmp]) {
+				// ignore duplicate samples.
+				for (int z=iSmp-1; z>=0; z--)
+					if (insfile[iSmp] == insfile[z])
+						insfile[iSmp] = 0;
+			}
 			if ((Ins[iSmp].nLoopStart >= Ins[iSmp].nLoopEnd) || (Ins[iSmp].nLoopEnd - Ins[iSmp].nLoopStart < 8))
 				Ins[iSmp].nLoopStart = Ins[iSmp].nLoopEnd = 0;
 			Ins[iSmp].nPan = 0x80;
