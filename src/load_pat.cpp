@@ -322,6 +322,7 @@ typedef struct {
 	char *mm;
 	int sz;
 	int pos;
+	int error;
 } MMFILE;
 
 static long mmftell(MMFILE *mmfile)
@@ -331,32 +332,53 @@ static long mmftell(MMFILE *mmfile)
 
 static void mmfseek(MMFILE *mmfile, long p, int whence)
 {
+	int newpos = mmfile->pos;
 	switch(whence) {
 		case SEEK_SET:
-			mmfile->pos = p;
+			newpos = p;
 			break;
 		case SEEK_CUR:
-			mmfile->pos += p;
+			newpos += p;
 			break;
 		case SEEK_END:
-			mmfile->pos = mmfile->sz + p;
+			newpos = mmfile->sz + p;
 			break;
+	}
+	if (newpos < mmfile->sz)
+		mmfile->pos = newpos;
+	else {
+		mmfile->error = 1;
+//		printf("WARNING: seeking too far\n");
 	}
 }
 
 static void mmreadUBYTES(BYTE *buf, long sz, MMFILE *mmfile)
 {
+	// do not overread.
+	if (sz > mmfile->sz - mmfile->pos)
+		sz = mmfile->sz - mmfile->pos;
 	memcpy(buf, &mmfile->mm[mmfile->pos], sz);
 	mmfile->pos += sz;
 }
 
 static void mmreadSBYTES(char *buf, long sz, MMFILE *mmfile)
 {
+	// do not overread.
+	if (sz > mmfile->sz - mmfile->pos)
+		sz = mmfile->sz - mmfile->pos;
 	memcpy(buf, &mmfile->mm[mmfile->pos], sz);
 	mmfile->pos += sz;
 }
 
 #endif
+
+long _mm_getfsize(MMSTREAM *mmpat) {
+	long fsize;
+	_mm_fseek(mmpat, 0L, SEEK_END);
+	fsize = _mm_ftell(mmpat);
+	_mm_fseek(mmpat, 0L, SEEK_SET);
+	return(fsize);
+}
 
 void pat_init_patnames(void)
 {
@@ -565,6 +587,10 @@ static void pat_get_waveheader(MMFILE *mmpat, WaveHeader *hw, int layer)
 			for( i=1; i<layer; i++ ) {
 				mmreadUBYTES((BYTE *)hw, sizeof(WaveHeader), mmpat);
 				mmfseek(mmpat, hw->wave_size, SEEK_CUR);
+				if ( mmpat->error ) {
+					hw->wave_size = 0;
+					return;
+				}
 			}
 		}
 		else {
@@ -599,13 +625,17 @@ static void pat_get_waveheader(MMFILE *mmpat, WaveHeader *hw, int layer)
 static int pat_readpat_attr(int pat, WaveHeader *hw, int layer)
 {
 	char fname[128];
+	int fsize;
 	MMSTREAM *mmpat;
 	pat_build_path(fname, pat);
 	mmpat = _mm_fopen(fname, "r");
 	if( !mmpat )
 		return 0;
+	fsize = _mm_getfsize(mmpat);
 	pat_read_waveheader(mmpat, hw, layer);
 	_mm_fclose(mmpat);
+	if (hw->wave_size > fsize)
+		return 0;
 	return 1;
 }
 
@@ -1416,6 +1446,7 @@ BOOL CSoundFile::ReadPAT(const BYTE *lpStream, DWORD dwMemLength)
 	mm.mm = (char *)lpStream;
 	mm.sz = dwMemLength;
 	mm.pos = 0;
+	mm.error = 0;
 #endif
 	while( avoid_reentry ) sleep(1);
 	avoid_reentry = 1;
