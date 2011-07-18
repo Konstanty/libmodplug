@@ -360,9 +360,10 @@ static void mmreadSBYTES(char *buf, long sz, MMFILE *mmfile)
 
 void pat_init_patnames(void)
 {
-	int i, isdrumset, nskip, pfnlen;
+	int z, i, nsources, isdrumset, nskip, pfnlen;
 	char *p, *q;
 	char line[PATH_MAX];
+	char cfgsources[5][PATH_MAX] = {{0}, {0}, {0}, {0}, {0}};
 	MMSTREAM *mmcfg;
 	strcpy(pathforpat, PATHFORPAT);
 	strcpy(timiditycfg, TIMIDITYCFG);
@@ -373,16 +374,22 @@ void pat_init_patnames(void)
 		strcat(timiditycfg,"/timidity.cfg");
 		strcat(pathforpat,"/instruments");
 	}
-	mmcfg = _mm_fopen(timiditycfg,"r");
+	strncpy(cfgsources[0], timiditycfg, PATH_MAX);
+	nsources = 1;
+
 	for( i=0; i<MAXSMP; i++ )	midipat[i][0] = '\0';
-	if( !mmcfg ) {
-		pat_message("can not open %s, use environment variable " PAT_ENV_PATH2CFG " for the directory", timiditycfg);
-	}
-	else {
-		// read in bank 0 and drum patches
-		isdrumset = 0;
-		_mm_fgets(mmcfg, line, PATH_MAX);
-		while( !_mm_feof(mmcfg) ) {
+
+	for ( z=0; z<5; z++ ) {
+		if (cfgsources[z][0] == 0) continue;
+		mmcfg = _mm_fopen(cfgsources[z],"r");
+		if( !mmcfg ) {
+			pat_message("can not open %s, use environment variable " PAT_ENV_PATH2CFG " for the directory", cfgsources[z]);
+		}
+		else {
+			// read in bank 0 and drum patches
+			isdrumset = 0;
+			_mm_fgets(mmcfg, line, PATH_MAX);
+			while( !_mm_feof(mmcfg) ) {
 			if( isdigit(line[0]) || (isblank(line[0]) && isdigit(line[1])) ) {
 				p = line;
 				// get pat number
@@ -415,9 +422,23 @@ void pat_init_patnames(void)
 				}
 			}
 			if( !strncmp(line,"drumset",7) ) isdrumset = 1;
+			if( !strncmp(line,"source",6) && nsources < 5 ) {
+				q = cfgsources[nsources];
+				p = &line[7];
+				while ( isspace(*p) ) p ++;
+				pfnlen = 0;
+				while ( *p && *p != '#' && !isspace(*p) && pfnlen < 128 ) {
+					pfnlen ++;
+					*q++ = *p++;
+				}
+				*q = 0; // null termination
+				nsources++;
+			}
 			_mm_fgets(mmcfg, line, PATH_MAX);
+
+			} /* end file parsing */
+			_mm_fclose(mmcfg);
 		}
-		_mm_fclose(mmcfg);
 	}
 	q = midipat[0];
 	nskip = 0;
