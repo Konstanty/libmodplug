@@ -52,7 +52,7 @@ BOOL CSoundFile::ReadAMS(LPCBYTE lpStream, DWORD dwMemLength)
 	
 	if ((!lpStream) || (dwMemLength < 1024)) return FALSE;
 	if ((pfh->verhi != 0x01) || (strncmp(pfh->szHeader, "Extreme", 7))
-	 || (!pfh->patterns) || (!pfh->orders) || (!pfh->samples) || (pfh->samples > MAX_SAMPLES)
+	 || (!pfh->patterns) || (!pfh->orders) || (!pfh->samples) || (pfh->samples >= MAX_SAMPLES)
 	 || (pfh->patterns > MAX_PATTERNS) || (pfh->orders > MAX_ORDERS))
 	{
 		return ReadAMS2(lpStream, dwMemLength);

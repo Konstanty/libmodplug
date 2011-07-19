@@ -101,7 +101,7 @@ BOOL CSoundFile::ReadDSM(LPCBYTE lpStream, DWORD dwMemLength)
 	if (m_nChannels < 4) m_nChannels = 4;
 	if (m_nChannels > 16) m_nChannels = 16;
 	m_nSamples = psong->numsmp;
-	if (m_nSamples > MAX_SAMPLES) m_nSamples = MAX_SAMPLES;
+	if (m_nSamples >= MAX_SAMPLES) m_nSamples = MAX_SAMPLES - 1;
 	m_nDefaultSpeed = psong->speed;
 	m_nDefaultTempo = psong->bpm;
 	m_nDefaultGlobalVolume = psong->globalvol << 2;
