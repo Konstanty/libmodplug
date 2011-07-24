@@ -321,7 +321,7 @@ BOOL CSoundFile::ReadAMS2(LPCBYTE lpStream, DWORD dwMemLength)
 	dwMemPos = pfh->titlelen + 8;
 	psh = (AMS2SONGHEADER *)(lpStream + dwMemPos);
 	if (((psh->version & 0xFF00) != 0x0200) || (!psh->instruments)
-	 || (psh->instruments > MAX_INSTRUMENTS) || (!psh->patterns) || (!psh->orders)) return FALSE;
+	 || (psh->instruments >= MAX_INSTRUMENTS) || (!psh->patterns) || (!psh->orders)) return FALSE;
 	dwMemPos += sizeof(AMS2SONGHEADER);
 	if (pfh->titlelen)
 	{
