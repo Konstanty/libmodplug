@@ -16,6 +16,10 @@ extern void Log(LPCSTR s, ...);
 
 //////////////////////////////////////////////////////////
 // OctaMed MED file support (import only)
+//
+// Lookup table for bpm values.
+static const BYTE bpmvals[10] = { 179,164,152,141,131,123,116,110,104,99 };
+
 
 // flags
 #define	MMD_FLAG_FILTERON	0x1
@@ -265,8 +269,6 @@ typedef struct tagMMD0EXP
 static void MedConvert(MODCOMMAND *p, const MMD0SONGHEADER *pmsh)
 //---------------------------------------------------------------
 {
-	const BYTE bpmvals[9] = { 179,164,152,141,131,123,116,110,104};
-
 	UINT command = p->command;
 	UINT param = p->param;
 	switch(command)
@@ -587,7 +589,12 @@ BOOL CSoundFile::ReadMed(const BYTE *lpStream, DWORD dwMemLength)
 	#endif
 	} else
 	{
-		deftempo = _muldiv(deftempo, 5*715909, 2*474326);
+		if (pmsh->flags & MMD_FLAG_8CHANNEL && deftempo > 0 && deftempo <= 10)
+		{
+			deftempo = bpmvals[deftempo-1];
+		} else {
+			deftempo = _muldiv(deftempo, 5*715909, 2*474326);
+		}
 	#ifdef MED_LOG
 		Log("oldtempo: %3d bpm (bpm=%3d)\n", deftempo, bswapBE16(pmsh->deftempo));
 	#endif
