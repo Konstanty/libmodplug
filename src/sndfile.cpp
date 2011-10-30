@@ -772,8 +772,8 @@ UINT CSoundFile::GetSaveFormats() const
 	if ((!m_nSamples) || (!m_nChannels) || (m_nType == MOD_TYPE_NONE)) return 0;
 	switch(m_nType)
 	{
-	case MOD_TYPE_MOD:	n = MOD_TYPE_MOD;
-	case MOD_TYPE_S3M:	n = MOD_TYPE_S3M;
+	case MOD_TYPE_MOD:	n |= MOD_TYPE_MOD;
+	case MOD_TYPE_S3M:	n |= MOD_TYPE_S3M;
 	}
 	n |= MOD_TYPE_XM | MOD_TYPE_IT;
 	if (!m_nInstruments)
