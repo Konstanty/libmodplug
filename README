@@ -103,7 +103,7 @@ Contents
            immediately succeeding the control events.
 - Slightly better sound quality than Mikmod.  Vastly superior quality
    over Winamp.
-- All XMMS calls are supported exept for the band gains on the
+- All XMMS calls are supported except for the band gains on the
    equalizer.  The preamp is supported, but MOD music is not anywhere
    near as cheap to equalize as MP3.  Thus, equalization does is not
    supported in this version.  However, a variable bass boost option

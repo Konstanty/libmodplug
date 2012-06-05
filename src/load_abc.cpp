@@ -1254,7 +1254,7 @@ static ABCTRACK *abc_track_with_note_tied(ABCHANDLE *h, uint32_t tracktime, int 
 	tp = h->tp;
 	vp = tp->tiedvpos;
 	if( tp->vpos != vp ) {
-		// chord note track allready returned in previous call
+		// chord note track already returned in previous call
 		for( tp = h->track; tp; tp = tp->next ) {
 			if( tp->vno == vn && tp->vpos == vp ) {
 				tp->tiedvpos = h->tp->vpos;
