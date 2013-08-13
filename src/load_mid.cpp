@@ -1793,7 +1793,10 @@ BOOL CSoundFile::ReadMID(const BYTE *lpStream, DWORD dwMemLength)
 		mid_adjust_for_optimal_tempo(h, maxtempo);
 	}
 	if( maxtempo > 0 ) m_nDefaultTempo = (255 * m_nDefaultTempo) / maxtempo;
+
 	numpats = 1 + (modticks(h, h->tracktime) / h->speed / 64 );
+	if (numpats > MAX_PATTERNS) numpats = MAX_PATTERNS;
+
 	if( h->verbose ) printf("Generating %d patterns with speed %d\n", numpats, h->speed);
 #ifdef NEWMIKMOD
 	if( !of->songname ) of->songname = DupStr(of->allochandle, "Untitled", 8);
