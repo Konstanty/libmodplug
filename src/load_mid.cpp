@@ -1456,6 +1456,7 @@ BOOL CSoundFile::ReadMID(const BYTE *lpStream, DWORD dwMemLength)
 	else
 		h->divider = h->resolution;
 	h->divider <<= 2; // ticks per quartnote ==> ticks per note
+	if (!h->divider) h->divider = 1;
 	h->tempo = 122;
 	m_nDefaultTempo = 0;
 	h->tracktime = 0;
