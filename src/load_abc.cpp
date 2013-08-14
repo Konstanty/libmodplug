@@ -3272,6 +3272,7 @@ static int abc_MIDI_gchord(const char *p, ABCHANDLE *h)
 			// consume the rest of the input
 			// definitely enough "drum last state" stored.
 			while ( *p && !isspace(*p) ) p++;
+			break;
 		}
 	}
 	*q = '\0';
