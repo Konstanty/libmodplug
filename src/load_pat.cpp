@@ -562,7 +562,7 @@ static void pat_read_waveheader(MMSTREAM *mmpat, WaveHeader *hw, int layer)
 		}
 	}
 	_mm_read_UBYTES((BYTE *)hw, sizeof(WaveHeader), mmpat);
-	strncpy(hw->reserved, hl.reserved, 36);
+	strncpy(hw->reserved, hl.reserved, 32);
 	if( hw->start_loop >= hw->wave_size ) {
 		hw->start_loop = 0;
 		hw->end_loop = 0;
