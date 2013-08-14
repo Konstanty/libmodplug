@@ -1330,7 +1330,7 @@ static void PATsample(CSoundFile *cs, MODINSTRUMENT *q, int smp, int gm)
 #else
 	s[31] = '\0';
 	memset(cs->m_szNames[smp], 0, 32);
-	strcpy(cs->m_szNames[smp], s);
+	strncpy(cs->m_szNames[smp], s, 32-1);
 	q->nGlobalVol = 64;
 	q->nPan       = 128;
 	q->uFlags     = CHN_16BIT;
