@@ -1814,7 +1814,7 @@ static int abc_extract_tempo(const char *p, int invoice)
 
 static void	abc_set_parts(char **d, char *p)
 {
-	int i,j,k,m,n;
+	int i,j,k,m,n,size;
 	char *q;
 #ifdef NEWMIKMOD
 	static MM_ALLOC *h;
@@ -1852,10 +1852,11 @@ static void	abc_set_parts(char **d, char *p)
 			i += n-1;
 		}
 	}
-	q = (char *)_mm_calloc(h, j+1, sizeof(char));	// enough storage for the worst case
+	size = (j + 1) > 0 ? j+1 : j;
+	q = (char *)_mm_calloc(h, size, sizeof(char));	// enough storage for the worst case
 	// now copy bytes from p to *d, taking parens and digits in account
 	j = 0;
-	for( i=0; p[i] && p[i] != '%'; i++ ) {
+	for( i=0; p[i] && p[i] != '%' && j < size; i++ ) {
 		if( isdigit(p[i]) || isupper(p[i]) || p[i] == '(' || p[i] == ')' ) {
 			if( p[i] == ')' ) {
 				for( n=j; n > 0 && q[n-1] != '('; n-- )	;	// find open paren in q
