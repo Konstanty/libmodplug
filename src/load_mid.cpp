@@ -1461,6 +1461,9 @@ BOOL CSoundFile::ReadMID(const BYTE *lpStream, DWORD dwMemLength)
 	m_nDefaultTempo = 0;
 	h->tracktime = 0;
 	h->speed = 6;
+	if (h->miditracks == 0) {
+		return FALSE;
+	}
 	p = (BYTE *)getenv(ENV_MMMID_SPEED);
 	if( p && isdigit(*p) && p[0] != '0' && p[1] == '\0' ) {
 		// transform speed
@@ -1843,6 +1846,8 @@ BOOL CSoundFile::ReadMID(const BYTE *lpStream, DWORD dwMemLength)
 	m_dwSongFlags   = SONG_LINEARSLIDES;
 	m_nMinPeriod    = 28 << 2;
 	m_nMaxPeriod    = 1712 << 3;
+	if (m_nChannels == 0)
+		return FALSE;
 	// orderlist
 	for(t=0; t < numpats; t++)
 		Order[t] = t;
