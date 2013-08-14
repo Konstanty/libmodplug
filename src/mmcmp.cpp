@@ -155,7 +155,7 @@ BOOL MMCMP_Unpack(LPCBYTE *ppMemFile, LPDWORD pdwMemLength)
 			}
 		} else
 		// Data is 16-bit packed
-		if (pblk->flags & MMCMP_16BIT)
+		if (pblk->flags & MMCMP_16BIT && pblk->numbits < 16)
 		{
 			MMCMPBITBUFFER bb;
 			LPWORD pDest = (LPWORD)(pBuffer + psubblk->unpk_pos);
@@ -223,7 +223,7 @@ BOOL MMCMP_Unpack(LPCBYTE *ppMemFile, LPDWORD pdwMemLength)
 					pDest = (LPWORD)(pBuffer + psubblk[subblk].unpk_pos);
 				}
 			}
-		} else
+		} else if (pblk->num_bits < 8)
 		// Data is 8-bit packed
 		{
 			MMCMPBITBUFFER bb;
@@ -284,6 +284,8 @@ BOOL MMCMP_Unpack(LPCBYTE *ppMemFile, LPDWORD pdwMemLength)
 				}
 			}
 		}
+	} else {
+		return FALSE;
 	}
 	*ppMemFile = pBuffer;
 	*pdwMemLength = dwFileSize;
