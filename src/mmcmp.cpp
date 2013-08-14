@@ -1,6 +1,7 @@
 /*
  * This source code is public domain.
  *
+ * Handles unpacking of Powerpack PP20
  * Authors: Olivier Lapicque <olivierl@jps.net>
 */
 
