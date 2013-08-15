@@ -35,7 +35,7 @@ typedef struct MMCMPBLOCK
 	WORD sub_blk;
 	WORD flags;
 	WORD tt_entries;
-	WORD num_bits;
+	USHORT num_bits;
 } MMCMPBLOCK, *LPMMCMPBLOCK;
 
 typedef struct MMCMPSUBBLOCK
@@ -158,7 +158,7 @@ BOOL MMCMP_Unpack(LPCBYTE *ppMemFile, LPDWORD pdwMemLength)
 			}
 		} else
 		// Data is 16-bit packed
-		if (pblk->flags & MMCMP_16BIT && pblk->numbits < 16)
+		if (pblk->flags & MMCMP_16BIT && pblk->num_bits < 16)
 		{
 			MMCMPBITBUFFER bb;
 			LPWORD pDest = (LPWORD)(pBuffer + psubblk->unpk_pos);
@@ -286,9 +286,10 @@ BOOL MMCMP_Unpack(LPCBYTE *ppMemFile, LPDWORD pdwMemLength)
 					pDest = pBuffer + psubblk[subblk].unpk_pos;
 				}
 			}
+		} else
+		{
+			return FALSE;
 		}
-	} else {
-		return FALSE;
 	}
 	*ppMemFile = pBuffer;
 	*pdwMemLength = dwFileSize;
