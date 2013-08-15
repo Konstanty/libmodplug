@@ -1523,8 +1523,8 @@ BOOL CSoundFile::ReadPAT(const BYTE *lpStream, DWORD dwMemLength)
 	}
 #else
 	m_nType         = MOD_TYPE_PAT;
-	m_nInstruments  = h->samples + 1; // we know better but use each sample in the pat...
-	m_nSamples      = h->samples + 1; // xmms modplug does not use slot zero
+	m_nInstruments  = h->samples >= MAX_INSTRUMENTS-1 ? MAX_INSTRUMENTS-1 : h->samples + 1; // we know better but use each sample in the pat...
+	m_nSamples      = h->samples >= MAX_SAMPLES-1 ? MAX_SAMPLES-1 : h->samples + 1; // xmms modplug does not use slot zero
 	m_nDefaultSpeed = 6;
 	m_nChannels     = h->samples;
 	numpat          = t;
