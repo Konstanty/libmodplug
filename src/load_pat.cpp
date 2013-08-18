@@ -626,7 +626,7 @@ static void pat_get_waveheader(MMFILE *mmpat, WaveHeader *hw, int layer)
 static int pat_readpat_attr(int pat, WaveHeader *hw, int layer)
 {
 	char fname[128];
-	uint fsize;
+	unsigned long fsize;
 	MMSTREAM *mmpat;
 	pat_build_path(fname, pat);
 	mmpat = _mm_fopen(fname, "r");
