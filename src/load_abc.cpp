@@ -24,6 +24,7 @@
 	All systems - all compilers (hopefully)
 */
 
+#include <limits.h>
 #include <stdlib.h>
 #include <time.h>
 #include <string.h>
@@ -1814,7 +1815,8 @@ static int abc_extract_tempo(const char *p, int invoice)
 
 static void	abc_set_parts(char **d, char *p)
 {
-	int i,j,k,m,n,size;
+	int i,k,m,n;
+	size_t j, size;
 	char *q;
 #ifdef NEWMIKMOD
 	static MM_ALLOC *h;
@@ -1852,11 +1854,12 @@ static void	abc_set_parts(char **d, char *p)
 			i += n-1;
 		}
 	}
-	size = (j + 1) > 0 ? j+1 : j;
+	// even if j overflows above, it will only wrap around and still be okay
+	size = ( j > INT_MAX )? INT_MAX : j;
 	q = (char *)_mm_calloc(h, size, sizeof(char));	// enough storage for the worst case
 	// now copy bytes from p to *d, taking parens and digits in account
 	j = 0;
-	for( i=0; p[i] && p[i] != '%' && j < size; i++ ) {
+	for( i=0; p[i] && p[i] != '%' && j < size && i < size; i++ ) {
 		if( isdigit(p[i]) || isupper(p[i]) || p[i] == '(' || p[i] == ')' ) {
 			if( p[i] == ')' ) {
 				for( n=j; n > 0 && q[n-1] != '('; n-- )	;	// find open paren in q
