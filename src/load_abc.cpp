@@ -1855,8 +1855,8 @@ static void	abc_set_parts(char **d, char *p)
 		}
 	}
 	// even if j overflows above, it will only wrap around and still be okay
-	size = ( j > INT_MAX )? INT_MAX : j;
-	q = (char *)_mm_calloc(h, size, sizeof(char));	// enough storage for the worst case
+	size = ( j >= INT_MAX )? INT_MAX - 1 : j;
+	q = (char *)_mm_calloc(h, size + 1, sizeof(char)); // enough storage for the worst case
 	// now copy bytes from p to *d, taking parens and digits in account
 	j = 0;
 	for( i=0; p[i] && p[i] != '%' && j < size && i < size; i++ ) {
