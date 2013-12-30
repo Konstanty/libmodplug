@@ -1340,7 +1340,7 @@ static void PATsample(CSoundFile *cs, MODINSTRUMENT *q, int smp, int gm)
 		pat_setpat_attr(&hw, q);
 		pat_loops[smp-1] = (q->uFlags & CHN_LOOP)? 1: 0;
 		if( hw.modes & PAT_16BIT ) p = (char *)malloc(hw.wave_size);
-		else p = (char *)malloc(hw.wave_size * sizeof(short int));
+		else p = (char *)malloc(hw.wave_size * sizeof(char)*2);
 		if( p ) {
 			if( hw.modes & PAT_16BIT ) {
 				dec_pat_Decompress16Bit((short int *)p, hw.wave_size>>1, gm - 1);
@@ -1362,7 +1362,7 @@ static void PATsample(CSoundFile *cs, MODINSTRUMENT *q, int smp, int gm)
 		q->nVolume    = 256;
 		q->uFlags    |= CHN_LOOP;
 		q->uFlags    |= CHN_16BIT;
-		p = (char *)malloc(q->nLength*sizeof(short int));
+		p = (char *)malloc(q->nLength*sizeof(char)*2);
 		if( p ) {
 			dec_pat_Decompress8Bit((short int *)p, q->nLength, smp + MAXSMP - 1);
 			cs->ReadSample(q, RS_PCM16S, (LPSTR)p, q->nLength*2);
@@ -1577,7 +1577,7 @@ BOOL CSoundFile::ReadPAT(const BYTE *lpStream, DWORD dwMemLength)
 		memset(m_szNames[t], 0, 32);
 		strcpy(m_szNames[t], s);
 		if( hw.modes & PAT_16BIT ) p = (char *)malloc(hw.wave_size);
-		else p = (char *)malloc(hw.wave_size * sizeof(short int));
+		else p = (char *)malloc(hw.wave_size * sizeof(char) * 2);
 		if( p ) {
 			mmreadSBYTES(p, hw.wave_size, mmfile);
 			if( hw.modes & PAT_16BIT ) {
