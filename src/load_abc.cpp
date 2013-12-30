@@ -3390,7 +3390,7 @@ static void abc_add_drum(ABCHANDLE *h, uint32_t tracktime, uint32_t bartime)
 	while( rtime < stime ) {
 		gnote = h->drum[g*2];
 		i = h->drum[g*2+1] - '0';
-		if(gnote=='d') {
+		if( gnote=='d') {
 			tp->instr = pat_gm_drumnr(h->drumins[g]-1);
 			nnum      = pat_gm_drumnote(h->drumins[g]);
 			abc_add_drumnote(h, tp, etime + rtime/steps, nnum, h->drumvol[g]);
