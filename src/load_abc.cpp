@@ -3382,6 +3382,11 @@ static void abc_add_drum(ABCHANDLE *h, uint32_t tracktime, uint32_t bartime)
 	}
 	stime = (tracktime - etime) * steps;
 	rtime = 0;
+
+	// if no drumsteps, there is nothing we can do anyway.
+	if( steps == 0 )
+		return;
+
 	while( rtime < stime ) {
 		gnote = h->drum[g*2];
 		i = h->drum[g*2+1] - '0';
