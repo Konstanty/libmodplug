@@ -2887,7 +2887,7 @@ static int ABC_ReadPatterns(MODCOMMAND *pattern[], WORD psize[], ABCHANDLE *h, i
 static int ABC_Key(const char *p)
 {
 	int i,j;
-	char c[8] = {0};
+	char c[8] = {}; // initialize all to zero.
 	const char *q;
 	while( isspace(*p) ) p++;
 	i = 0;
@@ -2901,7 +2901,6 @@ static int ABC_Key(const char *p)
 		c[i] = *p;
 		i++;
 	}
-	c[i] = '\0';
 	if( !strcmp(c,"Hp") || !strcmp(c,"HP") ) // highland pipes
 		strcpy(c,"Bm");	// two sharps at c and f
 	if( !strcasecmp(c+1, "minor") ) i=2;
