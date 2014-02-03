@@ -1463,6 +1463,7 @@ BOOL CSoundFile::ReadMID(const BYTE *lpStream, DWORD dwMemLength)
 	h->tracktime = 0;
 	h->speed = 6;
 	if (h->miditracks == 0) {
+		MID_Cleanup(h);
 		return FALSE;
 	}
 	p = (BYTE *)getenv(ENV_MMMID_SPEED);
