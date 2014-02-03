@@ -777,7 +777,6 @@ static int abc_transpose(const char *v)
 			global_octave_shift = 0;
 		}
 		if( j && !strncasecmp(v,"bass",4) ) {
-			m = "D,";
 			j = 0;
 			v += 4;
 			switch( *v ) {
@@ -2113,7 +2112,7 @@ static void abc_song_to_parts(ABCHANDLE *h, char **abcparts, BYTE partp[27][2])
 							x = 0;
 							break;
 						default:
-							x = 0;
+							// defaults set above.
 							break;
 					}
 					if( vmask[partno] != -1 ) nextp[partno] = x;
@@ -2890,7 +2889,6 @@ static int ABC_Key(const char *p)
 	char c[8] = {}; // initialize all to zero.
 	const char *q;
 	while( isspace(*p) ) p++;
-	i = 0;
 	q = p;
 	for( i=0; i<8 && *p && *p != ']'; p++ ) {
 		if( isspace(*p) ) {
@@ -3458,7 +3456,6 @@ static void abc_add_gchord(ABCHANDLE *h, uint32_t tracktime, uint32_t bartime)
 		gnote = h->gchord[2*g];
 		glen  = h->gchord[2*g+1] - '0';
 		if( ++g == gsteps ) g = 0;
-		nnum = 0;
 		switch(gnote) {
 			case 'b':
 				tp = abc_locate_track(h, h->tpc->v, GCHORDFPOS);
