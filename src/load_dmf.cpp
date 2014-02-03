@@ -91,7 +91,7 @@ BOOL CSoundFile::ReadDMF(const BYTE *lpStream, DWORD dwMemLength)
 	DMFSEQU *sequ;
 	DWORD dwMemPos;
 	BYTE infobyte[32];
-	BYTE smplflags[MAX_SAMPLES];
+	BYTE smplflags[MAX_SAMPLES], hasSMPI = 0;
 
 	if ((!lpStream) || (dwMemLength < 1024)) return FALSE;
 	if ((pfh->id != 0x464d4444) || (!pfh->version) || (pfh->version & 0xF0)) return FALSE;
@@ -378,6 +378,7 @@ BOOL CSoundFile::ReadDMF(const BYTE *lpStream, DWORD dwMemLength)
 		// "SMPI": Sample Info
 		case 0x49504d53:
 			{
+				hasSMPI = 1;
 				DMFSMPI *pds = (DMFSMPI *)(lpStream+dwMemPos);
 				if (pds->size <= dwMemLength - dwMemPos)
 				{
@@ -450,7 +451,8 @@ BOOL CSoundFile::ReadDMF(const BYTE *lpStream, DWORD dwMemLength)
 					if ((pksize) && (iSmp <= m_nSamples))
 					{
 						UINT flags = (Ins[iSmp].uFlags & CHN_16BIT) ? RS_PCM16S : RS_PCM8S;
-						if (smplflags[ismpd] & 4) flags = (Ins[iSmp].uFlags & CHN_16BIT) ? RS_DMF16 : RS_DMF8;
+						if (hasSMPI && smplflags[ismpd] & 4)
+							flags = (Ins[iSmp].uFlags & CHN_16BIT) ? RS_DMF16 : RS_DMF8;
 						ReadSample(&Ins[iSmp], flags, (LPSTR)(lpStream+dwPos), pksize);
 					}
 					dwPos += pksize;
