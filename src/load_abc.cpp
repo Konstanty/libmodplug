@@ -2911,7 +2911,6 @@ static int ABC_Key(const char *p)
 	if( !strcasecmp(c+2, "maj") ) i=2;
 	for( ; i<6; i++ )
 		c[i] = ' ';
-	c[i] = '\0';
 	for( i=0; keySigs[i]; i++ ) {
 		for( j=10; j<46; j+=6 )
 			if( !strncasecmp(keySigs[i]+j, c, 6) )
