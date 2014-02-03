@@ -1576,7 +1576,8 @@ BOOL CSoundFile::ReadPAT(const BYTE *lpStream, DWORD dwMemLength)
 		s[31] = '\0';
 		memset(m_szNames[t], 0, 32);
 		strcpy(m_szNames[t], s);
-		if( hw.modes & PAT_16BIT ) p = (char *)malloc(hw.wave_size);
+		if ( hw.wave_size == 0 ) p = NULL;
+		else if( hw.modes & PAT_16BIT ) p = (char *)malloc(hw.wave_size);
 		else p = (char *)malloc(hw.wave_size * sizeof(char) * 2);
 		if( p ) {
 			mmreadSBYTES(p, hw.wave_size, mmfile);
