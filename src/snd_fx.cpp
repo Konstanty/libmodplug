@@ -38,7 +38,8 @@ DWORD CSoundFile::GetLength(BOOL bAdjust, BOOL bTotal)
 	memset(oldparam, 0, sizeof(oldparam));
 	memset(chnvols, 64, sizeof(chnvols));
 	memset(samples, 0, sizeof(samples));
-	for (UINT icv=0; icv<m_nChannels; icv++) chnvols[icv] = ChnSettings[icv].nVolume;
+	for (UINT icv=0; icv<m_nChannels; icv++)
+		chnvols[icv] = ChnSettings[icv].nVolume;
 	nMaxRow = m_nNextRow;
 	nMaxPattern = m_nNextPattern;
 	for (;;)
