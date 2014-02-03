@@ -573,7 +573,7 @@ static void abc_new_macro(ABCHANDLE *h, const char *m)
 	char key[256], value[256];
 	abc_extractkeyvalue(key, sizeof(key), value, sizeof(value), m);
 
-    retval = (ABCMACRO *)_mm_calloc(h->macrohandle, 1,sizeof(ABCTRACK));
+    retval = (ABCMACRO *)_mm_calloc(h->macrohandle, 1,sizeof(ABCMACRO));
     retval->name  = DupStr(h->macrohandle, key, strlen(key));
 		retval->n     = strrchr(retval->name, 'n'); // for transposing macro's
     retval->subst = DupStr(h->macrohandle, value, strlen(value));
@@ -604,7 +604,7 @@ static void abc_new_umacro(ABCHANDLE *h, const char *m)
 			}
 			return;
 		}
-    retval = (ABCMACRO *)_mm_calloc(h->macrohandle, 1,sizeof(ABCTRACK));
+    retval = (ABCMACRO *)_mm_calloc(h->macrohandle, 1,sizeof(ABCMACRO));
     retval->name  = DupStr(h->macrohandle, key, 1);
     retval->subst = DupStr(h->macrohandle, value, strlen(value));
 		retval->n     = 0;
