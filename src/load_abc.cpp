@@ -2340,6 +2340,7 @@ BOOL CSoundFile::TestABC(const BYTE *lpStream, DWORD dwMemLength)
 // =====================================================================================
 {
     char id[128];
+    int hasText = 0;
     // scan file for first K: line (last in header)
 #ifdef NEWMIKMOD
 		_mm_fseek(mmfile,0,SEEK_SET);
@@ -2354,7 +2355,7 @@ BOOL CSoundFile::TestABC(const BYTE *lpStream, DWORD dwMemLength)
 		while(abc_fgets(&mmfile,id,128)) {
 #endif
 
-		if (id[0] == 0 && mmfile.pos < ppos + 120) return(0); //probably binary
+		if (id[0] == 0 && hasText == 0 && mmfile.pos < ppos + 120) return(0); //probably binary
 		if (id[0] == 0) continue; // blank line.
 
 		if (!abc_isvalidchar(id[0])  || !abc_isvalidchar(id[1])) {
@@ -2363,6 +2364,10 @@ BOOL CSoundFile::TestABC(const BYTE *lpStream, DWORD dwMemLength)
 	    if(id[0]=='K'
 			&& id[1]==':'
 			&& (isalpha(id[2]) || isspace(id[2])) ) return 1;
+            // disable binary error if have any "tag"
+	    if((id[0]>='A' && id[0]<='Z')
+			&& id[1]==':'
+			&& (isalpha(id[2]) || isspace(id[2])) ) hasText = 1;
 		}
     return 0;
 }
@@ -2727,6 +2732,7 @@ static int ABC_ReadPatterns(MODCOMMAND *pattern[], WORD psize[], ABCHANDLE *h, i
 			ch = 0;
 			tempo = 0;
 			patbrk = 0;
+			if ( h->track )
 			for( e=abc_next_global(h->track->capostart); e && e->tracktick < tt2; e=abc_next_global(e->next) ) {
 				if( e && e->tracktick >= tt1 ) {	// we have a tempo event in this row
 					switch( e->cmd ) {
