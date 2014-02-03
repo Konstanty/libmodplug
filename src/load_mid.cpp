@@ -1881,9 +1881,9 @@ BOOL CSoundFile::ReadMID(const BYTE *lpStream, DWORD dwMemLength)
 		ChnSettings[t].nVolume = 64;
 		t++;
 	}
+	if( h->verbose ) printf("Cleanup.\n");
 	MID_Cleanup(h);	// we dont need it anymore
 #endif
-	if( h->verbose ) printf("Done\n");
 	avoid_reentry = 0; // it is safe now, I'm finished
 	return TRUE;
 }
