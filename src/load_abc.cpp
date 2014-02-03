@@ -454,15 +454,16 @@ typedef struct {
 static MMFILE *mmfopen(const char *name, const char *mode)
 {
 	FILE *fp;
-	MMFILE *mmfile;
+	MMFILE *mmfile = NULL;
 	long len;
 	if( *mode != 'r' ) return NULL;
 	fp = fopen(name, mode);
 	if( !fp ) return NULL;
 	fseek(fp, 0, SEEK_END);
 	len = ftell(fp);
-	mmfile = (MMFILE *)malloc(len+sizeof(MMFILE));
-	if( !mmfile ) {
+	if ( len > 0 )
+		mmfile = (MMFILE *)malloc(len+sizeof(MMFILE));
+	if( !mmfile || len <= 0 ) {
 		fclose(fp);
 		return NULL;
 	}
