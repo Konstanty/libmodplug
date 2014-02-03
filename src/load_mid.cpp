@@ -1107,6 +1107,7 @@ static int MID_ReadPatterns(MODCOMMAND *pattern[], WORD psize[], MIDHANDLE *h, i
 			ch = 0;
 			tempo = 0;
 			patbrk = 0;
+			if ( h->track )
 			for( e=mid_next_global(h->track->workevent); e && e->tracktick < tt2; e=mid_next_global(e->next) ) {
 				if( e && e->tracktick >= tt1 ) {	// we have a controller event in this row
 					switch( e->fx ) {
@@ -1774,8 +1775,10 @@ BOOL CSoundFile::ReadMID(const BYTE *lpStream, DWORD dwMemLength)
 		if( ttp->tail && ttp->tail->tracktick > h->tracktime )
 			h->tracktime = ttp->tail->tracktick;
 	}
+
 	h->tracktime += h->divider >> 2; // add one quartnote to the song for silence
-	mid_add_partbreak(h);
+	if ( h->track )
+		mid_add_partbreak(h);
 	if( h->debug )
 		mid_dump_tracks(h);
 	numchans = mid_numchans(h);
