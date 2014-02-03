@@ -354,11 +354,15 @@ static void mmfseek(MMFILE *mmfile, long p, int whence)
 
 static void mmreadUBYTES(BYTE *buf, long sz, MMFILE *mmfile)
 {
+	int sztr = sz;
 	// do not overread.
 	if (sz > mmfile->sz - mmfile->pos)
-		sz = mmfile->sz - mmfile->pos;
-	memcpy(buf, &mmfile->mm[mmfile->pos], sz);
+		sztr = mmfile->sz - mmfile->pos;
+	memcpy(buf, &mmfile->mm[mmfile->pos], sztr);
 	mmfile->pos += sz;
+	// if truncated read, populate the rest of the array with zeros.
+	if (sz > sztr)
+		memset(buf+sztr, 0, sz-sztr);
 }
 
 static void mmreadSBYTES(char *buf, long sz, MMFILE *mmfile)
