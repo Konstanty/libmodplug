@@ -3197,7 +3197,7 @@ static void abc_MIDI_chordname(const char *p)
 	}
 	else {
 		i = 0;
-		while ((i <= 6) && isspace(*p)) {
+		while ((i < 6) && isspace(*p)) {
 			for( ; *p && isspace(*p); p++ ) ;
 			p += abc_getnumber(p, &notes[i]);
 			i = i + 1;
