@@ -745,7 +745,7 @@ static void mid_add_pitchwheel(MIDHANDLE *h, int mch, int wheel)
 	}
 }
 
-static long int mid_read_long(MIDHANDLE *h)
+static uint32_t mid_read_long(MIDHANDLE *h)
 {
 	BYTE buf[4];
 	mmreadUBYTES(buf, 4, h->mmf);
@@ -1417,7 +1417,7 @@ BOOL CSoundFile::ReadMID(const BYTE *lpStream, DWORD dwMemLength)
 	MIDTRACK *ttp;
 	uint32_t t, numpats;
 	char buf[256];
-	long miditracklen;
+	uint32_t miditracklen;
 	BYTE runningstatus;
 	BYTE cmd;
 	BYTE midibyte[2];
@@ -1700,7 +1700,7 @@ BOOL CSoundFile::ReadMID(const BYTE *lpStream, DWORD dwMemLength)
 									if( m_nDefaultTempo == 0 ) m_nDefaultTempo = h->tempo;
 									else {
 										ttp = h->track;
-										if( !ttp ) ttp = mid_locate_track(h, 0, 0xff);
+										if( !ttp ) mid_locate_track(h, 0, 0xff);
 										mid_add_tempo_event(h,h->tempo);
 									}
 									if( h->tempo > maxtempo ) maxtempo = h->tempo;
@@ -1708,7 +1708,7 @@ BOOL CSoundFile::ReadMID(const BYTE *lpStream, DWORD dwMemLength)
 								case 0x2f: // type: end of track
 									if( h->debug ) printf("%2d %08ld META end of track\n", t, (long)(h->tracktime));
 									if( miditracklen > 0 ) {
-										sprintf(buf, "%ld", miditracklen);
+										sprintf(buf, "%u", miditracklen);
 										mid_message("Meta event not at end of track, %s bytes left in track", buf);
 										miditracklen = 0;
 									}
