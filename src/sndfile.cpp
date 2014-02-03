@@ -1763,7 +1763,10 @@ BOOL CSoundFile::SetPatternName(UINT nPat, LPCSTR lpszName)
 //---------------------------------------------------------
 {
         char szName[MAX_PATTERNNAME] = "";
+	// check input arguments
 	if (nPat >= MAX_PATTERNS) return FALSE;
+	if (lpszName == NULL) return(FALSE);
+
 	if (lpszName) lstrcpyn(szName, lpszName, MAX_PATTERNNAME);
 	szName[MAX_PATTERNNAME-1] = 0;
 	if (!m_lpszPatternNames) m_nPatternNames = 0;
