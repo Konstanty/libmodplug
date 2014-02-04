@@ -1464,6 +1464,7 @@ BOOL CSoundFile::ReadMID(const BYTE *lpStream, DWORD dwMemLength)
 	h->speed = 6;
 	if (h->miditracks == 0) {
 		MID_Cleanup(h);
+		avoid_reentry = 0;
 		return FALSE;
 	}
 	p = (BYTE *)getenv(ENV_MMMID_SPEED);
@@ -1511,6 +1512,7 @@ BOOL CSoundFile::ReadMID(const BYTE *lpStream, DWORD dwMemLength)
 		buf[4] = '\0';
 		if( strcmp(buf,"MTrk") ) {
 			mid_message("invalid track-chunk '%s' is not 'MTrk'",buf);
+			MID_Cleanup(h);
 			avoid_reentry = 0;
 			return FALSE;
 		}
