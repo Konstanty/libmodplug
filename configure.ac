@@ -1,9 +1,11 @@
 dnl Process this file with autoconf to produce a configure script.
-AC_INIT
+
 AC_PREREQ(2.63)
+
+AC_INIT([libmodplug], [0.8.8.4])
 AC_CONFIG_SRCDIR([Makefile.am])
 
-AM_INIT_AUTOMAKE(libmodplug, 0.8.8.4)
+AM_INIT_AUTOMAKE
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES])
 AC_CONFIG_HEADERS([src/config.h])
 
