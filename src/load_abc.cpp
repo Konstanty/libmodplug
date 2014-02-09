@@ -3627,6 +3627,7 @@ static int abc_partpat_to_orderlist(BYTE partp[27][2], const char *abcparts, ABC
 			for( t = partp[*p - 'A'][0]; t < partp[*p - 'A'][1]; t++ ) {
 				if( orderlen == ordersize ) {
 					ordersize <<= 1;
+					if (ordersize == 0) ordersize = 2;
 					orderlist = (BYTE *)_mm_recalloc(h->ho, orderlist, ordersize, sizeof(BYTE));
 					*list = orderlist;
 				}
@@ -3641,6 +3642,7 @@ static int abc_partpat_to_orderlist(BYTE partp[27][2], const char *abcparts, ABC
 	for( t = partp[26][0]; t < partp[26][1]; t++ ) {
 		if( orderlen == ordersize ) {
 			ordersize <<= 1;
+			if (ordersize == 0) ordersize = 2;
 			orderlist = (BYTE *)_mm_recalloc(h->ho, orderlist, ordersize, sizeof(BYTE));
 			*list = orderlist;
 		}
