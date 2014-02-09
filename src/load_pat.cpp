@@ -67,9 +67,9 @@ typedef UWORD WORD;
 
 // 128 gm and 63 drum
 #define MAXSMP				191
-static char midipat[MAXSMP][128];
-static char pathforpat[128];
-static char timiditycfg[128];
+static char midipat[MAXSMP][PATH_MAX];
+static char pathforpat[PATH_MAX] = {};
+static char timiditycfg[PATH_MAX] = {};
 
 #pragma pack(1)
 
@@ -391,16 +391,16 @@ void pat_init_patnames(void)
 	char line[PATH_MAX];
 	char cfgsources[5][PATH_MAX] = {{0}, {0}, {0}, {0}, {0}};
 	MMSTREAM *mmcfg;
-	strcpy(pathforpat, PATHFORPAT);
-	strcpy(timiditycfg, TIMIDITYCFG);
+	strncpy(pathforpat, PATHFORPAT, PATH_MAX);
+	strncpy(timiditycfg, TIMIDITYCFG, PATH_MAX);
 	p = getenv(PAT_ENV_PATH2CFG);
 	if( p ) {
-		strcpy(timiditycfg,p);
-		strcpy(pathforpat,p);
-		strcat(timiditycfg,"/timidity.cfg");
-		strcat(pathforpat,"/instruments");
+		strncpy(timiditycfg, p, PATH_MAX - 14);
+		strncpy(pathforpat, p, PATH_MAX - 13);
+		strcat(timiditycfg, "/timidity.cfg");
+		strcat(pathforpat, "/instruments");
 	}
-	strncpy(cfgsources[0], timiditycfg, PATH_MAX);
+	strncpy(cfgsources[0], timiditycfg, PATH_MAX - 1);
 	nsources = 1;
 
 	for( i=0; i<MAXSMP; i++ )	midipat[i][0] = '\0';
