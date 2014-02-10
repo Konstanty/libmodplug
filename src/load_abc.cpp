@@ -3182,7 +3182,7 @@ static void abc_MIDI_voice(const char *p, ABCTRACK *tp, ABCHANDLE *h)
 static void abc_MIDI_chordname(const char *p)
 {
 	char name[20];
-	int i, notes[6];
+	int i, notes[6] = {};
 
 	for( ; *p && isspace(*p); p++ ) ;
 	i = 0;
