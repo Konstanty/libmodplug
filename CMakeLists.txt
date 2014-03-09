@@ -85,7 +85,7 @@ install(FILES
   )
 
 # fill in the blanks in libmodplug.pc.in
-set(VERSION "0.8.8.4+")
+set(VERSION "0.8.8.5")
 configure_file(libmodplug.pc.in-for-cmake libmodplug.pc)
 
 # install pkg-config file:
