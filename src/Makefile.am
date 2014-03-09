@@ -1,3 +1,7 @@
+# always define MODPLUG_BUILD when building libmodplug
+# regardless of static build or shared library build..
+AM_CXXFLAGS = -DMODPLUG_BUILD=1
+
 AM_CPPFLAGS = -I$(top_srcdir)/src/libmodplug
 
 lib_LTLIBRARIES = libmodplug.la
