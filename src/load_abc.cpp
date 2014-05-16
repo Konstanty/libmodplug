@@ -46,6 +46,11 @@ typedef UWORD WORD;
 
 #include "load_pat.h"
 
+#if _MSC_VER >= 1600
+#define putenv _putenv
+#define strdup _strdup
+#endif
+
 #define MAXABCINCLUDES	8
 #define MAXCHORDNAMES 80
 #define ABC_ENV_DUMPTRACKS		"MMABC_DUMPTRACKS"
