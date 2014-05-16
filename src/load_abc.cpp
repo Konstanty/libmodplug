@@ -1932,8 +1932,9 @@ static void abc_appendpart(ABCHANDLE *h, ABCTRACK *tp, uint32_t pt1, uint32_t pt
 static uint32_t abc_pattracktime(ABCHANDLE *h, uint32_t tracktime)
 {
 	ABCEVENT *e;
-	uint32_t dt,et,pt=abcticks(64 * h->speed);
+	uint32_t dt,et;
 	if(!h || !h->track || !h->track->head ) return 0;
+	uint32_t pt=abcticks(64 * h->speed);
 	dt = 0;
 	for( e=h->track->head; e && e->tracktick <= tracktime; e=e->next ) {
 		if( e->flg == 1 && e->cmd == cmdpartbrk ) {
