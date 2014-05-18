@@ -562,6 +562,9 @@ static void pat_read_waveheader(MMSTREAM *mmpat, WaveHeader *hw, int layer)
 				}
 				_mm_fseek(mmpat, hw->wave_size, SEEK_CUR);
 			}
+			// if invalid bestpos, assume the start.
+			if( bestpos < 0 )
+				bestpos = 0;
 			_mm_fseek(mmpat, bestpos, SEEK_SET);
 		}
 	}

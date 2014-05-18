@@ -1187,6 +1187,10 @@ DWORD ITReadBits(DWORD &bitbuf, UINT &bitnum, LPBYTE &ibuf, CHAR n)
 	DWORD retval = 0;
 	UINT i = n;
 
+	// explicit if read 0 bits, then return 0
+	if (i == 0)
+		return(0);
+
 	if (n > 0)
 	{
 		do
