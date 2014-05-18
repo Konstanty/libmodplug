@@ -259,7 +259,7 @@ void ModPlug_Seek(ModPlugFile* file, int millisecond)
 		millisecond = maxtime;
 	maxpos = file->mSoundFile.GetMaxPosition();
 	postime = 0.0f;
-	if (maxtime != 0.0f)
+	if (maxtime != 0)
 		postime = (float)maxpos / (float)maxtime;
 
 	file->mSoundFile.SetCurrentPos((int)(millisecond * postime));
