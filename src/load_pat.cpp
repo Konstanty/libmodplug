@@ -53,15 +53,10 @@ typedef UWORD WORD;
 
 #include "load_pat.h"
 
-#ifdef MSC_VER
-#define DIRDELIM		'\\'
-#define TIMIDITYCFG	"C:\\TIMIDITY\\TIMIDITY.CFG"
-#define PATHFORPAT	"C:\\TIMIDITY\\INSTRUMENTS"
-#else
 #define DIRDELIM		'/'
-#define TIMIDITYCFG	"/usr/local/share/timidity/timidity.cfg"
-#define PATHFORPAT	"/usr/local/share/timidity/instruments"
-#endif
+//#define TIMIDITYCFG	"pat/TimGM6mb.cfg"
+#define TIMIDITYCFG	"pat/timidity.cfg"
+#define PATHFORPAT	"pat"
 
 #define PAT_ENV_PATH2CFG			"MMPAT_PATH_TO_CFG"
 
