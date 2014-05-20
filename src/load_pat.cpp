@@ -636,7 +636,7 @@ static int pat_readpat_attr(int pat, WaveHeader *hw, int layer)
 	unsigned long fsize;
 	MMSTREAM *mmpat;
 	pat_build_path(fname, pat);
-	mmpat = _mm_fopen(fname, "r");
+	mmpat = _mm_fopen(fname, "rb");
 	if( !mmpat )
 		return 0;
 	fsize = _mm_getfsize(mmpat);
@@ -733,7 +733,7 @@ static void pat_readpat(int pat, char *dest, int num)
 #endif
 	if( !readlasttime ) {
 		opt=pat_build_path(fname, pat);
-		mmpat = _mm_fopen(fname, "r");
+		mmpat = _mm_fopen(fname, "rb");
 		if( !mmpat )
 			return;
 		pat_read_waveheader(mmpat, &hw, 0);
