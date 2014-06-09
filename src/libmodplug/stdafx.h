@@ -21,6 +21,9 @@
 # include <stdint.h>
 #endif
 
+/* disable AGC and FILESAVE for all targets for uniformity. */
+#define NO_AGC
+#define MODPLUG_NO_FILESAVE
 
 #ifdef _WIN32
 
@@ -89,8 +92,6 @@ inline LONG MulDiv (long a, long b, long c)
   return ((uint64_t) a * (uint64_t) b ) / c;
 }
 
-#define MODPLUG_NO_FILESAVE
-#define NO_AGC
 #define LPCTSTR LPCSTR
 #define lstrcpyn strncpy
 #define lstrcpy strcpy
