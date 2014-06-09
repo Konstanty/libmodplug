@@ -8,6 +8,8 @@ AC_CONFIG_SRCDIR([Makefile.am])
 AM_INIT_AUTOMAKE
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES])
 AC_CONFIG_HEADERS([src/config.h])
+AC_CONFIG_MACRO_DIR([m4])
+AM_MAINTAINER_MODE
 
 dnl Checks for programs.
 dnl  I am disabling static libraries here because otherwise libtool insists on
@@ -19,18 +21,17 @@ AC_DISABLE_STATIC([])
 AC_PROG_CC
 AC_PROG_CXX
 AC_LANG([C++])
-AC_C_BIGENDIAN     #this will cause problems when cross-compiling...
-#AC_REQUIRE([AC_CANONICAL_HOST])_LT_SET_OPTION([LT_INIT],[win32-dll])
-#AC_DIAGNOSE([obsolete],[AC_LIBTOOL_WIN32_DLL: Remove this warning and the call to _LT_SET_OPTION when you
-#put the `win32-dll' option into LT_INIT's first parameter.])
+AC_C_BIGENDIAN
 
-LT_INIT
+#AC_LIBTOOL_WIN32_DLL
+#AC_PROG_LIBTOOL
+LT_INIT([win32-dll])
+
 AC_HEADER_STDC
 AC_CHECK_HEADERS([inttypes.h stdint.h malloc.h])
 AC_CHECK_FUNCS(setenv sinf)
 
-CXXFLAGS="$CXXFLAGS -fno-exceptions -Wall -ffast-math -D_REENTRANT"
-# CXXFLAGS="-fno-exceptions -g -Wall -ffast-math -D_REENTRANT `glib-config --cflags`"
+CXXFLAGS="$CXXFLAGS -fno-exceptions -Wall -ffast-math -fno-common -D_REENTRANT"
 
 AC_CANONICAL_HOST
 case "$host" in
@@ -42,6 +43,38 @@ case "$host" in
 		;;
 esac
 AC_SUBST(LT_LDFLAGS)
+
+# require 10.5+ for osx/x86_64 builds
+case "$host" in
+	x86_64-*-darwin*)
+		CXXFLAGS="$CXXFLAGS -mmacosx-version-min=10.5"
+		LDFLAGS="$LDFLAGS -mmacosx-version-min=10.5" ;;
+esac
+
+# symbol visibility
+ac_save_CXXFLAGS="$CXXFLAGS"
+CXXFLAGS="$CXXFLAGS -fvisibility=hidden -Werror"
+AC_CACHE_CHECK([if compiler supports visibility attributes],[libmodplug_cv_gcc_visibility],
+	AC_TRY_COMPILE([void foo(void);
+__attribute__((visibility("default"))) void foo(void) {}],
+		[],
+		[libmodplug_cv_gcc_visibility=yes],
+		[libmodplug_cv_gcc_visibility=no])
+	)
+# we want symbol -fvisibility for elf targets, however it works
+# with darwin/macho too.  other than that, windows, dos and os2
+# do not need it:  for any such targets, the -Werror switch is
+# supposed to fail the above check. (I'm adding the manual test
+# below nonetheless, just in case.)
+case $host_os in
+   mingw*|cygwin*|emx*|*djgpp)
+	libmodplug_cv_gcc_visibility=no
+	;;
+esac
+CXXFLAGS="$ac_save_CXXFLAGS"
+if test $libmodplug_cv_gcc_visibility = yes ;then
+   CXXFLAGS="$CXXFLAGS -DSYM_VISIBILITY -fvisibility=hidden"
+fi
 
 case ${target_os} in
 	*sun* | *solaris*)
