@@ -9,6 +9,7 @@ AM_INIT_AUTOMAKE
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES])
 AC_CONFIG_HEADERS([src/config.h])
 AC_CONFIG_MACRO_DIR([m4])
+AM_MAINTAINER_MODE
 
 dnl Checks for programs.
 dnl  I am disabling static libraries here because otherwise libtool insists on
