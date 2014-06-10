@@ -49,6 +49,31 @@ case "$host" in
 		LDFLAGS="$LDFLAGS -mmacosx-version-min=10.5" ;;
 esac
 
+# symbol visibility
+ac_save_CXXFLAGS="$CXXFLAGS"
+CXXFLAGS="$CXXFLAGS -fvisibility=hidden -Werror"
+AC_CACHE_CHECK([if compiler supports visibility attributes],[libmodplug_cv_gcc_visibility],
+	AC_TRY_COMPILE([void foo(void);
+__attribute__((visibility("default"))) void foo(void) {}],
+		[],
+		[libmodplug_cv_gcc_visibility=yes],
+		[libmodplug_cv_gcc_visibility=no])
+	)
+# we want symbol -fvisibility for elf targets, however it works
+# with darwin/macho too.  other than that, windows, dos and os2
+# do not need it:  for any such targets, the -Werror switch is
+# supposed to fail the above check. (I'm adding the manual test
+# below nonetheless, just in case.)
+case $host_os in
+   mingw*|cygwin*|emx*|*djgpp)
+	libmodplug_cv_gcc_visibility=no
+	;;
+esac
+CXXFLAGS="$ac_save_CXXFLAGS"
+if test $libmodplug_cv_gcc_visibility = yes ;then
+   CXXFLAGS="$CXXFLAGS -DSYM_VISIBILITY -fvisibility=hidden"
+fi
+
 case ${target_os} in
 	*sun* | *solaris*)
 		CXXFLAGS="$CXXFLAGS -fpermissive"

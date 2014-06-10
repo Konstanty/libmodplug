@@ -133,14 +133,10 @@ inline void ProcessPlugins(int n) {}
 # else
 #   define MODPLUG_EXPORT __declspec(dllimport)			/* using libmodplug dll for windows */
 # endif
-/* FIXME: USE VISIBILITY ATTRIBUTES HERE */
-#elif defined(MODPLUG_BUILD)
-#define MODPLUG_EXPORT
+#elif defined(MODPLUG_BUILD) && defined(SYM_VISIBILITY)
+#   define MODPLUG_EXPORT __attribute__((visibility("default")))
 #else
 #define MODPLUG_EXPORT
 #endif
 
 #endif
-
-
-
