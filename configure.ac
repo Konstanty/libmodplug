@@ -8,6 +8,7 @@ AC_CONFIG_SRCDIR([Makefile.am])
 AM_INIT_AUTOMAKE
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES])
 AC_CONFIG_HEADERS([src/config.h])
+AC_CONFIG_MACRO_DIR([m4])
 
 dnl Checks for programs.
 dnl  I am disabling static libraries here because otherwise libtool insists on
