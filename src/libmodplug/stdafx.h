@@ -88,7 +88,7 @@ typedef void VOID;
 
 inline LONG MulDiv (long a, long b, long c)
 {
-  // if (!c) return 0;
+/*if (!c) return 0;*/
   return ((uint64_t) a * (uint64_t) b ) / c;
 }
 
@@ -97,7 +97,6 @@ inline LONG MulDiv (long a, long b, long c)
 #define lstrcpy strcpy
 #define lstrcmp strcmp
 #define WAVE_FORMAT_PCM 1
-//#define ENABLE_EQ
 
 #define  GHND   0
 
@@ -124,7 +123,7 @@ inline void ProcessPlugins(int n) {}
 #define TRUE	true
 #endif
 
-#endif // _WIN32
+#endif /* _WIN32 */
 
 #if defined(_WIN32) || defined(__CYGWIN__)
 # if defined(MODPLUG_BUILD) && defined(DLL_EXPORT)	/* building libmodplug as a dll for windows */
@@ -141,6 +140,3 @@ inline void ProcessPlugins(int n) {}
 #endif
 
 #endif
-
-
-
