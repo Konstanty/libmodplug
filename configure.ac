@@ -29,8 +29,7 @@ AC_HEADER_STDC
 AC_CHECK_HEADERS([inttypes.h stdint.h malloc.h])
 AC_CHECK_FUNCS(setenv sinf)
 
-CXXFLAGS="$CXXFLAGS -fno-exceptions -Wall -ffast-math -D_REENTRANT"
-# CXXFLAGS="-fno-exceptions -g -Wall -ffast-math -D_REENTRANT `glib-config --cflags`"
+CXXFLAGS="$CXXFLAGS -fno-exceptions -Wall -ffast-math -fno-common -D_REENTRANT"
 
 AC_CANONICAL_HOST
 case "$host" in
