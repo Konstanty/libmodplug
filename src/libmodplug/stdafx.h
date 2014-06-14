@@ -46,9 +46,14 @@
 
 inline void ProcessPlugins(int n) {}
 
-#define strncasecmp(a,b,c)  strncmp(a,b,c)
-#define strcasecmp(a,b) strcmp(a,b)
-#define strnicmp(a,b,c)		strncasecmp(a,b,c)
+#undef strcasecmp
+#undef strncasecmp
+#undef stricmp
+#undef strnicmp
+#define strcasecmp(a,b)     _stricmp(a,b)
+#define strncasecmp(a,b,c)  _strnicmp(a,b,c)
+#define stricmp(a,b)        _stricmp(a,b)
+#define strnicmp(a,b,c)     _strnicmp(a,b,c)
 #define HAVE_SINF 1
 
 #ifndef isblank
@@ -96,10 +101,12 @@ inline LONG MulDiv (long a, long b, long c)
 #define lstrcpyn strncpy
 #define lstrcpy strcpy
 #define lstrcmp strcmp
+#define wsprintf sprintf
+
 #define WAVE_FORMAT_PCM 1
 
 #define  GHND   0
-
+#define GlobalFreePtr(p) free((void *)(p))
 inline int8_t * GlobalAllocPtr(unsigned int, size_t size)
 {
   int8_t * p = (int8_t *) malloc(size);
@@ -109,11 +116,6 @@ inline int8_t * GlobalAllocPtr(unsigned int, size_t size)
 }
 
 inline void ProcessPlugins(int n) {}
-
-#define GlobalFreePtr(p) free((void *)(p))
-
-#define strnicmp(a,b,c)		strncasecmp(a,b,c)
-#define wsprintf			sprintf
 
 #ifndef FALSE
 #define FALSE	false
