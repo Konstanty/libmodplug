@@ -89,7 +89,7 @@ BOOL CSoundFile::ReadXM(const BYTE *lpStream, DWORD dwMemLength)
 
 	m_nChannels = 0;
 	if ((!lpStream) || (dwMemLength < 0x200)) return FALSE;
-	if (strncasecmp((LPCSTR)lpStream, "Extended Module", 15)) return FALSE;
+	if (strncmp((LPCSTR)lpStream, "Extended Module:", 16)) return FALSE;
 
 	memcpy(m_szNames[0], lpStream+17, 20);
 	xmhead = *(tagXMFILEHEADER *)(lpStream+60);
