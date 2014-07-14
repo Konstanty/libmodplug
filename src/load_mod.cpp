@@ -230,10 +230,14 @@ BOOL CSoundFile::ReadMod(const BYTE *lpStream, DWORD dwMemLength)
 		MODINSTRUMENT *psmp = &Ins[i];
 		UINT loopstart, looplen;
 
-		if (m_nSamples == 15 && !IsValidName((LPCSTR)pms->name, 22, 14))
+		if (m_nSamples == 15)
 		{
-			return FALSE;
+			if (!IsValidName((LPCSTR)pms->name, 22, 14)) return FALSE;
+			if (pms->finetune>>4) return FALSE;
+			if (pms->volume > 64) return FALSE;
+			if (bswapBE16(pms->length) > 32768) return FALSE;
 		}
+
 		memcpy(m_szNames[i], pms->name, 22);
 		m_szNames[i][22] = 0;
 		psmp->uFlags = 0;
@@ -276,7 +280,10 @@ BOOL CSoundFile::ReadMod(const BYTE *lpStream, DWORD dwMemLength)
 	if ((m_nSamples == 15) && (dwTotalSampleLen > dwMemLength * 4)) return FALSE;
 	pMagic = (PMODMAGIC)(lpStream+dwMemPos);
 	dwMemPos += sizeof(MODMAGIC);
-	if (m_nSamples == 15) dwMemPos -= 4;
+	if (m_nSamples == 15) {
+		dwMemPos -= 4;
+		if (pMagic->nOrders > 128) return FALSE;
+	}
 	memset(Order, 0,sizeof(Order));
 	memcpy(Order, pMagic->Orders, 128);
 
