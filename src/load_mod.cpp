@@ -168,6 +168,22 @@ typedef struct _MODMAGIC
 
 #pragma pack()
 
+static BOOL IsValidName(LPCSTR s, int length, CHAR minChar)
+//-----------------------------------------------------------------
+{
+	int i, nt;
+	for (i = 0, nt = 0; i < length; i++)
+	{
+		if(s[i])
+		{
+			if (nt) return FALSE;// garbage after null
+			if (s[i] < minChar) return FALSE;// caller says it's garbage
+		}
+		else if (!nt) nt = i;// found null terminator
+	}
+	return TRUE;
+}
+
 BOOL IsMagic(LPCSTR s1, LPCSTR s2)
 {
 	return ((*(DWORD *)s1) == (*(DWORD *)s2)) ? TRUE : FALSE;
@@ -199,7 +215,12 @@ BOOL CSoundFile::ReadMod(const BYTE *lpStream, DWORD dwMemLength)
 	if ((s[0]=='3') && (s[1]>='0') && (s[1]<='2') && (s[2]=='C') && (s[3]=='H')) m_nChannels = s[1] - '0' + 30; else
 	if ((s[0]=='T') && (s[1]=='D') && (s[2]=='Z') && (s[3]>='4') && (s[3]<='9')) m_nChannels = s[3] - '0'; else
 	if (IsMagic(s,"16CN")) m_nChannels = 16; else
-	if (IsMagic(s,"32CN")) m_nChannels = 32; else m_nSamples = 15;
+	if (IsMagic(s,"32CN")) m_nChannels = 32;
+	else {
+		if (!IsValidName((LPCSTR)lpStream, 20, ' '))
+			return FALSE;
+		m_nSamples = 15;
+	}
 	// Load Samples
 	nErr = 0;
 	dwTotalSampleLen = 0;
@@ -209,6 +230,10 @@ BOOL CSoundFile::ReadMod(const BYTE *lpStream, DWORD dwMemLength)
 		MODINSTRUMENT *psmp = &Ins[i];
 		UINT loopstart, looplen;
 
+		if (m_nSamples == 15 && !IsValidName((LPCSTR)pms->name, 22, 14))
+		{
+			return FALSE;
+		}
 		memcpy(m_szNames[i], pms->name, 22);
 		m_szNames[i][22] = 0;
 		psmp->uFlags = 0;
