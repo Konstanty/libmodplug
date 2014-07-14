@@ -199,7 +199,11 @@ BOOL CSoundFile::ReadMod(const BYTE *lpStream, DWORD dwMemLength)
 	if ((s[0]=='3') && (s[1]>='0') && (s[1]<='2') && (s[2]=='C') && (s[3]=='H')) m_nChannels = s[1] - '0' + 30; else
 	if ((s[0]=='T') && (s[1]=='D') && (s[2]=='Z') && (s[3]>='4') && (s[3]<='9')) m_nChannels = s[3] - '0'; else
 	if (IsMagic(s,"16CN")) m_nChannels = 16; else
-	if (IsMagic(s,"32CN")) m_nChannels = 32; else m_nSamples = 15;
+	if (IsMagic(s,"32CN")) m_nChannels = 32;
+	else {
+	//	m_nSamples = 15;
+		return FALSE;
+	}
 	// Load Samples
 	nErr = 0;
 	dwTotalSampleLen = 0;
