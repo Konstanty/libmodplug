@@ -341,7 +341,7 @@ BOOL CSoundFile::ReadMod(const BYTE *lpStream, DWORD dwMemLength)
 		LPSTR p = (LPSTR)(lpStream+dwMemPos);
 		UINT flags = 0;
 		if (dwMemPos + 5 >= dwMemLength) break;
-		if (!strncasecmp(p, "ADPCM", 5))
+		if (! strncmp(p, "ADPCM", 5))
 		{
 			flags = 3;
 			p += 5;
