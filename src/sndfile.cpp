@@ -814,6 +814,8 @@ UINT CSoundFile::GetInstrumentName(UINT nInstr,LPSTR s) const
 }
 
 
+#ifndef MODPLUG_NO_FILESAVE
+
 #ifndef NO_PACKING
 UINT CSoundFile::PackSample(int &sample, int next)
 //------------------------------------------------
@@ -873,8 +875,6 @@ BOOL CSoundFile::CanPackSample(LPSTR pSample, UINT nLen, UINT nPacking, BYTE *re
 	return (dwResult >= nPacking) ? TRUE : FALSE;
 }
 #endif // NO_PACKING
-
-#ifndef MODPLUG_NO_FILESAVE
 
 UINT CSoundFile::WriteSample(FILE *f, MODINSTRUMENT *pins, UINT nFlags, UINT nMaxLen)
 //-----------------------------------------------------------------------------------

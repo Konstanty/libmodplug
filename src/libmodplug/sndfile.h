@@ -759,8 +759,11 @@ public:
 	BOOL IsValidBackwardJump(UINT nStartOrder, UINT nStartRow, UINT nJumpOrder, UINT nJumpRow) const;
 	// Read/Write sample functions
 	signed char GetDeltaValue(signed char prev, UINT n) const { return (signed char)(prev + CompressionTable[n & 0x0F]); }
+#if !(defined(MODPLUG_NO_FILESAVE)||defined(NO_PACKING))
 	UINT PackSample(int &sample, int next);
 	BOOL CanPackSample(LPSTR pSample, UINT nLen, UINT nPacking, BYTE *result=NULL);
+#endif // NO_FILESAVE, NO_PACKING
+
 	UINT ReadSample(MODINSTRUMENT *pIns, UINT nFlags, LPCSTR pMemFile, DWORD dwMemLength);
 	BOOL DestroySample(UINT nSample);
 	BOOL DestroyInstrument(UINT nInstr);
