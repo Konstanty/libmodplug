@@ -66,9 +66,9 @@
 // because 2/192 = 1/96 and 3/192 = 1/64
 #define RESOLUTION	192
 
-#pragma pack(1)
-
 /**********************************************************************/
+
+#pragma pack(1)
 
 typedef enum {
 	note,
@@ -170,8 +170,6 @@ typedef struct _ABCMACRO
 	char *n;
 } ABCMACRO;
 
-/**********************************************************************/
-
 typedef struct _ABCHANDLE
 {
 	ABCMACRO *macro;
@@ -196,6 +194,10 @@ typedef struct _ABCHANDLE
 	ABCTRACK *tp, *tpc, *tpr;
 	uint32_t tracktime;
 } ABCHANDLE;
+
+#pragma pack()
+
+/**********************************************************************/
 
 static int global_voiceno, global_octave_shift, global_tempo_factor, global_tempo_divider;
 static char global_part;
