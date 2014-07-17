@@ -750,6 +750,7 @@ void CSoundFile::LoopPattern(int nPat, int nRow)
 }
 
 
+#ifndef MODPLUG_NO_FILESAVE
 UINT CSoundFile::GetBestSaveFormat() const
 //----------------------------------------
 {
@@ -763,7 +764,6 @@ UINT CSoundFile::GetBestSaveFormat() const
 		return MOD_TYPE_XM;
 	return MOD_TYPE_IT;
 }
-
 
 UINT CSoundFile::GetSaveFormats() const
 //-------------------------------------
@@ -783,6 +783,7 @@ UINT CSoundFile::GetSaveFormats() const
 	}
 	return n;
 }
+#endif // MODPLUG_NO_FILESAVE
 
 
 UINT CSoundFile::GetSampleName(UINT nSample,LPSTR s) const

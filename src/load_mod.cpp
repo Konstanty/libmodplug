@@ -60,6 +60,7 @@ void CSoundFile::ConvertModCommand(MODCOMMAND *m) const
 }
 
 
+#ifndef MODPLUG_NO_FILESAVE
 WORD CSoundFile::ModSaveCommand(const MODCOMMAND *m, BOOL bXM) const
 //------------------------------------------------------------------
 {
@@ -144,6 +145,7 @@ WORD CSoundFile::ModSaveCommand(const MODCOMMAND *m, BOOL bXM) const
 	}
 	return (WORD)((command << 8) | (param));
 }
+#endif // MODPLUG_NO_FILESAVE
 
 
 #pragma pack(1)

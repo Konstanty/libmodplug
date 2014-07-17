@@ -666,14 +666,16 @@ public:
 	BOOL SaveS3M(LPCSTR lpszFileName, UINT nPacking=0);
 	BOOL SaveMod(LPCSTR lpszFileName, UINT nPacking=0);
 	BOOL SaveIT(LPCSTR lpszFileName, UINT nPacking=0);
-#endif // MODPLUG_NO_FILESAVE
-	// MOD Convert function
 	UINT GetBestSaveFormat() const;
 	UINT GetSaveFormats() const;
+#endif
+	// MOD Convert function
 	void ConvertModCommand(MODCOMMAND *) const;
 	void S3MConvert(MODCOMMAND *m, BOOL bIT) const;
+#ifndef MODPLUG_NO_FILESAVE
 	void S3MSaveConvert(UINT *pcmd, UINT *pprm, BOOL bIT) const;
 	WORD ModSaveCommand(const MODCOMMAND *m, BOOL bXM) const;
+#endif
 
 public:
 	// Real-time sound functions
