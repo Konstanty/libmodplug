@@ -451,7 +451,7 @@ BOOL PP20_Unpack(LPCBYTE *ppMemFile, LPDWORD pdwMemLength)
 	DWORD dwDstLen;
 	LPBYTE pBuffer;
 
-	if ((!lpMemFile) || (dwMemLength < 256) || (memcmp(lpMemFile,"PP20",8) != 0)) return FALSE;
+	if ((!lpMemFile) || (dwMemLength < 256) || (memcmp(lpMemFile,"PP20",4) != 0)) return FALSE;
 	dwDstLen = (lpMemFile[dwMemLength-4]<<16) | (lpMemFile[dwMemLength-3]<<8) | (lpMemFile[dwMemLength-2]);
 	//Log("PP20 detected: Packed length=%d, Unpacked length=%d\n", dwMemLength, dwDstLen);
 	if ((dwDstLen < 512) || (dwDstLen > 0x400000) || (dwDstLen > 16*dwMemLength)) return FALSE;
