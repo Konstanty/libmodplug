@@ -180,6 +180,7 @@ BOOL MMCMP_Unpack(LPCBYTE *ppMemFile, LPDWORD pdwMemLength)
 	for (UINT nBlock=0; nBlock<pmmh->nblocks; nBlock++)
 	{
 		DWORD dwMemPos = bswapLE32(pblk_table[nBlock]);
+		DWORD dwSubPos;
 		LPMMCMPBLOCK pblk;
 		LPMMCMPSUBBLOCK psubblk;
 
@@ -191,6 +192,7 @@ BOOL MMCMP_Unpack(LPCBYTE *ppMemFile, LPDWORD pdwMemLength)
 		swap_subblock(psubblk);
 
 		if (dwMemPos + 20 + pblk->sub_blk*8 >= dwMemLength) break;
+		dwSubPos = dwMemPos + 20;
 		dwMemPos += 20 + pblk->sub_blk*8;
 #ifdef MMCMP_LOG
 		Log("block %d: flags=%04X sub_blocks=%d", nBlock, (UINT)pblk->flags, (UINT)pblk->sub_blk);
@@ -210,7 +212,8 @@ BOOL MMCMP_Unpack(LPCBYTE *ppMemFile, LPDWORD pdwMemLength)
 #endif
 				memcpy(pBuffer+psubblk->unpk_pos, lpMemFile+dwMemPos, psubblk->unpk_size);
 				dwMemPos += psubblk->unpk_size;
-				psubblk++;
+				memcpy(tmp1+20,lpMemFile+dwSubPos+i*8,8);
+				swap_subblock(psubblk);
 			}
 		} else
 		// Data is 16-bit packed
@@ -277,9 +280,11 @@ BOOL MMCMP_Unpack(LPCBYTE *ppMemFile, LPDWORD pdwMemLength)
 				if (dwPos >= dwSize)
 				{
 					subblk++;
+					memcpy(tmp1+20,lpMemFile+dwSubPos+subblk*8,8);
+					swap_subblock(psubblk);
 					dwPos = 0;
-					dwSize = psubblk[subblk].unpk_size >> 1;
-					pDest = (LPWORD)(pBuffer + psubblk[subblk].unpk_pos);
+					dwSize = psubblk->unpk_size >> 1;
+					pDest = (LPWORD)(pBuffer + psubblk->unpk_pos);
 				}
 			}
 		} else if (pblk->num_bits < 8)
@@ -337,9 +342,11 @@ BOOL MMCMP_Unpack(LPCBYTE *ppMemFile, LPDWORD pdwMemLength)
 				if (dwPos >= dwSize)
 				{
 					subblk++;
+					memcpy(tmp1+20,lpMemFile+dwSubPos+subblk*8,8);
+					swap_subblock(psubblk);
 					dwPos = 0;
-					dwSize = psubblk[subblk].unpk_size;
-					pDest = pBuffer + psubblk[subblk].unpk_pos;
+					dwSize = psubblk->unpk_size;
+					pDest = pBuffer + psubblk->unpk_pos;
 				}
 			}
 		} else
