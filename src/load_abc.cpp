@@ -34,15 +34,8 @@
 #include <unistd.h> // for sleep
 #endif // _WIN32
 
-#ifdef NEWMIKMOD
-#include "mikmod.h"
-#include "uniform.h"
-typedef UBYTE BYTE;
-typedef UWORD WORD;
-#else
 #include "stdafx.h"
 #include "sndfile.h"
-#endif
 
 #include "load_pat.h"
 
@@ -51,9 +44,9 @@ typedef UWORD WORD;
 #define strdup _strdup
 #endif
 
-#define MAXABCINCLUDES	8
+#define MAXABCINCLUDES 8
 #define MAXCHORDNAMES 80
-#define ABC_ENV_DUMPTRACKS		"MMABC_DUMPTRACKS"
+#define ABC_ENV_DUMPTRACKS	"MMABC_DUMPTRACKS"
 #define ABC_ENV_NORANDOMPICK	"MMABC_NO_RANDOM_PICK"
 
 // gchords use tracks with vpos 1 thru 7
@@ -62,7 +55,7 @@ typedef UWORD WORD;
 #define GCHORDBPOS 1
 #define GCHORDFPOS 2
 #define GCHORDCPOS 3
-#define DRUMPOS	8
+#define DRUMPOS   8
 #define DRONEPOS1 9
 #define DRONEPOS2 10
 
@@ -73,13 +66,9 @@ typedef UWORD WORD;
 // because 2/192 = 1/96 and 3/192 = 1/64
 #define RESOLUTION	192
 
-#pragma pack(1)
+/**********************************************************************/
 
-/**************************************************************************
-**************************************************************************/
-#ifdef NEWMIKMOD
-static char  ABC_Version[] = "ABC+2.0 (draft IV)";
-#endif
+#pragma pack(1)
 
 typedef enum {
 	note,
@@ -181,17 +170,8 @@ typedef struct _ABCMACRO
 	char *n;
 } ABCMACRO;
 
-/**************************************************************************
-**************************************************************************/
-
 typedef struct _ABCHANDLE
 {
-#ifdef NEWMIKMOD
-	MM_ALLOC *allochandle;
-	MM_ALLOC *macrohandle;
-	MM_ALLOC *trackhandle;
-	MM_ALLOC *ho;
-#endif
 	ABCMACRO *macro;
 	ABCMACRO *umacro;
 	ABCTRACK *track;
@@ -214,6 +194,10 @@ typedef struct _ABCHANDLE
 	ABCTRACK *tp, *tpc, *tpr;
 	uint32_t tracktime;
 } ABCHANDLE;
+
+#pragma pack()
+
+/**********************************************************************/
 
 static int global_voiceno, global_octave_shift, global_tempo_factor, global_tempo_divider;
 static char global_part;
@@ -286,13 +270,14 @@ static void setenv(const char *name, const char *value, int overwrite)
 static int abc_isvalidchar(char c) {
 	return(isalpha(c) || isdigit(c) || isspace(c) || c == '%' || c == ':');
 }
-
+#if 0
 static const char *abc_skipspace(const char *p)
 {
 	while (*p && isspace(*p))
 		p++;
 	return p;
 }
+#endif
 
 static void abc_extractkeyvalue(char *key, size_t key_max,
 								char *value, size_t value_max, const char *src)
@@ -328,11 +313,7 @@ static void abc_message(const char *s1, const char *s2)
 	char txt[256];
 	if( strlen(s1) + strlen(s2) > 255 ) return;
 	sprintf(txt, s1, s2);
-#ifdef NEWMIKMOD
-	_mmlog(txt);
-#else
 	fprintf(stderr, "load_abc > %s\n", txt);
-#endif
 }
 
 static uint32_t modticks(uint32_t abcticks)
@@ -418,19 +399,6 @@ static void abc_dumptracks(ABCHANDLE *h, const char *p)
 		}
 	}
 }
-
-#ifdef NEWMIKMOD
-
-#define MMFILE				MMSTREAM
-#define mmfgetc(x)			_mm_read_SBYTE(x)
-#define mmfeof(x)			_mm_feof(x)
-#define mmfgets(buf,sz,f) _mm_fgets(f,buf,sz)
-#define mmftell(x)			_mm_ftell(x)
-#define mmfseek(f,p,w)		_mm_fseek(f,p,w)
-#define mmfopen(s,m)			_mm_fopen(s,m)
-#define mmfclose(f)			_mm_fclose(f)
-
-#else
 
 #if defined(WIN32) && defined(_mm_free)
 #undef _mm_free
@@ -537,23 +505,22 @@ static void mmfseek(MMFILE *mmfile, long p, int whence)
 			break;
 	}
 }
-#endif
 
 // =====================================================================================
 static ABCEVENT *abc_new_event(ABCHANDLE *h, uint32_t abctick, const char data[])
 // =====================================================================================
 {
-    ABCEVENT   *retval;
-		int i;
+	ABCEVENT   *retval;
+	int i;
 
-    retval = (ABCEVENT *)_mm_calloc(h->trackhandle, 1,sizeof(ABCEVENT));
-		retval->next        = NULL;
-    retval->tracktick   = abctick;
-		for( i=0; i<6; i++ )
-	    retval->par[i]    = data[i];
-		retval->part = global_part;
-		retval->tiednote = 0;
-    return retval;
+	retval = (ABCEVENT *)_mm_calloc(h->trackhandle, 1,sizeof(ABCEVENT));
+	retval->next        = NULL;
+	retval->tracktick   = abctick;
+	for( i=0; i<6; i++ )
+	    retval->par[i]  = data[i];
+	retval->part = global_part;
+	retval->tiednote = 0;
+	return retval;
 }
 
 // =============================================================================
@@ -575,47 +542,47 @@ static ABCEVENT *abc_copy_event(ABCHANDLE *h, ABCEVENT *se)
 static void abc_new_macro(ABCHANDLE *h, const char *m)
 // =============================================================================
 {
-    ABCMACRO *retval;
+	ABCMACRO *retval;
 	char key[256], value[256];
 	abc_extractkeyvalue(key, sizeof(key), value, sizeof(value), m);
 
-    retval = (ABCMACRO *)_mm_calloc(h->macrohandle, 1,sizeof(ABCMACRO));
-    retval->name  = DupStr(h->macrohandle, key, strlen(key));
-		retval->n     = strrchr(retval->name, 'n'); // for transposing macro's
-    retval->subst = DupStr(h->macrohandle, value, strlen(value));
-		retval->next  = h->macro;
-		h->macro      = retval;
+	retval = (ABCMACRO *)_mm_calloc(h->macrohandle, 1,sizeof(ABCMACRO));
+	retval->name  = DupStr(h->macrohandle, key, strlen(key));
+	retval->n     = strrchr(retval->name, 'n'); // for transposing macro's
+	retval->subst = DupStr(h->macrohandle, value, strlen(value));
+	retval->next  = h->macro;
+	h->macro      = retval;
 }
 
 // =============================================================================
 static void abc_new_umacro(ABCHANDLE *h, const char *m)
 // =============================================================================
 {
-    ABCMACRO *retval, *mp;
-		char key[256], value[256];
-		abc_extractkeyvalue(key, sizeof(key), value, sizeof(value), m);
-		if( strlen(key) > 1 || strchr("~HIJKLMNOPQRSTUVWXY",toupper(key[0])) == 0 ) return;
-		while( char *q = strchr(key, '!') )
-			*q = '+'; // translate oldstyle to newstyle
-		if( !strcmp(key,"+nil+") ) { // delete a macro
-			mp = NULL;
-			for( retval=h->umacro; retval; retval = retval->next ) {
-				if( retval->name[0] == key[0] ) {	// delete this one
-					if( mp ) mp->next = retval->next;
-					else h->umacro = retval->next;
-					_mm_free(h->macrohandle, retval);
-					return;
-				}
-				mp = retval;
+	ABCMACRO *retval, *mp;
+	char key[256], value[256];
+	abc_extractkeyvalue(key, sizeof(key), value, sizeof(value), m);
+	if( strlen(key) > 1 || strchr("~HIJKLMNOPQRSTUVWXY",toupper(key[0])) == 0 ) return;
+	while( char *q = strchr(key, '!') )
+		*q = '+'; // translate oldstyle to newstyle
+	if( !strcmp(key,"+nil+") ) { // delete a macro
+		mp = NULL;
+		for( retval=h->umacro; retval; retval = retval->next ) {
+			if( retval->name[0] == key[0] ) {	// delete this one
+				if( mp ) mp->next = retval->next;
+				else h->umacro = retval->next;
+				_mm_free(h->macrohandle, retval);
+				return;
 			}
-			return;
+			mp = retval;
 		}
-    retval = (ABCMACRO *)_mm_calloc(h->macrohandle, 1,sizeof(ABCMACRO));
-    retval->name  = DupStr(h->macrohandle, key, 1);
-    retval->subst = DupStr(h->macrohandle, value, strlen(value));
-		retval->n     = 0;
-		retval->next  = h->umacro; // by placing it up front we mask out the old macro until we +nil+ it
-		h->umacro      = retval;
+		return;
+	}
+	retval = (ABCMACRO *)_mm_calloc(h->macrohandle, 1,sizeof(ABCMACRO));
+	retval->name  = DupStr(h->macrohandle, key, 1);
+	retval->subst = DupStr(h->macrohandle, value, strlen(value));
+	retval->n     = 0;
+	retval->next  = h->umacro; // by placing it up front we mask out the old macro until we +nil+ it
+	h->umacro      = retval;
 }
 
 // =============================================================================
@@ -888,11 +855,11 @@ static ABCTRACK *abc_locate_track(ABCHANDLE *h, const char *voice, int pos)
 		}
 		else {
 			global_voiceno++;
-	    tr->vno   = global_voiceno;
+			tr->vno   = global_voiceno;
 			tr->instr = 1;
 			tr->chan  = 0;
 		}
-    tr->vpos         = pos;
+		tr->vpos         = pos;
 		tr->tiedvpos     = pos;
 		strncpy(tr->v, vc, 20);
 		tr->v[20]        = '\0';
@@ -921,7 +888,7 @@ static ABCTRACK *abc_locate_track(ABCHANDLE *h, const char *voice, int pos)
 static ABCTRACK *abc_check_track(ABCHANDLE *h, ABCTRACK *tp)
 // =============================================================================
 {
-	if( !tp ) { 
+	if( !tp ) {
 		tp = abc_locate_track(h, "", 0);	// must work for voiceless abc too...
 		tp->transpose = h->ktrans;
 	}
@@ -1399,8 +1366,8 @@ static int abc_add_noteon(ABCHANDLE *h, int ch, const char *p, uint32_t tracktim
 		}
 	}
 	if( tp->tienote
-	&& tp->tienote->par[note]   == d[note]
-	&& tp->tienote->par[octave] == d[octave] ) {
+	  && tp->tienote->par[note]   == d[note]
+	  && tp->tienote->par[octave] == d[octave] ) {
 		for( e = tp->tienote; e; e = e->next ) {
 			if( e->par[note] == 0 && e->par[octave] == 0 ) {	// undo noteoff
 				e->flg = 1;
@@ -1417,11 +1384,11 @@ static int abc_add_noteon(ABCHANDLE *h, int ch, const char *p, uint32_t tracktim
 	}
 	tp->tienote = NULL;
 	if( tp->tail 
-	&& tp->tail->tracktick == tracktime
-	&& tp->tail->par[note]      == 0
-	&& tp->tail->par[octave]    == 0 ) {
+	  && tp->tail->tracktick == tracktime
+	  && tp->tail->par[note]      == 0
+	  && tp->tail->par[octave]    == 0 ) {
 		for( j=0; j<6; j++ )
-	    tp->tail->par[j]   = d[j];
+		     tp->tail->par[j] = d[j];
 	}
 	else {
 		e = abc_new_event(h, tracktime, d);
@@ -1458,11 +1425,11 @@ static void abc_add_dronenote(ABCHANDLE *h, ABCTRACK *tp, uint32_t tracktime, in
 	d[effect]  = 0; // effect
 	d[effoper] = 0;
 	if( tp->tail 
-	&& tp->tail->tracktick == tracktime
-	&& tp->tail->par[note]      == 0
-	&& tp->tail->par[octave]    == 0 ) {
+	  && tp->tail->tracktick == tracktime
+	  && tp->tail->par[note]      == 0
+	  && tp->tail->par[octave]    == 0 ) {
 		for( j=0; j<6; j++ )
-	    tp->tail->par[j]   = d[j];
+		     tp->tail->par[j] = d[j];
 	}
 	else {
 		e = abc_new_event(h, tracktime, d);
@@ -1717,7 +1684,7 @@ static int abc_brokenrithm(const char *p, int *nl, int *nd, int *b, int hornpipe
 			*nl = 3;
 			*nd = 2; 
 		}
-	}  
+	}
 	return 0;
 }
 
@@ -1823,12 +1790,7 @@ static void	abc_set_parts(char **d, char *p)
 	int i,k,m,n;
 	size_t j, size;
 	char *q;
-#ifdef NEWMIKMOD
-	static MM_ALLOC *h;
-	if( *d )	_mmalloc_close(h);
-#else
 	if( *d )	free(*d);
-#endif
 	*d = 0;
 	if( !p ) return;
 	for( i=0; p[i] && p[i] != '%'; i++ ) {
@@ -1837,9 +1799,6 @@ static void	abc_set_parts(char **d, char *p)
 			return;
 		}
 	}
-#ifdef NEWMIKMOD
-	h = _mmalloc_create("Load_ABC_parts", NULL);
-#endif
 	// decode constructs like "((AB)2.(CD)2)3.(AB)E2" to "ABABCDCDABABCDCDABABCDCDABEE"
 	// first compute needed storage...
 	j=0;
@@ -2131,7 +2090,7 @@ static void abc_song_to_parts(ABCHANDLE *h, char **abcparts, BYTE partp[27][2])
 								if( x == partfine ) skip = 2;
 								if( x == parttocoda ) skip = 1;
 								y = !skip;
-							}  
+							}
 							if( !(vmask[x] & (1<<loop)) ) y = 0;
 						}
 						if( y ) {
@@ -2232,8 +2191,8 @@ static void abc_substitute(ABCHANDLE *h, char *target, char *s)
 	int i;
 	int l = strlen(target);
 	int n = strlen(s);
-    if (l <= 0 ||n <= 0 || strstr(s, target))
-        return;
+	if (l <= 0 ||n <= 0 || strstr(s, target))
+		return;
 	while( (p=strstr(h->line, target)) ) {
 		if( (i=strlen(h->line)) + n - l >= (int)h->len ) {
 			h->line = (char *)_mm_recalloc(h->allochandle, h->line, h->len<<1, sizeof(char));
@@ -2340,106 +2299,73 @@ static int abc_parse_decorations(ABCHANDLE *h, ABCTRACK *tp, const char *p)
 }
 
 // =====================================================================================
-#ifdef NEWMIKMOD
-BOOL ABC_Test(MMSTREAM *mmfile)
-#else
 BOOL CSoundFile::TestABC(const BYTE *lpStream, DWORD dwMemLength)
-#endif
 // =====================================================================================
 {
-    char id[128];
-    int hasText = 0;
-    // scan file for first K: line (last in header)
-#ifdef NEWMIKMOD
-		_mm_fseek(mmfile,0,SEEK_SET);
-		while(abc_fgets(mmfile,id,128)) {
-#else
-		MMFILE mmfile;
-		mmfile.mm = (char *)lpStream;
-		mmfile.sz = dwMemLength;
-		mmfseek(&mmfile,0,SEEK_SET);
-		int ppos = mmfile.pos;
+	char id[128];
+	int hasText = 0;
+	// scan file for first K: line (last in header)
+	MMFILE mmfile;
+	mmfile.mm = (char *)lpStream;
+	mmfile.sz = dwMemLength;
+	mmfseek(&mmfile,0,SEEK_SET);
+	int ppos = mmfile.pos;
 
-		while(abc_fgets(&mmfile,id,128)) {
-#endif
-
+	while(abc_fgets(&mmfile,id,128)) {
 		if (id[0] == 0 && hasText == 0 && mmfile.pos < ppos + 120) return(0); //probably binary
 		if (id[0] == 0) continue; // blank line.
 
 		if (!abc_isvalidchar(id[0])  || !abc_isvalidchar(id[1])) {
 			return(0); // probably not an ABC.
 		}
-	    if(id[0]=='K'
+		if(id[0]=='K'
 			&& id[1]==':'
 			&& (isalpha(id[2]) || isspace(id[2])) ) return 1;
-            // disable binary error if have any "tag"
-	    if((id[0]>='A' && id[0]<='Z')
+		// disable binary error if have any "tag"
+		if((id[0]>='A' && id[0]<='Z')
 			&& id[1]==':'
 			&& (isalpha(id[2]) || isspace(id[2])) ) hasText = 1;
-		}
-    return 0;
+	}
+	return 0;
 }
 
 // =====================================================================================
 static ABCHANDLE *ABC_Init(void)
 {
-    ABCHANDLE   *retval;
-		char *p;
-		char buf[10];
-#ifdef NEWMIKMOD
-    MM_ALLOC     *allochandle;
-
-		allochandle = _mmalloc_create("Load_ABC", NULL);
-    retval = (ABCHANDLE *)_mm_calloc(allochandle, 1,sizeof(ABCHANDLE));
-		if( !retval ) return NULL;
-    retval->allochandle = allochandle;
-    allochandle = _mmalloc_create("Load_ABC_macros", NULL);
-    retval->macrohandle = allochandle;
-    allochandle = _mmalloc_create("Load_ABC_tracks", NULL);
-    retval->trackhandle = allochandle;
-#else
-    retval = (ABCHANDLE *)calloc(1,sizeof(ABCHANDLE));
-		if( !retval ) return NULL;
-#endif
-		retval->track       = NULL;
-		retval->macro       = NULL;
-		retval->umacro      = NULL;
-		retval->beatstring  = NULL;
-		retval->pickrandom  = 0;
-		retval->len         = 0;
-		retval->line        = NULL;
-		strcpy(retval->gchord, "");
-		retval->barticks    = 0;
-		p = getenv(ABC_ENV_NORANDOMPICK);
-		if( p ) {
-			if( isdigit(*p) )
-				retval->pickrandom = atoi(p);
-			if( *p == '-' ) {
-#ifdef NEWMIKMOD
-				retval->pickrandom = atoi(p+1);
-				sprintf(buf,"-%ld",retval->pickrandom+1);
-#else
-				retval->pickrandom = atoi(p+1)-1; // xmms preloads the file
-				sprintf(buf,"-%ld",retval->pickrandom+2);
-#endif
-				setenv(ABC_ENV_NORANDOMPICK, buf, 1);
-			}
-		}
-		else {
-			srandom((uint32_t)time(0));	// initialize random generator with seed
-			retval->pickrandom = 1+(int)(10000.0*random()/(RAND_MAX+1.0));
-			// can handle pickin' from songbooks with 10.000 songs
-#ifdef NEWMIKMOD
-			sprintf(buf,"-%ld",retval->pickrandom+1); // next in sequence
-#else
-			sprintf(buf,"-%ld",retval->pickrandom); // xmms preloads the file
-#endif
+	ABCHANDLE   *retval;
+	char *p;
+	char buf[10];
+	retval = (ABCHANDLE *)calloc(1,sizeof(ABCHANDLE));
+	if( !retval ) return NULL;
+	retval->track       = NULL;
+	retval->macro       = NULL;
+	retval->umacro      = NULL;
+	retval->beatstring  = NULL;
+	retval->pickrandom  = 0;
+	retval->len         = 0;
+	retval->line        = NULL;
+	strcpy(retval->gchord, "");
+	retval->barticks    = 0;
+	p = getenv(ABC_ENV_NORANDOMPICK);
+	if( p ) {
+		if( isdigit(*p) )
+			retval->pickrandom = atoi(p);
+		if( *p == '-' ) {
+			retval->pickrandom = atoi(p+1)-1; // xmms preloads the file
+			sprintf(buf,"-%ld",retval->pickrandom+2);
 			setenv(ABC_ENV_NORANDOMPICK, buf, 1);
 		}
-    return retval;
+	}
+	else {
+		srandom((uint32_t)time(0));	// initialize random generator with seed
+		retval->pickrandom = 1+(int)(10000.0*random()/(RAND_MAX+1.0));
+		// can handle pickin' from songbooks with 10.000 songs
+		sprintf(buf,"-%ld",retval->pickrandom); // xmms preloads the file
+		setenv(ABC_ENV_NORANDOMPICK, buf, 1);
+	}
+	return retval;
 }
 
-#ifndef NEWMIKMOD
 static void ABC_CleanupTrack(ABCTRACK *tp)
 {
 	ABCEVENT *ep, *en;
@@ -2460,18 +2386,11 @@ static void ABC_CleanupMacro(ABCMACRO *m)
 		free(m->subst);
 	free(m);
 }
-#endif
 
 // =====================================================================================
 static void ABC_CleanupTracks(ABCHANDLE *handle)
 // =====================================================================================
 {
-#ifdef NEWMIKMOD
-	if(handle && handle->trackhandle) {
-		_mmalloc_close(handle->trackhandle);
-		handle->trackhandle = 0;
-	}
-#else
 	ABCTRACK *tp, *tn;
 	if(handle) {
 		for( tp=handle->track; tp; tp = tn ) {
@@ -2480,19 +2399,12 @@ static void ABC_CleanupTracks(ABCHANDLE *handle)
 		}
 		handle->track = NULL;
 	}
-#endif
 }
 
 // =====================================================================================
 static void ABC_CleanupMacros(ABCHANDLE *handle)
 // =====================================================================================
 {
-#ifdef NEWMIKMOD
-	if(handle && handle->macrohandle) {
-		_mmalloc_close(handle->macrohandle);
-		handle->macrohandle = 0;
-	}
-#else
 	ABCMACRO *mp, *mn;
 	if(handle) {
 		for( mp=handle->macro; mp; mp = mn ) {
@@ -2506,31 +2418,20 @@ static void ABC_CleanupMacros(ABCHANDLE *handle)
 		handle->macro = NULL;
 		handle->umacro = NULL;
 	}
-#endif
 }
 
 // =====================================================================================
 static void ABC_Cleanup(ABCHANDLE *handle)
 // =====================================================================================
 {
-#ifdef NEWMIKMOD
-	if(handle && handle->allochandle) {
-#else
 	if(handle) {
-#endif
 		ABC_CleanupMacros(handle);
 		ABC_CleanupTracks(handle);
-#ifdef NEWMIKMOD
-		_mmalloc_close(handle->allochandle);
-		handle->allochandle = 0;
-		handle->len = 0;
-#else
 		if( handle->line )
 			free(handle->line);
 		if( handle->beatstring )
 			free(handle->beatstring);
 		free(handle);
-#endif
 	}
 }
 
@@ -2552,169 +2453,6 @@ static ABCEVENT *abc_next_note(ABCEVENT *e)
 }
 
 // =============================================================================
-#ifdef NEWMIKMOD
-static void ABC_ReadPatterns(UNIMOD *of, ABCHANDLE *h, int numpat)
-// =============================================================================
-{
-	int pat,row,i,ch,trillbits;
-	BYTE n,ins,vol;
-	ABCTRACK *t;
-	ABCEVENT *e, *en, *ef, *el;
-	uint32_t tt1, tt2;
-	UNITRK_EFFECT eff;
-
-	// initialize start points of event list in tracks
-	for( t = h->track; t; t = t->next ) t->capostart = t->head;
-	trillbits = 0; // trill effect admininstration: one bit per channel, max 32 channnels
-	for( pat = 0; pat < numpat; pat++ ) {
-		utrk_reset(of->ut);
-		for( row = 0; row < 64; row++ ) {
-			tt1 = abcticks((pat * 64 + row ) * h->speed);
-			tt2 = tt1 + abcticks(h->speed);
-			ch = 0;
-			for( e=abc_next_global(h->track->capostart); e && e->tracktick < tt2; e=abc_next_global(e->next) ) {
-				if( e && e->tracktick >= tt1 ) {	// we have a tempo event in this row
-					switch( e->cmd ) {
-						case cmdtempo:
-							eff.effect   = UNI_GLOB_TEMPO;
-							eff.param.u  = e->lpar;
-							eff.framedly = UFD_RUNONCE;
-							utrk_write_global(of->ut, &eff, PTMEM_TEMPO);
-							break;
-						case cmdpartbrk:
-							eff.effect   = UNI_GLOB_PATBREAK;
-							eff.param.u  = 0;
-							eff.framedly = UFD_RUNONCE;
-							utrk_write_global(of->ut, &eff, UNIMEM_NONE);
-							break;
-					}
-				}
-			}
-			for( t = h->track; t; t = t->next ) {
-				for( e=abc_next_note(t->capostart); e && e->tracktick < tt1; e=abc_next_note(e->next) )
-					t->capostart = e;
-				i = 0;
-				ef = NULL;
-				en = e;
-				el = e;
-				for( ; e && e->tracktick < tt2; e=abc_next_note(e->next) ) {	// we have a note event in this row
-					t->capostart = e;
-					i++;
-					if( e->par[volume] ) {
-						if( !ef ) ef = e;
-						el = e;
-					}
-				}
-				if( i ) {
-					trillbits &= ~(1<<ch);
-					utrk_settrack(of->ut, ch);
-					if( i == 1 || ef == el || !ef ) { // only one event in this row
-						if( ef ) e = ef;
-						else e = en;
-						el = t->capostart;
-						i  = e->par[note] + ((e->par[octave])*12);
-						if( t->chan == 10 ) {
-							n   = pat_gm_drumnote(i) + 23;
-							ins = pat_gmtosmp(pat_gm_drumnr(i));
-						}
-						else {
-							n   = pat_modnote(i);
-							ins = e->par[smpno];
-						}
-						eff.framedly = modticks(e->tracktick - tt1);
-						vol = e->par[volume];
-						if( e->par[effect] == accent ) {
-							vol += vol / 10;
-							if( vol > 127 ) vol = 127;
-						}
-						if (vol <= 0) {}
-						else if( el->par[volume] == 0 ) {
-							eff.framedly     = modticks(el->tracktick - tt1);
-							eff.param.u      = 0;
-							eff.param.byte_a = n;
-							eff.param.byte_b = ins;
-							eff.effect       = UNI_NOTEKILL;
-							utrk_write_local(of->ut, &eff, UNIMEM_NONE);
-						}
-						else {
-							switch( e->par[effect] ) {
-								case trill:
-									eff.effect  = UNI_VIBRATO_DEPTH;
-									eff.param.u = 12;	// depth 1.5
-									utrk_write_local(of->ut, &eff, PTMEM_VIBRATO_DEPTH);
-									eff.effect  = UNI_VIBRATO_SPEED;
-									eff.param.u = 48; // speed 12
-									utrk_write_local(of->ut, &eff, PTMEM_VIBRATO_SPEED);
-									trillbits |= (1<<ch);
-									break;
-								case bow:
-									eff.effect   = UNI_PITCHSLIDE;
-									eff.framedly = (h->speed/2)|UFD_RUNONCE;
-									eff.param.s  = 2;
-									utrk_write_local(of->ut, &eff, (e->par[effoper])? PTMEM_PITCHSLIDEUP: PTMEM_PITCHSLIDEDN);
-									break;
-								default:
-									break;
-							}
-							if( eff.framedly ) {
-								eff.param.u      = 0;
-								eff.param.byte_a = n;
-								eff.param.byte_b = ins;
-								eff.effect       = UNI_NOTEDELAY;
-								utrk_write_local(of->ut, &eff, UNIMEM_NONE);
-							}
-						}
-						utrk_write_inst(of->ut, ins);
-						utrk_write_note(of->ut, n); // <- normal note
-						pt_write_effect(of->ut, 0xc, vol);
-					}
-					else {
-						// two notes in one row, use FINEPITCHSLIDE runonce effect
-						// start first note on first tick and framedly runonce on seconds note tick
-						// use volume and instrument of last note
-						if( t->chan == 10 ) {
-							i   = el->par[note] + ((el->par[octave])*12);
-							n   = pat_gm_drumnote(i) + 23;
-							ins = pat_gmtosmp(pat_gm_drumnr(i));
-							i   = n; // cannot change instrument here..
-						}
-						else {
-							i   = ef->par[note] + ((ef->par[octave])*12);
-							n   = pat_modnote(i);
-							ins = el->par[smpno];
-							i   = pat_modnote(el->par[note] + ((el->par[octave])*12));
-						}
-						vol = el->par[volume];
-						eff.effect    = UNI_PITCHSLIDE;
-						eff.framedly  = modticks(el->tracktick - tt1)|UFD_RUNONCE;
-						eff.param.s   = ((i > n)?i-n:n-i);
-						utrk_write_inst(of->ut, ins);
-						utrk_write_note(of->ut, n); // <- normal note
-						pt_write_effect(of->ut, 0xc, vol);
-						utrk_write_local(of->ut, &eff, (i > n)? PTMEM_PITCHSLIDEUP: PTMEM_PITCHSLIDEDN);
-					}
-				}
-				else { // no new notes, keep on trilling...
-					if( trillbits & (1<<ch) ) {
-						utrk_settrack(of->ut, ch);
-						eff.effect  = UNI_VIBRATO_DEPTH;
-						eff.param.u = 12;	// depth 1.5
-						utrk_write_local(of->ut, &eff, PTMEM_VIBRATO_DEPTH);
-						eff.effect  = UNI_VIBRATO_SPEED;
-						eff.param.u = 60; // speed 15
-						utrk_write_local(of->ut, &eff, PTMEM_VIBRATO_SPEED);
-					}
-				}
-				ch++;
-			}
-			utrk_newline(of->ut);
-		}
-		if(!utrk_dup_pattern(of->ut,of)) return;
-	}
-}
-
-#else
-
 static int ABC_ReadPatterns(MODCOMMAND *pattern[], WORD psize[], ABCHANDLE *h, int numpat, int channels)
 // =====================================================================================
 {
@@ -2888,8 +2626,6 @@ static int ABC_ReadPatterns(MODCOMMAND *pattern[], WORD psize[], ABCHANDLE *h, i
 	}
 	return 0;
 }
-
-#endif
 
 static int ABC_Key(const char *p)
 {
@@ -3803,20 +3539,12 @@ static char *abc_continuated(ABCHANDLE *h, MMFILE *mmf, char *p) {
 }
 
 // =====================================================================================
-#ifdef NEWMIKMOD
-BOOL ABC_Load(ABCHANDLE *h, UNIMOD *of, MMSTREAM *mmfile)
-#else
 BOOL CSoundFile::ReadABC(const uint8_t *lpStream, DWORD dwMemLength)
-#endif
 {
 	static int avoid_reentry = 0;
-#ifdef NEWMIKMOD
-#define m_nDefaultTempo	of->inittempo
-#else
 	ABCHANDLE *h;
 	uint32_t numpat;
 	MMFILE mm, *mmfile;
-#endif
 	uint32_t t;
 	char	*line, *p, *pp, ch, ch0=0;
 	char barsig[52];	// for propagated accidental key signature within bar
@@ -3838,10 +3566,6 @@ BOOL CSoundFile::ReadABC(const uint8_t *lpStream, DWORD dwMemLength)
 	ABCTRACK *tpd, *ttp;
 	ABCMACRO *mp;
 	int mmsp;
-#ifdef NEWMIKMOD
-	MMSTREAM *mmstack[MAXABCINCLUDES];
-	h->ho = _mmalloc_create("Load_ABC_ORDERLIST", NULL);
-#else
 	MMFILE *mmstack[MAXABCINCLUDES];
 	if( !TestABC(lpStream, dwMemLength) ) return FALSE;
 	h = ABC_Init();
@@ -3850,7 +3574,6 @@ BOOL CSoundFile::ReadABC(const uint8_t *lpStream, DWORD dwMemLength)
 	mm.mm = (char *)lpStream;
 	mm.sz = dwMemLength;
 	mm.pos = 0;
-#endif
 	while( avoid_reentry ) sleep(1);
 	avoid_reentry = 1;
 	pat_resetsmp();
@@ -3952,11 +3675,7 @@ BOOL CSoundFile::ReadABC(const uint8_t *lpStream, DWORD dwMemLength)
 				case INBETWEEN:
 					if( !strncmp(p,"X:",2) ) {
 						abcstate = INHEAD;
-#ifdef NEWMIKMOD
-						of->songname = NULL;
-#else
 						memset(m_szNames[0], 0, 32);
-#endif
 						for( p+=2; isspace(*p); p++ ) ;
 						abcxnumber = atoi(p);
 						abchornpipe = 0;
@@ -4029,23 +3748,12 @@ BOOL CSoundFile::ReadABC(const uint8_t *lpStream, DWORD dwMemLength)
 						for( t=strlen(p)-1; isspace(p[t]); t-- )
 							p[t]='\0';
 						for( t=2; isspace(p[t]); t++ ) ;
-#ifdef NEWMIKMOD
-						if( of->songname )
-							strcpy(buf,of->songname);
-						else
-							strcpy(buf,"");
-#else
 						strcpy(buf,m_szNames[0]);
-#endif
 						if( strlen(buf) + strlen(p+t) > 199 ) p[t+199-strlen(buf)] = '\0'; // chop it of
 						if( strlen(buf) ) strcat(buf," "); // add a space
 						strcat(buf, p+t);
-#ifdef NEWMIKMOD
-						of->songname = DupStr(of->allochandle, buf, strlen(buf));
-#else
 						if( strlen(buf) > 31 ) buf[31] = '\0'; // chop it of
 						strcpy(m_szNames[0], buf);
-#endif
 						break;
 					}
 					if( !strncmp(p,"R:",2) ) {
@@ -4187,23 +3895,12 @@ BOOL CSoundFile::ReadABC(const uint8_t *lpStream, DWORD dwMemLength)
 						for( t=strlen(p)-1; isspace(p[t]); t-- )
 							p[t]='\0';
 						for( t=2; isspace(p[t]); t++ ) ;
-#ifdef NEWMIKMOD
-						if( of->songname )
-							strcpy(buf,of->songname);
-						else
-							strcpy(buf,"");
-#else
 						strcpy(buf,m_szNames[0]);
-#endif
 						if( strlen(buf) + strlen(p+t) > 198 ) p[t+198-strlen(buf)] = '\0'; // chop it of
 						if( strlen(buf) ) strcat(buf," "); // add a space
 						strcat(buf, p+t);
-#ifdef NEWMIKMOD
-						of->songname = DupStr(of->allochandle, buf, strlen(buf));
-#else
 						if( strlen(buf) > 31 ) buf[31] = '\0'; // chop it of
 						strcpy(m_szNames[0], buf);
-#endif
 						*p = '%';	// make me skip the rest of the line....
 					}
 					break;
@@ -4343,7 +4040,7 @@ BOOL CSoundFile::ReadABC(const uint8_t *lpStream, DWORD dwMemLength)
 									pp = p;
 									p = mp->subst;
 									ch = *p;
-                                    if( ch ) p++;
+									if( ch ) p++;
 									break;
 								}
 							}
@@ -4420,7 +4117,7 @@ BOOL CSoundFile::ReadABC(const uint8_t *lpStream, DWORD dwMemLength)
 									if( !strncmp(p,"MIDI",4) && (p[4]=='=' || isspace(p[4])) ) { // interpret some of the possibilitys
 										for( p += 4; isspace(*p); p++ ) ;
 										if( *p == '=' )
-											for( p += 1; isspace(*p); p++ ) ;											
+											for( p += 1; isspace(*p); p++ ) ;
 										abc_MIDI_command(h, p, ']');
 										if( h->tp ) abcnolegato = !h->tp->legato;
 										if( !abcnolegato ) abcnoslurs = 0;
@@ -5059,7 +4756,6 @@ BOOL CSoundFile::ReadABC(const uint8_t *lpStream, DWORD dwMemLength)
 	abc_synchronise_tracks(h);	// distribute all control events
 	abc_recalculate_tracktime(h);
 /*
-	
 	abctrack:
 		tracktick		long
 		note				byte
@@ -5071,7 +4767,6 @@ BOOL CSoundFile::ReadABC(const uint8_t *lpStream, DWORD dwMemLength)
 	row  = (tracktick div speed) modulo 64
 	pat  = (tracktick div speed) div 64
 	ord  = calculated
-
 */
 	if( (p=getenv(ABC_ENV_DUMPTRACKS)) ) {
 		printf("P:%s\n",abcparts);
@@ -5100,26 +4795,6 @@ BOOL CSoundFile::ReadABC(const uint8_t *lpStream, DWORD dwMemLength)
 	// set module variables
 	if( abctempo == 0 ) abctempo = abcrate;
 	if( m_nDefaultTempo == 0 ) m_nDefaultTempo = abctempo;
-#ifdef NEWMIKMOD
-	of->memsize     = PTMEM_LAST;      // Number of memory slots to reserve!
-	of->modtype     = _mm_strdup(of->allochandle, ABC_Version);
-	of->numpat      = 1+(modticks(h->tracktime) / h->speed / 64);
-	of->numpos      = orderlen;
-	of->reppos      = 0;
-	of->initspeed   = h->speed;
-	of->numchn      = abc_numtracks(h);
-	of->numtrk      = of->numpat * of->numchn;
-	of->initvolume  = 64;
-	of->pansep      = 128;
-	// orderlist
-	if(!AllocPositions(of, orderlen)) {
-		avoid_reentry = 0;
-		return FALSE;
-	}
-	for(t=0; t<orderlen; t++)
-		of->positions[t] = orderlist[t];
-	_mmalloc_close(h->ho);	// get rid of orderlist memory
-#else
 	m_nType         = MOD_TYPE_ABC;
 	numpat          = 1+(modticks(h->tracktime) / h->speed / 64);
 	if( numpat > MAX_PATTERNS )
@@ -5136,27 +4811,6 @@ BOOL CSoundFile::ReadABC(const uint8_t *lpStream, DWORD dwMemLength)
 		Order[t] = orderlist[t];
 	}
 	free(orderlist);	// get rid of orderlist memory
-#endif
-#ifdef NEWMIKMOD
-	// ==============================
-	// Load the pattern info now!
-	if(!AllocTracks(of)) return 0;
-	if(!AllocPatterns(of)) return 0;
-	of->ut = utrk_init(of->numchn, h->allochandle);
-	utrk_memory_reset(of->ut);
-	utrk_local_memflag(of->ut, PTMEM_PORTAMENTO, TRUE, FALSE);
-	ABC_ReadPatterns(of, h, of->numpat);
-	// load instruments after building the patterns (chan == 10 track handling)
-	if( !PAT_Load_Instruments(of) ) {
-		avoid_reentry = 0;
-		return FALSE;
-	}
-	// ============================================================
-	// set panning positions
-	for(t=0; t<of->numchn; t++) {
-		of->panning[t] = PAN_LEFT+((t+2)%5)*((PAN_RIGHT - PAN_LEFT)/5);     // 0x30 = std s3m val
-	}
-#else
 	// ==============================
 	// Load the pattern info now!
 	if( ABC_ReadPatterns(Patterns, PatternSize, h, numpat, m_nChannels) ) {
@@ -5183,44 +4837,8 @@ BOOL CSoundFile::ReadABC(const uint8_t *lpStream, DWORD dwMemLength)
 		ChnSettings[t].nPan = 0x30+((t+2)%5)*((0xD0 - 0x30)/5);     // 0x30 = std s3m val
 		ChnSettings[t].nVolume = 64;
 	}
-#endif
 	avoid_reentry = 0; // it is safe now, I'm finished
 	abc_set_parts(&abcparts, 0);	// free the parts array
-#ifndef NEWMIKMOD
 	ABC_Cleanup(h);	// we dont need it anymore
-#endif
 	return 1;
 }
-
-#ifdef NEWMIKMOD
-// =====================================================================================
-CHAR *ABC_LoadTitle(MMSTREAM *mmfile)
-// =====================================================================================
-{
-	char s[128];
-	int i;
-	// get the first line with T:songtitle
-	_mm_fseek(mmfile,0,SEEK_SET);
-	while(abc_fgets(mmfile,s,128)) {
-		if( s[0]=='T' && s[1]==':' ) {
-			for( i=2; s[i]==' '; i++ ) ;
-			return(DupStr(NULL, s+i,strlen(s+i)));
-		}
-	}
-	return NULL;
-}
-
-MLOADER load_abc =
-{
-    "ABC",
-    "ABC draft 2.0",
-    0x30,
-    NULL,
-    ABC_Test,
-    (void *(*)(void))ABC_Init,
-    (void (*)(ML_HANDLE *))ABC_Cleanup,
-    /* Every single loader seems to need one of these! */
-    (BOOL (*)(ML_HANDLE *, UNIMOD *, MMSTREAM *))ABC_Load,
-    ABC_LoadTitle
-};
-#endif
