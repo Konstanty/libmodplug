@@ -335,17 +335,21 @@ BOOL CSoundFile::ReadPSM(LPCBYTE lpStream, DWORD dwMemLength)
 				ch = 0;
 			}
 			// Note + Instr
+                        if ((flags & 0x80) && (pos+1 < len))
+                        {
+                                UINT note = p[pos++];
+                                note = (note>>4)*12+(note&0x0f)+12+1;
+                                if (note > 0x80) note = 0;
+				m[ch].note = note;
+                        }
 			if ((flags & 0x40) && (pos+1 < len))
 			{
-				UINT note = p[pos++];
 				UINT nins = p[pos++];
 			#ifdef PSM_LOG
 				//if (!nPat) Log("note+ins: %02X.%02X\n", note, nins);
 				if ((!nPat) && (nins >= m_nSamples)) Log("WARNING: invalid instrument number (%d)\n", nins);
 			#endif
-				if ((note) && (note < 0x80)) note = (note>>4)*12+(note&0x0f)+12+1;
 				m[ch].instr = samplemap[nins];
-				m[ch].note = note;
 			}
 			// Volume
 			if ((flags & 0x20) && (pos < len))
@@ -362,13 +366,27 @@ BOOL CSoundFile::ReadPSM(LPCBYTE lpStream, DWORD dwMemLength)
 				switch(command)
 				{
 				// 01: fine volslide up
-				case 0x01:	command = CMD_VOLUMESLIDE; param |= 0x0f; break;
+				case 0x01:	command = CMD_VOLUMESLIDE; param |= 0x0f;
+						if (param == 15) param=31;
+						break;
+                                // 02: volslide up
+                                case 0x02:      command = CMD_VOLUMESLIDE; param>>=1; param<<=4; break;
+                                // 03: fine volslide down
+                                case 0x03:	command = CMD_VOLUMESLIDE; param>>=4; param |= 0xf0;
+						if (param == 240) param=241;
+						break;
 				// 04: fine volslide down
 				case 0x04:	command = CMD_VOLUMESLIDE; param>>=4; param |= 0xf0; break;
 				// 0C: portamento up
 				case 0x0C:	command = CMD_PORTAMENTOUP; param = (param+1)/2; break;
 				// 0E: portamento down
 				case 0x0E:	command = CMD_PORTAMENTODOWN; param = (param+1)/2; break;
+				// 0F: tone portamento
+				case 0x0F:	command = CMD_TONEPORTAMENTO; param = param/4; break;
+				// 15: vibrato
+                                case 0x15:	command = CMD_VIBRATO; break;
+                                // 29: sample offset
+                                case 0x29:	pos += 2; break;
 				// 33: Position Jump
 				case 0x33:	command = CMD_POSITIONJUMP; break;
 				// 34: Pattern break
