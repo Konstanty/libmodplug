@@ -385,8 +385,10 @@ BOOL CSoundFile::ReadPSM(LPCBYTE lpStream, DWORD dwMemLength)
 				case 0x0F:	command = CMD_TONEPORTAMENTO; param = param/4; break;
 				// 15: vibrato
                                 case 0x15:	command = CMD_VIBRATO; break;
-                                // 29: sample offset
-                                case 0x29:	pos += 2; break;
+				// 29: sample offset
+				case 0x29:	pos += 2; break;
+				// 2A: retrigger note
+				case 0x2A:	command = CMD_RETRIG; break;
 				// 33: Position Jump
 				case 0x33:	command = CMD_POSITIONJUMP; break;
 				// 34: Pattern break
