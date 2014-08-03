@@ -286,54 +286,33 @@ BOOL CSoundFile::ReadPSM(LPCBYTE lpStream, DWORD dwMemLength)
 		if ((Patterns[nPat] = AllocatePattern(nRows, m_nChannels)) == NULL) break;
 		MODCOMMAND *m = Patterns[nPat];
 		BYTE *p = pPsmPat->data;
+		MODCOMMAND *sp, dummy;
 		UINT pos = 0;
 		UINT row = 0;
-		UINT oldch = 0;
-		BOOL bNewRow = FALSE;
+		UINT rowlim;
 	#ifdef PSM_LOG
 		Log("Pattern %d at offset 0x%04X\n", nPat, (DWORD)(p - (BYTE *)lpStream));
 	#endif
+		UINT flags, ch;
+		rowlim = bswapLE16(pPsmPat->reserved1)-2;
 		while ((row < nRows) && (pos+1 < len))
 		{
-			UINT flags = p[pos++];
-			UINT ch = p[pos++];
-			
-		#ifdef PSM_LOG
-			//Log("flags+ch: %02X.%02X\n", flags, ch);
-		#endif
-			if (((flags & 0xf0) == 0x10) && (ch <= oldch) /*&& (!bNewRow)*/)
-			{
-				if ((pos+1<len) && (!(p[pos] & 0x0f)) && (p[pos+1] < m_nChannels))
-				{
-				#ifdef PSM_LOG
-					//if (!nPat) Log("Continuing on new row\n");
-				#endif
-					row++;
-					m += m_nChannels;
-					oldch = ch;
-					continue;
-				}
-			}
-			if ((pos >= len) || (row >= nRows)) break;
-			if (!(flags & 0xf0))
-			{
-			#ifdef PSM_LOG
-				//if (!nPat) Log("EOR(%d): %02X.%02X\n", row, p[pos], p[pos+1]);
-			#endif
-				row++;
+			if ((pos+1) >= rowlim) {
+				pos = rowlim;
+				rowlim = (((int)p[pos+1])<<8)
+					| ((int)p[pos+0]);
 				m += m_nChannels;
-				bNewRow = TRUE;
-				oldch = ch;
-				continue;
+				row++;
+				rowlim += pos;
+				pos += 2;
 			}
-			bNewRow = FALSE;
-			if (ch >= m_nChannels)
-			{
-			#ifdef PSM_LOG
-				if (!nPat) Log("Invalid channel row=%d (0x%02X.0x%02X)\n", row, flags, ch);
-			#endif
-				ch = 0;
-			}
+			flags = p[pos++];
+			ch = p[pos++];
+			if (ch >= m_nChannels) {
+				sp = &dummy;
+                        } else {
+				sp = &m[ch];
+                        }
 			// Note + Instr
                         if ((flags & 0x80) && (pos+1 < len))
                         {
@@ -407,7 +386,6 @@ BOOL CSoundFile::ReadPSM(LPCBYTE lpStream, DWORD dwMemLength)
 				m[ch].command = (BYTE)command;
 				m[ch].param = (BYTE)param;
 			}
-			oldch = ch;
 		}
 	#ifdef PSM_LOG
 		if (pos < len)
