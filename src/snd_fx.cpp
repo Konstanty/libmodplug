@@ -21,7 +21,7 @@ DWORD CSoundFile::GetLength(BOOL bAdjust, BOOL bTotal)
 {
 	UINT dwElapsedTime=0, nRow=0, nCurrentPattern=0, nNextPattern=0, nPattern=0;
 	UINT nMusicSpeed=m_nDefaultSpeed, nMusicTempo=m_nDefaultTempo, nNextRow=0;
-	UINT nMaxRow = 0, nMaxPattern = 0;
+	UINT nMaxRow = 0, nMaxPattern = 0, nNextStartRow = 0;
 	LONG nGlbVol = m_nDefaultGlobalVolume, nOldGlbVolSlide = 0;
 	BYTE samples[MAX_CHANNELS];
 	BYTE instr[MAX_CHANNELS];
@@ -71,7 +71,8 @@ DWORD CSoundFile::GetLength(BOOL bAdjust, BOOL bTotal)
 		if (nNextRow >= PatternSize[nPattern])
 		{
 			nNextPattern = nCurrentPattern + 1;
-			nNextRow = 0;
+			nNextRow = nNextStartRow;
+			nNextStartRow = 0;
 		}
 		if (!nRow)
 		{
@@ -106,6 +107,7 @@ DWORD CSoundFile::GetLength(BOOL bAdjust, BOOL bTotal)
 				if (param <= nCurrentPattern) goto EndMod;
 				nNextPattern = param;
 				nNextRow = 0;
+				nNextStartRow = 0;
 				if (bAdjust)
 				{
 					pChn->nPatternLoopCount = 0;
@@ -116,6 +118,7 @@ DWORD CSoundFile::GetLength(BOOL bAdjust, BOOL bTotal)
 			case CMD_PATTERNBREAK:
 				nNextRow = param;
 				nNextPattern = nCurrentPattern + 1;
+				nNextStartRow = 0;
 				if (bAdjust)
 				{
 					pChn->nPatternLoopCount = 0;
@@ -157,7 +160,10 @@ DWORD CSoundFile::GetLength(BOOL bAdjust, BOOL bTotal)
 				if ((param & 0xF0) == 0x60)
 				{
 					if (param & 0x0F) dwElapsedTime += (dwElapsedTime - patloop[nChn]) * (param & 0x0F);
-					else patloop[nChn] = dwElapsedTime;
+					else {
+						patloop[nChn] = dwElapsedTime;
+						if (m_nType & MOD_TYPE_XM) nNextStartRow = nRow;
+					}
 				}
 				break;
 			}
@@ -1169,11 +1175,13 @@ BOOL CSoundFile::ProcessEffects()
 		// Position Jump
 		case CMD_POSITIONJUMP:
 			nPosJump = param;
+			m_nNextStartRow = 0;
 			break;
 
 		// Pattern Break
 		case CMD_PATTERNBREAK:
 			nBreakRow = param;
+			m_nNextStartRow = 0;
 			break;
 
 		// Midi Controller
@@ -2127,6 +2135,7 @@ int CSoundFile::PatternLoop(MODCHANNEL *pChn, UINT param)
 	} else
 	{
 		pChn->nPatternLoop = m_nRow;
+		if (m_nType & MOD_TYPE_XM) m_nNextStartRow = m_nRow;
 	}
 	return -1;
 }

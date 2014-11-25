@@ -103,6 +103,7 @@ BOOL CSoundFile::Create(LPCBYTE lpStream, DWORD dwMemLength)
 	m_nFrameDelay = 0;
 	m_nNextRow = 0;
 	m_nRow = 0;
+	m_nNextStartRow = 0;
 	m_nPattern = 0;
 	m_nCurrentPattern = 0;
 	m_nNextPattern = 0;
@@ -244,6 +245,7 @@ BOOL CSoundFile::Create(LPCBYTE lpStream, DWORD dwMemLength)
 	m_nTickCount = m_nMusicSpeed;
 	m_nNextRow = 0;
 	m_nRow = 0;
+	m_nNextStartRow = 0;
 	if ((m_nRestartPos >= MAX_ORDERS) || (Order[m_nRestartPos] >= MAX_PATTERNS)) m_nRestartPos = 0;
 	// Load plugins
 	if (gpMixPluginCreateProc)
@@ -678,6 +680,7 @@ void CSoundFile::SetCurrentPos(UINT nPos)
 	}
 	m_nNextPattern = nPattern;
 	m_nNextRow = nRow;
+	m_nNextStartRow = 0;
 	m_nTickCount = m_nMusicSpeed;
 	m_nBufferCount = 0;
 	m_nPatternDelay = 0;
@@ -706,7 +709,7 @@ void CSoundFile::SetCurrentOrder(UINT nPos)
 	} else
 	{
 		m_nNextPattern = nPos;
-		m_nRow = m_nNextRow = 0;
+		m_nRow = m_nNextRow = m_nNextStartRow = 0;
 		m_nPattern = 0;
 		m_nTickCount = m_nMusicSpeed;
 		m_nBufferCount = 0;

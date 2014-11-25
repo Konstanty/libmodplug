@@ -419,7 +419,8 @@ BOOL CSoundFile::ProcessRow()
 		if (m_nNextRow >= PatternSize[m_nPattern])
 		{
 			if (!(m_dwSongFlags & SONG_PATTERNLOOP)) m_nNextPattern = m_nCurrentPattern + 1;
-			m_nNextRow = 0;
+			m_nNextRow = m_nNextStartRow;
+			m_nNextStartRow = 0;
 		}
 		// Reset channel values
 		MODCHANNEL *pChn = Chn;
