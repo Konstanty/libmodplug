@@ -578,7 +578,7 @@ public:	// for Editing
 	UINT m_nType, m_nSamples, m_nInstruments;
 	UINT m_nTickCount, m_nTotalCount, m_nPatternDelay, m_nFrameDelay;
 	UINT m_nMusicSpeed, m_nMusicTempo;
-	UINT m_nNextRow, m_nRow;
+	UINT m_nNextRow, m_nRow, m_nNextStartRow;
 	UINT m_nPattern,m_nCurrentPattern,m_nNextPattern,m_nRestartPos;
 	UINT m_nMasterVolume, m_nGlobalVolume, m_nSongPreAmp;
 	UINT m_nFreqFactor, m_nTempoFactor, m_nOldGlbVolSlide;
