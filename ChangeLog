@@ -78,38 +78,38 @@ date = 2-nov-2006 [Konstanty Bialkowski/Macro Trillo]
 -> file: src/load_amf.cpp, src/fastmix.cpp
 		where: Licensing
 		what: all old code was relicensed for public domain, and somehow an old version was included with GPL notices
-date = 20-jul-2006 [Peter Grootswagers]
--> file: src/load_abc.cpp
-		where: instrument loader functions
-		what: replaced with correspondig functions in load_pat.cpp
--> file: src/load_mid.cpp
-		where: whole source
-		what: new loader for midi files
--> file: src/load_pat.cpp
-		where: whole source
-		what: new loader for GUS instrument patch files (pat)
--> file: src/load_pat.h
-		where: whole source
-		what: new header declaring reuseable GUS instrument patch functions (pat)
--> file: README
-		where: 2. Features
-		what: added description of load_mid.cpp and load_pat.cpp
--> file: src/Makefile.am
-		where: libmodplug_la_SOURCES
-		what: added load_mid.cpp and load_pat.cpp
-		where: libmodpluginclude_HEADERS
-		what: added load_pat.h
--> file: src/sndfile.cpp
-		where: function CSoundFile::Create()
-		what: added call to ReadMID and ReadPAT
--> file: src/libmodplug/sndfile.h
-		where: #define
-		what: added MOD_TYPE_PAT (MOD_TYPE_MID already there...)
-		where: class CSoundFile
-		what: added public function members ReadMID, TestMID, ReadPat, TestPAT and PATsample
-date = 24-jun-2006 [Peter Grootswagers]
--> file: src/load_abc.cpp
-		where: whole source
+date = 20-jul-2006 [Peter Grootswagers]
+-> file: src/load_abc.cpp
+		where: instrument loader functions
+		what: replaced with correspondig functions in load_pat.cpp
+-> file: src/load_mid.cpp
+		where: whole source
+		what: new loader for midi files
+-> file: src/load_pat.cpp
+		where: whole source
+		what: new loader for GUS instrument patch files (pat)
+-> file: src/load_pat.h
+		where: whole source
+		what: new header declaring reuseable GUS instrument patch functions (pat)
+-> file: README
+		where: 2. Features
+		what: added description of load_mid.cpp and load_pat.cpp
+-> file: src/Makefile.am
+		where: libmodplug_la_SOURCES
+		what: added load_mid.cpp and load_pat.cpp
+		where: libmodpluginclude_HEADERS
+		what: added load_pat.h
+-> file: src/sndfile.cpp
+		where: function CSoundFile::Create()
+		what: added call to ReadMID and ReadPAT
+-> file: src/libmodplug/sndfile.h
+		where: #define
+		what: added MOD_TYPE_PAT (MOD_TYPE_MID already there...)
+		where: class CSoundFile
+		what: added public function members ReadMID, TestMID, ReadPat, TestPAT and PATsample
+date = 24-jun-2006 [Peter Grootswagers]
+-> file: src/load_abc.cpp
+		where: whole source
 		what: new loader for abc files
 -> file: README
 		where: 2. Features
@@ -128,14 +128,14 @@ date = 24-jun-2006 [Peter Grootswagers]
 date = 20-mar-2006 [Macro Trillo / "Custom libmodplug project"]
 -> file : src/load_s3m.cpp
 -> file : src/load_far.cpp
-		what: fixed endianness 
+		what: fixed endianness
 date = 20-mar-2006 [Alistair John Strachan]
 ....
 
 Many other changes need to be documented here...
 
 GCC3 fixes, GCC4 fixes, More Archive Types.
-	
+
 date = 09-feb-2001 [Markus Fick]
 -> file: fastmix.cpp
 		where: spline creation, spline macros
@@ -163,7 +163,7 @@ date = 08-feb-2001 [Markus Fick]
 		what: - implemented spline table precalculator
 		      - changed fir precalculator + macros (for higher quality and clearer source)
 		      - added some comments and documentation
-		comment: 
+		comment:
 		  - preprocessor constant: SPLINE_FRACBITS
 		     ) controls quality/memory usage
 			   range is [4..14] inclusive
@@ -182,7 +182,7 @@ date = 07-feb-2001 [Markus Fick]
 
 date = 07-feb-2001 [Markus Fick]
 -> file: sndfile.h
-		where: class definition of soundfile 
+		where: class definition of soundfile
 		what: removed InitFIR + DoneFIR function prototypes
 -> file: sndfile.cpp
 		function:CSoundFile::CSoundFile()
@@ -225,7 +225,7 @@ date = 04-feb-2001 [Markus Fick]
 -> file: sndfile.cpp
      function:CSoundFile::CSoundFile()
 	 what: [modify] add call to CSoundFile::InitFIRMixer( )
-	 
+
 	 function:CSoundFile::~CSoundFile()
 	 what: [modify] add call to CSoundFile::DoneFIRMixer( )
 
@@ -277,7 +277,7 @@ date = 04-feb-2001 [Markus Fick]
 		const LPMIXINTERFACE gpMixFunctionTable[2*2*16] // to hold new fir mixer interface
 		const LPMIXINTERFACE gpFastMixFunctionTable[2*2*16] // to hold new fir mixer interface
 		functioN: UINT CSoundFile::CreateStereoMix(int count)
-			new: 
+			new:
 				if (!(pChannel->dwFlags & CHN_NOIDO))
 				{
 					// use hq-fir mixer?
@@ -285,12 +285,10 @@ date = 04-feb-2001 [Markus Fick]
 						((gdwSoundSetup & (SNDMIX_HQRESAMPLER)) == (SNDMIX_HQRESAMPLER)) )
 						nFlags += MIXNDX_FIRMIXERSRC;
 					else
-						nFlags += MIXNDX_LINEARSRC; // use 
+						nFlags += MIXNDX_LINEARSRC; // use
 				}
 			was:
 				if (!(pChannel->dwFlags & CHN_NOIDO))
 				{
-					nFlags += MIXNDX_LINEARSRC; // use 
+					nFlags += MIXNDX_LINEARSRC; // use
 				}
-
-
