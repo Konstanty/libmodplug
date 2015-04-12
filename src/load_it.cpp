@@ -24,10 +24,6 @@ BYTE autovibxm2it[8] =
 //////////////////////////////////////////////////////////
 // Impulse Tracker IT file support
 
-// for conversion of XM samples
-extern WORD XMPeriodTable[96+8];
-extern UINT XMLinearTable[768];
-
 static inline UINT ConvertVolParam(UINT value)
 //--------------------------------------------
 {

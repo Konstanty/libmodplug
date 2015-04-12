@@ -184,7 +184,7 @@ static BOOL IsValidName(LPCSTR s, int length, CHAR minChar)
 	return TRUE;
 }
 
-BOOL IsMagic(LPCSTR s1, LPCSTR s2)
+static BOOL IsMagic(LPCSTR s1, LPCSTR s2)
 {
 	return ((*(DWORD *)s1) == (*(DWORD *)s2)) ? TRUE : FALSE;
 }

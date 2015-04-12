@@ -42,7 +42,7 @@ typedef struct MDLPATTERNDATA
 } MDLPATTERNDATA;
 
 
-void ConvertMDLCommand(MODCOMMAND *m, UINT eff, UINT data)
+static void ConvertMDLCommand(MODCOMMAND *m, UINT eff, UINT data)
 //--------------------------------------------------------
 {
 	UINT command = 0, param = data;
@@ -91,7 +91,7 @@ void ConvertMDLCommand(MODCOMMAND *m, UINT eff, UINT data)
 }
 
 
-void UnpackMDLTrack(MODCOMMAND *pat, UINT nChannels, UINT nRows, UINT nTrack, const BYTE *lpTracks)
+static void UnpackMDLTrack(MODCOMMAND *pat, UINT nChannels, UINT nRows, UINT nTrack, const BYTE *lpTracks)
 //-------------------------------------------------------------------------------------------------
 {
 	MODCOMMAND cmd, *m = pat;
@@ -173,7 +173,6 @@ void UnpackMDLTrack(MODCOMMAND *pat, UINT nChannels, UINT nRows, UINT nTrack, co
 		}
 	}
 }
-
 
 
 BOOL CSoundFile::ReadMDL(const BYTE *lpStream, DWORD dwMemLength)
@@ -499,5 +498,4 @@ WORD MDLReadBits(DWORD &bitbuf, UINT &bitnum, LPBYTE &ibuf, CHAR n)
 	}
 	return v;
 }
-
 
