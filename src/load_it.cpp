@@ -15,9 +15,11 @@
 #pragma warning(disable:4244)
 #endif
 
+static const
 BYTE autovibit2xm[8] =
 { 0, 3, 1, 4, 2, 0, 0, 0 };
 
+static const
 BYTE autovibxm2it[8] =
 { 0, 2, 4, 1, 3, 0, 0, 0 };
 
