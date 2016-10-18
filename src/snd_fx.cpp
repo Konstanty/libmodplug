@@ -2120,7 +2120,11 @@ int CSoundFile::PatternLoop(MODCHANNEL *pChn, UINT param)
 		if (pChn->nPatternLoopCount)
 		{
 			pChn->nPatternLoopCount--;
-			if (!pChn->nPatternLoopCount) return -1;
+			if (!pChn->nPatternLoopCount)
+			{
+				pChn->nPatternLoop = 0;
+				return -1;
+			}
 		} else
 		{
 			MODCHANNEL *p = Chn;
@@ -2130,6 +2134,9 @@ int CSoundFile::PatternLoop(MODCHANNEL *pChn, UINT param)
 				if (p->nPatternLoopCount) return -1;
 			}
 			pChn->nPatternLoopCount = param;
+			// Single row loop, no loop start position
+			if (pChn->nPatternLoop == 0)
+				pChn->nPatternLoop = m_nRow;
 		}
 		return pChn->nPatternLoop;
 	} else
