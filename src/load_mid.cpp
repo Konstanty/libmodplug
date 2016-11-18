@@ -751,6 +751,7 @@ BOOL CSoundFile::TestMID(const BYTE *lpStream, DWORD dwMemLength)
 	mm.mm = (char *)lpStream;
 	mm.sz = dwMemLength;
 	h.mmf = &mm;
+	if (h.mmf->sz < 4) return FALSE;
 	mmfseek(h.mmf,0,SEEK_SET);
 	mmreadSBYTES(id, 4, h.mmf);
 	id[4] = '\0';
