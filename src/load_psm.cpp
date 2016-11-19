@@ -105,11 +105,12 @@ BOOL CSoundFile::ReadPSM(LPCBYTE lpStream, DWORD dwMemLength)
 	BYTE samplemap[MAX_SAMPLES];
 	UINT nPatterns;
 	
+	if (dwMemLength < 256) return FALSE;
+
 	// Swap chunk
 	swap_PSMCHUNK(pfh);
 	
 	// Chunk0: "PSM ",filesize,"FILE"
-	if (dwMemLength < 256) return FALSE;
 	if (pfh->id == PSM_ID_OLD)
 	{
 	#ifdef PSM_LOG
