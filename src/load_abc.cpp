@@ -2180,6 +2180,7 @@ static char *abc_fgetbytes(MMFILE *mmfile, char buf[], unsigned int bufsz)
 		if( buf[i] == '\n' ) break;
 		if( buf[i] == '\r' ) {
 			pos = mmftell(mmfile);
+			// peek at next char
 			if( mmfgetc(mmfile) != '\n' )	mmfseek(mmfile, pos, SEEK_SET);
 			buf[i] = '\n';
 			break;
