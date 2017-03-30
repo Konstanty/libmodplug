@@ -306,6 +306,9 @@ static void abc_extractkeyvalue(char *key, size_t key_max,
 	while (value_size > 0 && isspace(value[value_size - 1]))
 		value_size--;
 	value[value_size] = '\0';
+
+	key[key_max-1] = '\0';
+	value[value_max-1] = '\0';
 }
 
 static void abc_message(const char *s1, const char *s2)
