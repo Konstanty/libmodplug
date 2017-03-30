@@ -3666,6 +3666,7 @@ BOOL CSoundFile::ReadABC(const uint8_t *lpStream, DWORD dwMemLength)
 	while( mmsp > 0 ) {
 		mmsp--;
 		while((line=abc_gets(h, mmstack[mmsp]))) {
+			char blankline[3] = "%%";
 			for( p=line; isspace(*p); p++ ) ;
 			switch(abcstate) {
 				case INSKIPFORX:
@@ -3918,7 +3919,8 @@ BOOL CSoundFile::ReadABC(const uint8_t *lpStream, DWORD dwMemLength)
 						if( !abcnolegato ) abcnoslurs = 0;
 					}
 				}
-				*p = '%'; // skip rest of line
+				// cannot edit p, as it might not exist due to continuated.
+				p = blankline; // *p = '%'; // skip rest of line
 			}
 			if( !strncmp(p,"U:",2) ) {
 				abc_new_umacro(h, p+2);
