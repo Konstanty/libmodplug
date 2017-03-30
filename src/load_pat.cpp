@@ -509,6 +509,7 @@ static void pat_read_waveheader(MMSTREAM *mmpat, WaveHeader *hw, int layer)
 	int i;
 	// read the very first and maybe only sample
 	pat_read_layerheader(mmpat, &hl);
+	if (hl.samples > MAXSMP) hl.samples = MAXSMP;
 	if( hl.samples > 1 ) {
 		if( layer ) {
 			if( layer > hl.samples ) layer = hl.samples; // you don't fool me....
@@ -1016,6 +1017,7 @@ static void PATinst(INSTRUMENTHEADER *d, int smp, int gm)
 		hw.envelope_offset[4] = 0;
 		hw.envelope_offset[5] = 0;
 		strncpy(hw.reserved, midipat[gm-1], sizeof(hw.reserved));
+		hw.reserved[sizeof(hw.reserved) - 1] = '\0';
 		pat_setpat_inst(&hw, d, smp);
 	}
 	if( hw.reserved[0] )
