@@ -1599,7 +1599,8 @@ static int abc_getnumber(const char *p, int *number)
 	i = 0;
 	h = 0;
 	while( isdigit(p[i]) ) {
-		h = 10 * h + p[i] - '0';
+		if (i < 9)
+			h = 10 * h + p[i] - '0';
 		i++;
 	}
 	if( i==0 )
