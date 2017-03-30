@@ -403,7 +403,7 @@ BOOL CSoundFile::ReadS3M(const BYTE *lpStream, DWORD dwMemLength)
 		if (inspack[iRaw-1] == 4) flags = RS_ADPCM4;
 		dwMemPos = insfile[iRaw];
 		if (dwMemPos < dwMemLength)
-			dwMemPos += ReadSample(&Ins[iRaw], flags, (LPSTR)(lpStream + dwMemPos), dwMemLength - dwMemPos);
+			ReadSample(&Ins[iRaw], flags, (LPSTR)(lpStream + dwMemPos), dwMemLength - dwMemPos);
 	}
 	m_nMinPeriod = 64;
 	m_nMaxPeriod = 32767;
