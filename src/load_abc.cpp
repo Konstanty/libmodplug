@@ -3057,13 +3057,20 @@ static void abc_metric_gchord(ABCHANDLE *h, int mlen, int mdiv)
 			abc_MIDI_gchord("fzcfzcfzcfzc", h);
 			break;
 		default:
+		{
+			int dest = 0;
 			if( mlen % 3 == 0 )
 				abc_MIDI_gchord("fzcfzcfzcfzcfzcfzcfzcfzcfzc", h);
 			else
 				abc_MIDI_gchord("fzczfzczfzczfzczfzczfzczfzcz", h);
-			if( mdiv == 8 )	h->gchord[mlen*2] = '\0';
-			else h->gchord[mlen*4] = '\0';
-			break;
+
+			if( mdiv == 8 )	dest = mlen*2;
+			else dest = mlen*4;
+			if (dest >= sizeof(h->gchord))
+				dest = sizeof(h->gchord) - 1;
+			h->gchord[dest] = '\0';
+		}
+		break;
 	}
 }
 
