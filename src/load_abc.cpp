@@ -4129,12 +4129,14 @@ BOOL CSoundFile::ReadABC(const uint8_t *lpStream, DWORD dwMemLength)
 									break;
 								}
 								if( *p && strchr("abcdefgABCDEFG^_=",*p) ) {
-									int cnl[8],cnd[8],vnl,nl0=0,nd0=0;	// for chords with notes of varying length
+									int cnl[8],cnd[8],vnl,nl0=0,nd0=0,barticks;	// for chords with notes of varying length
+									barticks = notelen_notediv_to_ticks(h->speed,1,mnotediv);
+									if (barticks == 0) barticks = 1;
 									abcchord = 0;
 									vnl = 0;
 									h->tp = abc_check_track(h, h->tp);
 									abc_track_clear_tiedvpos(h);
-									abcbeatvol = abc_beat_vol(h, abcvol, (h->tracktime - bartime)/notelen_notediv_to_ticks(h->speed,1,mnotediv));
+									abcbeatvol = abc_beat_vol(h, abcvol, (h->tracktime - bartime)/barticks);
 									while( (ch=*p++) && (ch != ']') ) {
 										h->tp = abc_locate_track(h, h->tp->v, abcchord? abcchord+DRONEPOS2: 0);
 										p += abc_add_noteon(h, ch, p, h->tracktime, barsig, abcbeatvol, abceffect, abceffoper);
@@ -4294,11 +4296,14 @@ BOOL CSoundFile::ReadABC(const uint8_t *lpStream, DWORD dwMemLength)
 								abcnoslurs = abcnolegato;
 								break;
 							case '{':	// grace notes follow
+								{
 								abcto = 0;
 								h->tp = abc_check_track(h, h->tp);
 								abc_track_clear_tiedvpos(h);
 								abcgrace = 0;
-								abcbeatvol = abc_beat_vol(h, abcvol, (h->tracktime - bartime)/notelen_notediv_to_ticks(h->speed,1,mnotediv));
+								int barticks = notelen_notediv_to_ticks(h->speed,1,mnotediv);
+								if (barticks == 0) barticks = 1;
+								abcbeatvol = abc_beat_vol(h, abcvol, (h->tracktime - bartime)/barticks);
 								while( (ch=*p++) && (ch != '}') ) {
 									p += abc_add_noteon(h, ch, p, h->tracktime+abcgrace, barsig, abcbeatvol, none, 0);
 									p += abc_notelen(p, &notelen, &notediv);
@@ -4317,6 +4322,7 @@ BOOL CSoundFile::ReadABC(const uint8_t *lpStream, DWORD dwMemLength)
 									abc_add_gchord(h, h->tracktime, bartime);
 								if( h->drumon && (h->tp == h->tpr) )
 									abc_add_drum(h, h->tracktime, bartime);
+								}
 								break;
 							case '|':	// bar symbols
 								abcto = 0;
@@ -4603,9 +4609,11 @@ BOOL CSoundFile::ReadABC(const uint8_t *lpStream, DWORD dwMemLength)
 								break;
 							default:	// some kinda note must follow
 								if( strchr("abcdefgABCDEFG^_=X",ch) ) {
+									int barticks = notelen_notediv_to_ticks(h->speed, 1, mnotediv);
+									if (barticks == 0) barticks = 1;
 									h->tp = abc_check_track(h, h->tp);
 									abc_track_clear_tiedvpos(h);
-									abcbeatvol = abc_beat_vol(h, abcvol, (h->tracktime - bartime)/notelen_notediv_to_ticks(h->speed,1,mnotediv));
+									abcbeatvol = abc_beat_vol(h, abcvol, (h->tracktime - bartime)/barticks);
 									p += abc_add_noteon(h, ch, p, h->tracktime, barsig, abcbeatvol, abceffect, abceffoper);
 									if( abceffoper != 255 ) abceffect = none;
 									p += abc_notelen(p, &notelen, &notediv);
