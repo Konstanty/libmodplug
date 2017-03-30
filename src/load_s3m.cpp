@@ -135,7 +135,7 @@ void CSoundFile::S3MSaveConvert(UINT *pcmd, UINT *pprm, BOOL bIT) const
 	case CMD_FINEVIBRATO:		command = 'U'; break;
 	case CMD_GLOBALVOLUME:		command = 'V'; break;
 	case CMD_GLOBALVOLSLIDE:	command = 'W'; break;
-	case CMD_PANNING8:			
+	case CMD_PANNING8:
 		command = 'X';
 		if ((bIT) && (m_nType != MOD_TYPE_IT) && (m_nType != MOD_TYPE_XM))
 		{
@@ -668,4 +668,3 @@ BOOL CSoundFile::SaveS3M(LPCSTR lpszFileName, UINT nPacking)
 #endif
 
 #endif // MODPLUG_NO_FILESAVE
-
