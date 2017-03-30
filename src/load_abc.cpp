@@ -1310,7 +1310,8 @@ static int abc_add_noteon(ABCHANDLE *h, int ch, const char *p, uint32_t tracktim
 				}
 			if( j < 25 ) // was it not A# over Bb?
 			barkey[j] = ' ';
-			barkey[k] = n;
+			if ( k >= 0 )
+				barkey[k] = n;
 		}
 	}
 	oct = 3;	// ABC note pitch C is C4 and pitch c is C5
