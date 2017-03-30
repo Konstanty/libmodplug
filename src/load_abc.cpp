@@ -2263,8 +2263,8 @@ static char *abc_gets(ABCHANDLE *h, MMFILE *mmfile)
 				abc_fgetbytes(mmfile, &h->line[i], h->len);
 			h->len <<= 1;
 		}
-		h->line[i-1] = '\0'; // strip off newline
-		for( mp=h->macro; mp; mp=mp->next )
+		h->line[i ? i-1 : 0] = '\0'; // strip off newline / force null termination
+		for( mp=h->macro; mp && mp->name; mp=mp->next )
 			abc_preprocess(h,mp);
 		return h->line;
 	}
