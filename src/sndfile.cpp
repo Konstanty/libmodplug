@@ -229,7 +229,7 @@ BOOL CSoundFile::Create(LPCBYTE lpStream, DWORD dwMemLength)
 		if (pins->nGlobalVol > 64) pins->nGlobalVol = 64;
 	}
 	// Check invalid instruments
-	while ((m_nInstruments > 0) && (!Headers[m_nInstruments])) 
+	while ((m_nInstruments > 0) && (!Headers[m_nInstruments]))
 		m_nInstruments--;
 	// Set default values
 	if (m_nSongPreAmp < 0x20) m_nSongPreAmp = 0x20;
@@ -1098,11 +1098,12 @@ UINT CSoundFile::WriteSample(FILE *f, MODINSTRUMENT *pins, UINT nFlags, UINT nMa
 UINT CSoundFile::ReadSample(MODINSTRUMENT *pIns, UINT nFlags, LPCSTR lpMemFile, DWORD dwMemLength)
 //------------------------------------------------------------------------------
 {
-	UINT len = 0, mem = pIns->nLength+6;
+	UINT len = 0, mem;
 
 	// Disable >2Gb samples,(preventing buffer overflow in AllocateSample)
 	if ((!pIns) || ((int)pIns->nLength < 4) || (!lpMemFile)) return 0;
 	if (pIns->nLength > MAX_SAMPLE_LENGTH) pIns->nLength = MAX_SAMPLE_LENGTH;
+	mem = pIns->nLength+6;
 	pIns->uFlags &= ~(CHN_16BIT|CHN_STEREO);
 	if (nFlags & RSF_16BIT)
 	{
@@ -1903,4 +1904,3 @@ BOOL CSoundFile::DestroySample(UINT nSample)
 }
 
 #endif // MODPLUG_FASTSOUNDLIB
-

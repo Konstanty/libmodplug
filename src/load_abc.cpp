@@ -182,9 +182,9 @@ typedef struct _ABCHANDLE
 	char *beatstring;
 	uint8_t beat[4]; // a:first note, b:strong notes, c:weak notes, n:strong note every n
 	char gchord[80];	// last setting for gchord
-	char drum[80]; // last setting for drum 
-	char drumins[80]; // last setting for drum 
-	char drumvol[80]; // last setting for drum 
+	char drum[80]; // last setting for drum
+	char drumins[80]; // last setting for drum
+	char drumvol[80]; // last setting for drum
 	uint32_t barticks;
 	// parse variables, declared here to avoid parameter pollution
 	int abcchordvol, abcchordprog, abcbassvol, abcbassprog;
@@ -224,7 +224,7 @@ static const char *sig[] = {
 	" CD E FG A B cd e fg a b ",	// 5 flats  Db
 	"C D E FG A Bc d e fg a b ",	// 6 flats  Gb
 	"C D EF G A Bc d ef g a b ",	// 7 flats  Cb
-// 0123456789012345678901234	
+// 0123456789012345678901234
 };
 
 static const char *keySigs[] = {
@@ -353,7 +353,7 @@ static void abc_dumptracks(ABCHANDLE *h, const char *p)
 			row = tck / h->speed;
 			pat = row / 64;
 			tck = tck % h->speed;
-			row = row % 64; 
+			row = row % 64;
 			nn[0] = ( e->tracktick % abcticks(h->speed * 64) ) ? ' ': '-';
 			if( e->flg == 1 ) {
 				printf("  %6d.%02d.%d%c%c %d.%d %s ",
@@ -391,7 +391,7 @@ static void abc_dumptracks(ABCHANDLE *h, const char *p)
 					nn[2] = '\0';
 				}
 				else strcpy(nn,"--");
-				printf("NOTE %s octave %d inst %s vol %03d\n", 
+				printf("NOTE %s octave %d inst %s vol %03d\n",
 					nn, e->par[octave], pat_gm_name(pat_smptogm(e->par[smpno])),e->par[volume]);
 				if( strcmp(p,"all") )
 					n = 0;
@@ -629,7 +629,7 @@ static int abc_interval(const char *s, const char *d)
 	int i,j,k;
 	int n,oct,m[2];
 	for( j=0; j<2; j++ ) {
-		if( j ) p = d; 
+		if( j ) p = d;
 		else p = s;
 		switch(p[0]) {
 			case '^':
@@ -722,13 +722,13 @@ static int abc_transpose(const char *v)
 		}
 		if( !strncasecmp(v,"m=",2) ) {
 			v += 2;
-			mv = v; // get the pitch for the middle staff line 
+			mv = v; // get the pitch for the middle staff line
 			while( *v && *v != ' ' && *v != ']' ) v++;
 			global_octave_shift = 0;
 		}
 		if( !strncasecmp(v,"middle=",7) ) {
 			v += 7;
-			mv = v; // get the pitch for the middle staff line 
+			mv = v; // get the pitch for the middle staff line
 			while( *v && *v != ' ' && *v != ']' ) v++;
 			global_octave_shift = 0;
 		}
@@ -782,7 +782,7 @@ static int abc_transpose(const char *v)
 			switch( *v ) {
 				case '1':	v++; m = "G";	break;
 				case '2': v++; m = "E";	break;
-				case '3': v++; 
+				case '3': v++;
 				default: m = "C";	break;
 				case '4': v++; m = "A,";	break;
 				case '5': v++; m = "F,";	break;
@@ -835,7 +835,7 @@ static ABCTRACK *abc_locate_track(ABCHANDLE *h, const char *voice, int pos)
 		}
 		else {
 			if( !strncasecmp(tr->v, vc, 20) ) {
-				if( tr->vpos == pos ) 
+				if( tr->vpos == pos )
 					return tr;
 				trans = tr->transpose;
 				global_octave_shift = tr->octave_shift;
@@ -976,7 +976,7 @@ static void abc_remove_unnecessary_events(ABCHANDLE *h)
 			ep->tracktick <<= 3;
 			ep->tracktick += 4;
 			if( ep->flg == 1 ) {
-				ep->tracktick += d;	
+				ep->tracktick += d;
 				d++;
 				if( d == 0 ) d = -1;
 				if( d == 4 ) d =  3;
@@ -1383,7 +1383,7 @@ static int abc_add_noteon(ABCHANDLE *h, int ch, const char *p, uint32_t tracktim
 		return i;
 	}
 	tp->tienote = NULL;
-	if( tp->tail 
+	if( tp->tail
 	  && tp->tail->tracktick == tracktime
 	  && tp->tail->par[note]      == 0
 	  && tp->tail->par[octave]    == 0 ) {
@@ -1424,7 +1424,7 @@ static void abc_add_dronenote(ABCHANDLE *h, ABCTRACK *tp, uint32_t tracktime, in
 	d[volume]  = abc_dynamic_volume(tp, tracktime, vol);
 	d[effect]  = 0; // effect
 	d[effoper] = 0;
-	if( tp->tail 
+	if( tp->tail
 	  && tp->tail->tracktick == tracktime
 	  && tp->tail->par[note]      == 0
 	  && tp->tail->par[octave]    == 0 ) {
@@ -1682,7 +1682,7 @@ static int abc_brokenrithm(const char *p, int *nl, int *nd, int *b, int hornpipe
 		if( *nl == 1 && *nd == 1 ) {
 			*b = '>';
 			*nl = 3;
-			*nd = 2; 
+			*nd = 2;
 		}
 	}
 	return 0;
@@ -1697,7 +1697,7 @@ static int abc_tuplet(int *nl, int *nd, int p, int q, int r)
 	return r - 1;
 }
 
-// evaluate [Q:"string" n1/m1 n2/m2 n3/m3 n4/m4=bpm "string"] 
+// evaluate [Q:"string" n1/m1 n2/m2 n3/m3 n4/m4=bpm "string"]
 // minimal form [Q:"string"]
 // most used form [Q: 1/4=120]
 static int abc_extract_tempo(const char *p, int invoice)
@@ -2279,7 +2279,7 @@ static int abc_parse_decorations(ABCHANDLE *h, ABCTRACK *tp, const char *p)
 		vol = 60;
 		while( *p++ == 'p' ) vol -= 15;
 		if( vol < 1 ) vol = 1;
-	}	
+	}
 	if( *p == 'f' ) {
 		vol = 105;
 		while( *p++ == 'f' ) vol += 15;
@@ -2742,7 +2742,7 @@ static void abc_setup_chordnames()
 	static const int list_9sus4[5] = { 0, 5, 10, 14, 19 };
 	static const int list_5[2] = { 0, 7 };
 	static const int list_13[6] = { 0, 4, 7, 10, 16, 21 };
-	
+
 	chordsnamed = 0;
 	abc_addchordname("", 3, list_Maj);
 	abc_addchordname("m", 3, list_m);
@@ -4188,7 +4188,7 @@ BOOL CSoundFile::ReadABC(const uint8_t *lpStream, DWORD dwMemLength)
 											if( h->tp->tail )
 												h->tp->tail->tracktick = h->tracktime + thistime * nl0;
 										}
-									}	
+									}
 									notelen *= cnotelen;
 									notediv *= cnotediv;
 									tupletr = abc_tuplet(&notelen, &notediv, tupletp, tupletq, tupletr);
@@ -4208,7 +4208,7 @@ BOOL CSoundFile::ReadABC(const uint8_t *lpStream, DWORD dwMemLength)
 										thistime = abcticks(h->speed);
 										abcgrace += abcticks(h->speed);
 									}
-									h->tracktime += thistime; 
+									h->tracktime += thistime;
 									while( abcchord>0 ) {
 										abcchord--;
 										h->tp = abc_locate_track(h, h->tp->v, abcchord? abcchord+DRONEPOS2: 0);
@@ -4226,9 +4226,9 @@ BOOL CSoundFile::ReadABC(const uint8_t *lpStream, DWORD dwMemLength)
 												abc_add_noteoff(h, h->tp, h->tracktime);
 										}
 									}
-									if( h->gchordon && (h->tp == h->tpc) )	
+									if( h->gchordon && (h->tp == h->tpc) )
 										abc_add_gchord(h, h->tracktime, bartime);
-									if( h->drumon && (h->tp == h->tpr) )	
+									if( h->drumon && (h->tp == h->tpr) )
 										abc_add_drum(h, h->tracktime, bartime);
 									abcarpeggio = 0;
 									if( abceffoper != 255 ) abceffect = none;
@@ -4313,16 +4313,16 @@ BOOL CSoundFile::ReadABC(const uint8_t *lpStream, DWORD dwMemLength)
 								}
 								h->tracktime += abcgrace;
 								abc_add_sync(h, h->tp, h->tracktime);
-								if( h->gchordon && (h->tp == h->tpc) )	
+								if( h->gchordon && (h->tp == h->tpc) )
 									abc_add_gchord(h, h->tracktime, bartime);
-								if( h->drumon && (h->tp == h->tpr) )	
+								if( h->drumon && (h->tp == h->tpr) )
 									abc_add_drum(h, h->tracktime, bartime);
 								break;
 							case '|':	// bar symbols
 								abcto = 0;
 								if( h->gchordon && h->tp && (h->tp == h->tpc) )
 									abc_add_gchord(h, h->tracktime, bartime);
-								if( h->drumon && (h->tp == h->tpr) )	
+								if( h->drumon && (h->tp == h->tpr) )
 									abc_add_drum(h, h->tracktime, bartime);
 								sprintf(barsig, "%s%s", sig[abckey], sig[abckey]);	// reset the key signature
 								bartime = h->tracktime;
@@ -4639,7 +4639,7 @@ BOOL CSoundFile::ReadABC(const uint8_t *lpStream, DWORD dwMemLength)
 									abc_add_sync(h, h->tp, h->tracktime);
 									if( h->gchordon && (h->tp == h->tpc) )
 										abc_add_gchord(h, h->tracktime, bartime);
-									if( h->drumon && (h->tp == h->tpr) )	
+									if( h->drumon && (h->tp == h->tpr) )
 										abc_add_drum(h, h->tracktime, bartime);
 									abcarpeggio = 0;
 									break;
@@ -4665,11 +4665,11 @@ BOOL CSoundFile::ReadABC(const uint8_t *lpStream, DWORD dwMemLength)
 										thistime = abcticks(h->speed);
 										abcgrace += abcticks(h->speed);
 									}
-									h->tracktime += thistime; 
+									h->tracktime += thistime;
 									abc_add_sync(h, h->tp, h->tracktime);
 									if( h->gchordon && (h->tp == h->tpc) )
 										abc_add_gchord(h, h->tracktime, bartime);
-									if( h->drumon && (h->tp == h->tpr) )	
+									if( h->drumon && (h->tp == h->tpr) )
 										abc_add_drum(h, h->tracktime, bartime);
 									abcarpeggio = 0;
 									break;
@@ -4692,12 +4692,12 @@ BOOL CSoundFile::ReadABC(const uint8_t *lpStream, DWORD dwMemLength)
 										thistime = abcticks(h->speed);
 										abcgrace += abcticks(h->speed);
 									}
-									h->tracktime += thistime; 
+									h->tracktime += thistime;
 									sprintf(barsig, "%s%s", sig[abckey], sig[abckey]);	// reset the key signature
 									abc_add_sync(h, h->tp, h->tracktime);
 									if( h->gchordon && (h->tp == h->tpc) )
 										abc_add_gchord(h, h->tracktime, bartime);
-									if( h->drumon && (h->tp == h->tpr) )	
+									if( h->drumon && (h->tp == h->tpr) )
 										abc_add_drum(h, h->tracktime, bartime);
 									abcarpeggio = 0;
 									break;
@@ -4705,7 +4705,7 @@ BOOL CSoundFile::ReadABC(const uint8_t *lpStream, DWORD dwMemLength)
 								if( isalpha(ch) && *p==':' ) {
 									// some unprocessed field line?
 									while( *p ) p++;	// skip it
-									break; 
+									break;
 								}
 								break;
 						}
@@ -4762,7 +4762,7 @@ BOOL CSoundFile::ReadABC(const uint8_t *lpStream, DWORD dwMemLength)
 		octave			byte
 		instrument	byte
 		effects			byte
-	
+
 	tick = tracktick modulo speed
 	row  = (tracktick div speed) modulo 64
 	pat  = (tracktick div speed) div 64

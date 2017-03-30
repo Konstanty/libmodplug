@@ -168,7 +168,7 @@ BOOL CSoundFile::ReadAMF(LPCBYTE lpStream, const DWORD dwMemLength)
 {
 	const AMFFILEHEADER *pfh = (AMFFILEHEADER *)lpStream;
 	DWORD dwMemPos;
-	
+
 	if ((!lpStream) || (dwMemLength < 2048)) return FALSE;
 	if ((!strncmp((LPCTSTR)lpStream, "ASYLUM Music Format V1.0", 25)) && (dwMemLength > 4096))
 	{
@@ -355,7 +355,7 @@ BOOL CSoundFile::ReadAMF(LPCBYTE lpStream, const DWORD dwMemLength)
 		if ((psh->type) && (bswapLE32(psh->offset) < dwMemLength-1))
 		{
 			sampleseekpos[iIns] = bswapLE32(psh->offset);
-			if (bswapLE32(psh->offset) > maxsampleseekpos) 
+			if (bswapLE32(psh->offset) > maxsampleseekpos)
 				maxsampleseekpos = bswapLE32(psh->offset);
 			if ((pins->nLoopEnd > pins->nLoopStart + 2)
 			 && (pins->nLoopEnd <= pins->nLength)) pins->uFlags |= CHN_LOOP;
@@ -419,4 +419,3 @@ BOOL CSoundFile::ReadAMF(LPCBYTE lpStream, const DWORD dwMemLength)
 	}
 	return TRUE;
 }
-
