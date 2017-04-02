@@ -3939,7 +3939,7 @@ BOOL CSoundFile::ReadABC(const uint8_t *lpStream, DWORD dwMemLength)
 					}
 				}
 				// cannot edit p, as it might not exist due to continuated.
-				p = blankline; // *p = '%'; // skip rest of line
+				p = blankline; // skip rest of line
 			}
 			if( !strncmp(p,"U:",2) ) {
 				abc_new_umacro(h, p+2);
