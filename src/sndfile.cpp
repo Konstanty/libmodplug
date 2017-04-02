@@ -1153,7 +1153,7 @@ UINT CSoundFile::ReadSample(MODINSTRUMENT *pIns, UINT nFlags, LPCSTR lpMemFile, 
 	case RS_ADPCM4:
 		{
 			len = (pIns->nLength + 1) / 2;
-			if (len > dwMemLength - 16) break;
+			if (len > dwMemLength - 16 || dwMemLength < 16) break;
 			memcpy(CompressionTable, lpMemFile, 16);
 			lpMemFile += 16;
 			signed char *pSample = pIns->pSample;
@@ -1405,8 +1405,9 @@ UINT CSoundFile::ReadSample(MODINSTRUMENT *pIns, UINT nFlags, LPCSTR lpMemFile, 
 			DWORD bitbuf = bswapLE32(*((DWORD *)ibuf));
 			UINT bitnum = 32;
 			BYTE dlt = 0, lowbyte = 0;
+			LPBYTE ibufend = (LPBYTE)lpMemFile + dwMemLength - 1;
 			ibuf += 4;
-			for (UINT j=0; j<pIns->nLength; j++)
+			for (UINT j=0; j<pIns->nLength && ibuf < ibufend; j++)
 			{
 				BYTE hibyte;
 				BYTE sign;
@@ -1418,8 +1419,10 @@ UINT CSoundFile::ReadSample(MODINSTRUMENT *pIns, UINT nFlags, LPCSTR lpMemFile, 
 				} else
 				{
 					hibyte = 8;
-					while (!MDLReadBits(bitbuf, bitnum, ibuf, 1)) hibyte += 0x10;
-					hibyte += MDLReadBits(bitbuf, bitnum, ibuf, 4);
+					while (ibuf < ibufend && !MDLReadBits(bitbuf, bitnum, ibuf, 1))
+						hibyte += 0x10;
+					if (ibuf < ibufend)
+						hibyte += MDLReadBits(bitbuf, bitnum, ibuf, 4);
 				}
 				if (sign) hibyte = ~hibyte;
 				dlt += hibyte;
