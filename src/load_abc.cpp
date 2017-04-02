@@ -1654,6 +1654,7 @@ static int abc_notelen(const char *p, int *len, int *div)
 	}
 	else k = 1;
 	*div = h * k;
+	if ( *div > 4096 ) *div = 4096;
 	return i;
 }
 
@@ -1813,9 +1814,10 @@ static void	abc_set_parts(char **d, char *p)
 			j++;
 		}
 		if( isdigit(p[i]) ) {
-			n=abc_getnumber(p+i,&k);
+			n=abc_getnumber(p+i, &k);
 			if( k == 0 )
 				k = 1;
+			if (k > 1e5 ) k = 1e5;
 			if( p[i-1] == ')' )
 				j *= k;	// never mind multiple parens, just take the worst case
 			else
@@ -1842,8 +1844,9 @@ static void	abc_set_parts(char **d, char *p)
 					break;
 				}
 				n = j - n + 1;	// number of repeatable characters
-				i += abc_getnumber(p+i+1,&k);
-				while( k-- > 1 ) {
+				i += abc_getnumber(p+i+1, &k);
+				if ( k > 1e5 ) k = 1e5;
+				while( k-- > 1 && j+n < size ) {
 					for( m=0; m<n; m++ ) {
 						q[j] = q[j-n];
 						j++;
@@ -1854,7 +1857,7 @@ static void	abc_set_parts(char **d, char *p)
 			if( isdigit(p[i]) ) {
 				n = abc_getnumber(p+i,&k);
 				i += n - 1;
-				while( k-- > 1 ) {
+				while( k-- > 1 && j < size ) {
 					q[j] = q[j-1];
 					j++;
 				}
@@ -2211,7 +2214,7 @@ static void abc_substitute(ABCHANDLE *h, char *target, char *s)
 		}
 		else {
 			strcpy(p,s);
-			strcat(p,p+l);
+			for( q=p+l; *q; q++ ) *p++ = *q;
 		}
 	}
 }
@@ -3174,7 +3177,7 @@ static void abc_add_gchord(ABCHANDLE *h, uint32_t tracktime, uint32_t bartime)
 {
 	ABCEVENT *e, *c;
 	ABCTRACK *tp;
-	uint32_t etime, ctime , rtime, stime;
+	uint32_t etime, ctime , rtime, stime, modbarticks;
 	int i, g, steps, gnote, gcnum, gsteps, nnum, glen;
 	// look up the last chord event in tpc
 	c = 0;
@@ -3185,6 +3188,8 @@ static void abc_add_gchord(ABCHANDLE *h, uint32_t tracktime, uint32_t bartime)
 	gcnum = c->par[chordnum];
 	steps = abc_gchord_steps(h->gchord);
 	ctime = h->barticks;
+	// if chord time is 0, its useless to process further
+	if (!ctime) return;
 	etime = 0;
 	for( i = GCHORDBPOS; i < DRUMPOS; i++ ) {
 		tp = abc_locate_track(h, h->tpc->v, i);
@@ -3194,8 +3199,9 @@ static void abc_add_gchord(ABCHANDLE *h, uint32_t tracktime, uint32_t bartime)
 		if( stime > etime )	etime = stime;
 	}
 	if( etime > tracktime ) return;
-	if( etime < bartime ) rtime = h->barticks - ((bartime - etime) % h->barticks);
-	else rtime = (etime - bartime) % h->barticks;
+	modbarticks = h->barticks ? h->barticks : 1;
+	if( etime < bartime ) rtime = h->barticks - ((bartime - etime) % modbarticks);
+	else rtime = (etime - bartime) % modbarticks;
 	stime = ctime * steps;
 	rtime *= steps;
 	rtime += stime;
