@@ -1825,8 +1825,8 @@ static void	abc_set_parts(char **d, char *p)
 			i += n-1;
 		}
 	}
-	// even if j overflows above, it will only wrap around and still be okay
-	size = ( j >= INT_MAX )? INT_MAX - 1 : j;
+	// more than 10 million part segments is excessive.
+	size = ( j >= 1e7 )? 1e7 - 1 : j;
 	q = (char *)_mm_calloc(h, size + 1, sizeof(char)); // enough storage for the worst case
 	// now copy bytes from p to *d, taking parens and digits in account
 	j = 0;
