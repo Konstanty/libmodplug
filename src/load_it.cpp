@@ -1071,7 +1071,7 @@ BOOL CSoundFile::SaveIT(LPCSTR lpszFileName, UINT nPacking)
 		if (psmp->uFlags & CHN_PINGPONGSUSTAIN) itss.flags |= 0x80;
 		itss.C5Speed = psmp->nC4Speed;
 		if (!itss.C5Speed) // if no C5Speed assume it is XM Sample
-		{ 
+		{
 			UINT period;
 
 			/**
@@ -1079,7 +1079,7 @@ BOOL CSoundFile::SaveIT(LPCSTR lpszFileName, UINT nPacking)
 			 * RealNote = Note + RelativeTone
 			 */
 			period = GetPeriodFromNote(61+psmp->RelativeTone, psmp->nFineTune, 0);
-						
+
 			if (period)
 				itss.C5Speed = GetFreqFromPeriod(period, 0, 0);
 			/**
@@ -1147,7 +1147,7 @@ BOOL CSoundFile::SaveIT(LPCSTR lpszFileName, UINT nPacking)
 	}
 	// Updating offsets
 	fseek(f, dwHdrPos, SEEK_SET);
-	
+
 	/* <Toad> Now we can byteswap them ;-) */
 	UINT WW;
 	UINT WX;
@@ -1165,7 +1165,7 @@ BOOL CSoundFile::SaveIT(LPCSTR lpszFileName, UINT nPacking)
 	WX <<= 2;
 	for (WW=0; WW < (WX>>2); WW++)
 	       patpos[WW] = bswapLE32(patpos[WW]);
-	
+
 	if (header.insnum) fwrite(inspos, 4, header.insnum, f);
 	if (header.smpnum) fwrite(smppos, 4, header.smpnum, f);
 	if (header.patnum) fwrite(patpos, 4, header.patnum, f);
@@ -1517,4 +1517,3 @@ UINT CSoundFile::LoadMixPlugins(const void *pData, UINT nLen)
 	}
 	return nPos;
 }
-
