@@ -2888,7 +2888,7 @@ static void abc_MIDI_program(const char *p, ABCTRACK *tp, ABCHANDLE *h)
 		for( ; *p && isspace(*p); p++ ) ;
 		if( isdigit(*p) ) {
 			i1 = i2;
-			p += abc_getnumber(p, &i2);
+			abc_getnumber(p, &i2);
 		}
 		abc_instr_to_tracks(h, i1, i2 + 1); // we start at 1
 	}
@@ -3927,9 +3927,11 @@ BOOL CSoundFile::ReadABC(const uint8_t *lpStream, DWORD dwMemLength)
 			}
 			if( !strncmp(p,"m:",2) ) {
 				if( abcstate != INSKIPFORX ) {
-					char *pm;
-					pm = abc_continuated(h, mmstack[mmsp], p);
-					abc_new_macro(h, pm+2);
+					char *pm = p;
+					if (mmstack[mmsp]->pos < dwMemLength) {
+						pm = abc_continuated(h, mmstack[mmsp], p);
+						abc_new_macro(h, pm+2);
+					}
 					if( pm != p ) {
 						free(pm);
 						if( h->tp ) abcnolegato = !h->tp->legato;
