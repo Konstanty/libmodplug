@@ -372,7 +372,8 @@ BOOL CSoundFile::ReadIT(const BYTE *lpStream, DWORD dwMemLength)
 	if (m_nInstruments >= MAX_INSTRUMENTS) m_nInstruments = MAX_INSTRUMENTS-1;
 	for (UINT nins=0; nins<m_nInstruments; nins++)
 	{
-		if ((inspos[nins] > 0) && (inspos[nins] < dwMemLength - sizeof(ITOLDINSTRUMENT)))
+		if ((inspos[nins] > 0) && dwMemLength > sizeof(ITOLDINSTRUMENT) &&
+			(inspos[nins] < dwMemLength - sizeof(ITOLDINSTRUMENT)))
 		{
 			INSTRUMENTHEADER *penv = new INSTRUMENTHEADER;
 			if (!penv) continue;
