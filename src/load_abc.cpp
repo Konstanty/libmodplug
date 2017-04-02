@@ -3769,9 +3769,9 @@ BOOL CSoundFile::ReadABC(const uint8_t *lpStream, DWORD dwMemLength)
 							p[t]='\0';
 						for( t=2; isspace(p[t]); t++ ) ;
 						strcpy(buf,m_szNames[0]);
-						if( strlen(buf) + strlen(p+t) > 199 ) p[t+199-strlen(buf)] = '\0'; // chop it of
 						if( strlen(buf) ) strcat(buf," "); // add a space
-						strcat(buf, p+t);
+						// don't go past 200 bytes.
+						strncat(buf, p+t, 200-strlen(buf)-1);
 						if( strlen(buf) > 31 ) buf[31] = '\0'; // chop it of
 						strcpy(m_szNames[0], buf);
 						break;
