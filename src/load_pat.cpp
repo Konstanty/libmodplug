@@ -738,13 +738,15 @@ static BOOL dec_pat_Decompress8Bit(short int *dest, int cbcount, int samplenum)
 {
 	int i;
 	PAT_SAMPLE_FUN f;
-	if( samplenum < MAXSMP ) pat_readpat(samplenum, (char *)dest, cbcount);
-	else {
+	if( samplenum < MAXSMP ) {
+		pat_readpat(samplenum, (char *)dest, cbcount);
+		pat_blowup_to16bit(dest, cbcount);
+	} else {
 		f = pat_fun[(samplenum - MAXSMP) % 3];
 		for( i=0; i<cbcount; i++ )
-			dest[i] = (char)(120.0*f(i));
+			dest[i] = (short int)(120.0*f(i)) << 8;
 	}
-	pat_blowup_to16bit(dest, cbcount);
+
 	return cbcount;
 }
 
