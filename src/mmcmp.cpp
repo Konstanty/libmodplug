@@ -378,6 +378,7 @@ BOOL MMCMP_Unpack(LPCBYTE *ppMemFile, LPDWORD pdwMemLength)
 			}
 		} else
 		{
+			GlobalFreePtr(pBuffer);
 			return FALSE;
 		}
 	}
