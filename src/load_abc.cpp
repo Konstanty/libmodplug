@@ -1857,6 +1857,8 @@ static void	abc_set_parts(char **d, char *p)
 			if( isdigit(p[i]) ) {
 				n = abc_getnumber(p+i,&k);
 				i += n - 1;
+				// if nothing is ready to 'repeat', skip it.
+				if (j==0) continue;
 				while( k-- > 1 && j < size ) {
 					q[j] = q[j-1];
 					j++;
