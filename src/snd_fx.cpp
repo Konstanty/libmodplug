@@ -48,7 +48,7 @@ DWORD CSoundFile::GetLength(BOOL bAdjust, BOOL bTotal)
 		nRow = nNextRow;
 		nCurrentPattern = nNextPattern;
 		// Check if pattern is valid
-		nPattern = Order[nCurrentPattern];
+		nPattern = (nCurrentPattern < MAX_ORDERS) ? Order[nCurrentPattern] : 0xFF;
 		while (nPattern >= MAX_PATTERNS)
 		{
 			// End of song ?
