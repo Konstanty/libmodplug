@@ -275,7 +275,8 @@ BOOL MMCMP_Unpack(LPCBYTE *ppMemFile, LPDWORD pdwMemLength)
 					{
 						newval ^= 0x8000;
 					}
-					pDest[dwPos++] = (WORD)newval;
+					WORD swapped = (WORD)newval;
+					pDest[dwPos++] = bswapLE16(swapped);
 				}
 				if (dwPos >= dwSize)
 				{
