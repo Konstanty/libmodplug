@@ -15,18 +15,16 @@
 #pragma warning(disable:4244)
 #endif
 
+static const
 BYTE autovibit2xm[8] =
 { 0, 3, 1, 4, 2, 0, 0, 0 };
 
+static const
 BYTE autovibxm2it[8] =
 { 0, 2, 4, 1, 3, 0, 0, 0 };
 
 //////////////////////////////////////////////////////////
 // Impulse Tracker IT file support
-
-// for conversion of XM samples
-extern WORD XMPeriodTable[96+8];
-extern UINT XMLinearTable[768];
 
 static inline UINT ConvertVolParam(UINT value)
 //--------------------------------------------
