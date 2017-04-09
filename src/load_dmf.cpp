@@ -103,7 +103,7 @@ BOOL CSoundFile::ReadDMF(const BYTE *lpStream, DWORD dwMemLength)
 #ifdef DMFLOG
 	Log("DMF version %d: \"%s\": %d bytes (0x%04X)\n", pfh->version, m_szNames[0], dwMemLength, dwMemLength);
 #endif
-	while (dwMemPos + 7 < dwMemLength)
+	while (dwMemPos < dwMemLength - 7)
 	{
 		DWORD id = *((LPDWORD)(lpStream+dwMemPos));
 
