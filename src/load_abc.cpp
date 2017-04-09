@@ -2202,12 +2202,14 @@ static void abc_substitute(ABCHANDLE *h, char *target, char *s)
 	int i;
 	int l = strlen(target);
 	int n = strlen(s);
-	if (l <= 0 ||n <= 0 || strstr(s, target))
+	if (l <= 0 ||n <= 0 || strstr(s, target) || abs(n-l) > 10e3)
 		return;
 	while( (p=strstr(h->line, target)) ) {
 		if( (i=strlen(h->line)) + n - l >= (int)h->len ) {
-			h->line = (char *)_mm_recalloc(h->allochandle, h->line, h->len<<1, sizeof(char));
-			h->len <<= 1;
+			int reqsize = h->len<<1;
+			while (i + n - l >= reqsize) reqsize = reqsize<<1;
+			h->line = (char *)_mm_recalloc(h->allochandle, h->line, reqsize, sizeof(char));
+			h->len = reqsize;
 			p=strstr(h->line, target);
 		}
 		if( n > l ) {
