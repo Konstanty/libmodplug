@@ -547,6 +547,7 @@ BOOL CSoundFile::ReadMT2(LPCBYTE lpStream, DWORD dwMemLength)
 			{
 				MODINSTRUMENT *psmp = &Ins[iSmp];
 				psmp->nGlobalVol = 64;
+				if (dwMemPos+sizeof(MT2SAMPLE) > dwMemLength) return TRUE;
 				psmp->nVolume = (pms->wVolume >> 7);
 				psmp->nPan = (pms->nPan == 0x80) ? 128 : (pms->nPan^0x80);
 				psmp->nLength = pms->dwLength;
