@@ -63,7 +63,8 @@ DWORD CSoundFile::GetLength(BOOL bAdjust, BOOL bTotal)
 			nNextPattern = nCurrentPattern;
 		}
 		// Weird stuff?
-		if ((nPattern >= MAX_PATTERNS) || (!Patterns[nPattern])) break;
+		if ((nPattern >= MAX_PATTERNS) || (!Patterns[nPattern]) ||
+			PatternSize[nPattern] == 0) break;
 		// Should never happen
 		if (nRow >= PatternSize[nPattern]) nRow = 0;
 		// Update next position
