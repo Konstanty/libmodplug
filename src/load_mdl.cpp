@@ -437,7 +437,7 @@ BOOL CSoundFile::ReadMDL(const BYTE *lpStream, DWORD dwMemLength)
 				UINT len = lpTracks[0] | (lpTracks[1] << 8);
 
 				lpTracks += 2;
-				for (UINT ntrk=1; ntrk<nTrack && lpTracks < (dwMemPos + lpStream); ntrk++)
+				for (UINT ntrk=1; ntrk<nTrack && lpTracks < (dwMemLength + lpStream - len); ntrk++)
 				{
 					lpTracks += len;
 					len = lpTracks[0] | (lpTracks[1] << 8);
