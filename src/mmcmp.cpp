@@ -241,6 +241,8 @@ BOOL MMCMP_Unpack(LPCBYTE *ppMemFile, LPDWORD pdwMemLength)
 			bb.bitbuffer = 0;
 			bb.pSrc = lpMemFile+dwMemPos+pblk->tt_entries;
 			bb.pEnd = lpMemFile+dwMemPos+pblk->pk_size;
+			if (bb.pEnd > lpMemFile+dwMemLength)
+				bb.pEnd = lpMemFile+dwMemLength;
 			while (subblk < pblk->sub_blk)
 			{
 				UINT newval = 0x10000;
@@ -321,6 +323,8 @@ BOOL MMCMP_Unpack(LPCBYTE *ppMemFile, LPDWORD pdwMemLength)
 			bb.bitbuffer = 0;
 			bb.pSrc = lpMemFile+dwMemPos+pblk->tt_entries;
 			bb.pEnd = lpMemFile+dwMemPos+pblk->pk_size;
+			if (bb.pEnd > lpMemFile+dwMemLength)
+				bb.pEnd = lpMemFile+dwMemLength;	
 			while (subblk < pblk->sub_blk)
 			{
 				UINT newval = 0x100;
@@ -353,7 +357,7 @@ BOOL MMCMP_Unpack(LPCBYTE *ppMemFile, LPDWORD pdwMemLength)
 				{
 					newval = d;
 				}
-				if (newval < 0x100 && dwPos < dwSize)
+				if (newval < 0x100 && dwPos < dwSize && dwMemPos < dwMemLength - newval)
 				{
 					int n = ptable[newval];
 					if (pblk->flags & MMCMP_DELTA)
