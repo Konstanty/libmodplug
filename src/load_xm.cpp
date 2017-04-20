@@ -166,6 +166,7 @@ BOOL CSoundFile::ReadXM(const BYTE *lpStream, DWORD dwMemLength)
 			dwMemPos++;
 			dwSize = bswapLE32(*((DWORD *)(lpStream+dwMemPos)));
 		}
+		if (dwMemPos + 9 > dwMemLength) return TRUE;		
 		rows = bswapLE16(*((WORD *)(lpStream+dwMemPos+5)));
 		if ((!rows) || (rows > 256)) rows = 64;
 		packsize = bswapLE16(*((WORD *)(lpStream+dwMemPos+7)));
