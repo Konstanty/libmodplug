@@ -1,4 +1,9 @@
 changes:
+date = 24-apr-2017 [Konstanty Bialkowski/Lionel Debroux/SEZERO]
+ Version 0.8.9.0
+  OOB Write and Read fixes + a number of divide by zero fixes.
+	 (ABC, PAT, AMF, MDL, PSM, XM, IT, MMCMP, MID)
+ There were some patches 2010-2016 which were recorded here.
 date = 21-apr-2009 [Konstanty Bialkowski/OpenMPT/Novell (Stanislav Brabec)]
 ->file: src/load_amf.cpp
 		where: whole file
@@ -128,14 +133,14 @@ date = 24-jun-2006 [Peter Grootswagers]
 date = 20-mar-2006 [Macro Trillo / "Custom libmodplug project"]
 -> file : src/load_s3m.cpp
 -> file : src/load_far.cpp
-		what: fixed endianness 
+		what: fixed endianness
 date = 20-mar-2006 [Alistair John Strachan]
 ....
 
 Many other changes need to be documented here...
 
 GCC3 fixes, GCC4 fixes, More Archive Types.
-	
+
 date = 09-feb-2001 [Markus Fick]
 -> file: fastmix.cpp
 		where: spline creation, spline macros
@@ -163,7 +168,7 @@ date = 08-feb-2001 [Markus Fick]
 		what: - implemented spline table precalculator
 		      - changed fir precalculator + macros (for higher quality and clearer source)
 		      - added some comments and documentation
-		comment: 
+		comment:
 		  - preprocessor constant: SPLINE_FRACBITS
 		     ) controls quality/memory usage
 			   range is [4..14] inclusive
@@ -182,7 +187,7 @@ date = 07-feb-2001 [Markus Fick]
 
 date = 07-feb-2001 [Markus Fick]
 -> file: sndfile.h
-		where: class definition of soundfile 
+		where: class definition of soundfile
 		what: removed InitFIR + DoneFIR function prototypes
 -> file: sndfile.cpp
 		function:CSoundFile::CSoundFile()
@@ -225,7 +230,7 @@ date = 04-feb-2001 [Markus Fick]
 -> file: sndfile.cpp
      function:CSoundFile::CSoundFile()
 	 what: [modify] add call to CSoundFile::InitFIRMixer( )
-	 
+
 	 function:CSoundFile::~CSoundFile()
 	 what: [modify] add call to CSoundFile::DoneFIRMixer( )
 
@@ -277,7 +282,7 @@ date = 04-feb-2001 [Markus Fick]
 		const LPMIXINTERFACE gpMixFunctionTable[2*2*16] // to hold new fir mixer interface
 		const LPMIXINTERFACE gpFastMixFunctionTable[2*2*16] // to hold new fir mixer interface
 		functioN: UINT CSoundFile::CreateStereoMix(int count)
-			new: 
+			new:
 				if (!(pChannel->dwFlags & CHN_NOIDO))
 				{
 					// use hq-fir mixer?
@@ -285,12 +290,10 @@ date = 04-feb-2001 [Markus Fick]
 						((gdwSoundSetup & (SNDMIX_HQRESAMPLER)) == (SNDMIX_HQRESAMPLER)) )
 						nFlags += MIXNDX_FIRMIXERSRC;
 					else
-						nFlags += MIXNDX_LINEARSRC; // use 
+						nFlags += MIXNDX_LINEARSRC; // use
 				}
 			was:
 				if (!(pChannel->dwFlags & CHN_NOIDO))
 				{
-					nFlags += MIXNDX_LINEARSRC; // use 
+					nFlags += MIXNDX_LINEARSRC; // use
 				}
-
-

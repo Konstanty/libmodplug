@@ -6,7 +6,7 @@ Web page: http://modplug-xmms.sf.net/
  Maintainer is now Konstanty Bialkowski <konstanty@ieee.org> (~2006)
 
 On Wed 14 Aug 2013 the repository was forked / cloned to GitHub.
-The current release is libmodplug v0.8.8.5. 
+The current release is libmodplug v0.8.9.0.
 
 History
 -------
@@ -51,7 +51,7 @@ Contents
     MOD, S3M, XM, IT, 669, AMF (both of them), AMS, DBM, DMF, DSM, FAR,
     MDL, MED, MTM, OKT, PTM, STM, ULT, UMX, MT2, PSM
 - Plays zip, rar, gzip, and bzip2 compressed mods.  The following
-    extensions are recognized:
+    extensions are recognized: (Only in modplug-xmms)
     zip:  MDZ,  S3Z,  XMZ,  ITZ
     rar:  MDR,  S3R,  XMR,  ITR
     gzip: MDGZ, S3GZ, XMGZ, ITGZ
@@ -63,7 +63,7 @@ Contents
     compressed mods.  For example, if you zipped a UMX mod and gave it the
     extension MDZ, it would work fine.
 - plays timidity's GUS patch files (*.pat):
-   a multi sample pat file with n samples can be played with a Frere Jacques 
+   a multi sample pat file with n samples can be played with a Frere Jacques
    canon with n voices.
 - plays all types of MIDI files (*.mid):
    uses the timidity .pat files for samples (when available)
@@ -85,7 +85,7 @@ Contents
        default: "/usr/local/share/timidity".
 
       MMABC_NO_RANDOM_PICK when not set and the abc file contains multiple songs
-       (X:n) the first song to be played will be picked at random another click 
+       (X:n) the first song to be played will be picked at random another click
        on the play button advances to the next
        song in the file (or the first when the last song has been
        played), when set it can be 0 (zero) or not numeric
@@ -94,7 +94,7 @@ Contents
        let it play the n-th song in the file and advancing to the next
        song when the play button is clicked.
 
-      MMABC_DUMPTRACKS when set it gives diagnostic information on stdout, 
+      MMABC_DUMPTRACKS when set it gives diagnostic information on stdout,
        values can be:
 
         all - every event is printed
@@ -211,7 +211,7 @@ Solution:
  If it sounds wrong there, then send the mod and a bug report to
  Olivier Lapicque <olivierl@jps.net>.  If the mod plays correctly in
  Windows, however, then the bug is my fault.  In that case, e-mail
- me (Konstanty) <konstanty@ieee.org>. (previously Kenton Varda at 
+ me (Konstanty) <konstanty@ieee.org>. (previously Kenton Varda at
  <temporal@gauge3d.org>).
 
 
@@ -222,4 +222,3 @@ Problem:
 Solution:
  E-mail me (Konstanty) at <konstanty@ieee.org>.  I would be
  happy to hear any suggestions or problems you have.
-
