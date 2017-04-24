@@ -412,7 +412,8 @@ BOOL CSoundFile::ProcessRow()
 			m_nNextPattern = m_nCurrentPattern;
 		}
 		// Weird stuff?
-		if ((m_nPattern >= MAX_PATTERNS) || (!Patterns[m_nPattern])) return FALSE;
+		if ((m_nPattern >= MAX_PATTERNS) || (!Patterns[m_nPattern]) ||
+			PatternSize[m_nPattern] == 0) return FALSE;
 		// Should never happen
 		if (m_nRow >= PatternSize[m_nPattern]) m_nRow = 0;
 		m_nNextRow = m_nRow + 1;
@@ -1234,5 +1235,3 @@ BOOL CSoundFile::ReadNote()
 	}
 	return TRUE;
 }
-
-

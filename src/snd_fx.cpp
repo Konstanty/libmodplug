@@ -48,7 +48,7 @@ DWORD CSoundFile::GetLength(BOOL bAdjust, BOOL bTotal)
 		nRow = nNextRow;
 		nCurrentPattern = nNextPattern;
 		// Check if pattern is valid
-		nPattern = Order[nCurrentPattern];
+		nPattern = (nCurrentPattern < MAX_ORDERS) ? Order[nCurrentPattern] : 0xFF;
 		while (nPattern >= MAX_PATTERNS)
 		{
 			// End of song ?
@@ -63,7 +63,8 @@ DWORD CSoundFile::GetLength(BOOL bAdjust, BOOL bTotal)
 			nNextPattern = nCurrentPattern;
 		}
 		// Weird stuff?
-		if ((nPattern >= MAX_PATTERNS) || (!Patterns[nPattern])) break;
+		if ((nPattern >= MAX_PATTERNS) || (!Patterns[nPattern]) ||
+			PatternSize[nPattern] == 0) break;
 		// Should never happen
 		if (nRow >= PatternSize[nPattern]) nRow = 0;
 		// Update next position
@@ -2307,8 +2308,12 @@ UINT CSoundFile::GetPeriodFromNote(UINT note, int nFineTune, UINT nC4Speed) cons
 			return (FreqS3MTable[note % 12] << 5) >> (note / 12);
 		} else
 		{
+			int divider;
 			if (!nC4Speed) nC4Speed = 8363;
-			return _muldiv(8363, (FreqS3MTable[note % 12] << 5), nC4Speed << (note / 12));
+			// if C4Speed is large, then up shifting may produce a zero divider
+			divider = nC4Speed << (note / 12);
+			if (!divider) divider = 1e6;
+			return _muldiv(8363, (FreqS3MTable[note % 12] << 5), divider);
 		}
 	} else
 	if (m_nType & (MOD_TYPE_XM|MOD_TYPE_MT2))
@@ -2382,5 +2387,3 @@ UINT CSoundFile::GetFreqFromPeriod(UINT period, UINT nC4Speed, int nPeriodFrac) 
 		}
 	}
 }
-
-

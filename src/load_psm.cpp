@@ -104,12 +104,12 @@ BOOL CSoundFile::ReadPSM(LPCBYTE lpStream, DWORD dwMemLength)
 	DWORD patptrs[MAX_PATTERNS];
 	BYTE samplemap[MAX_SAMPLES];
 	UINT nPatterns;
-	
+
 	if (dwMemLength < 256) return FALSE;
 
 	// Swap chunk
 	swap_PSMCHUNK(pfh);
-	
+
 	// Chunk0: "PSM ",filesize,"FILE"
 	if (pfh->id == PSM_ID_OLD)
 	{
@@ -296,7 +296,7 @@ BOOL CSoundFile::ReadPSM(LPCBYTE lpStream, DWORD dwMemLength)
 	#endif
 		UINT flags, ch;
 		rowlim = bswapLE16(pPsmPat->reserved1)-2;
-		while ((row < nRows) && (pos+1 < len))
+		while ((row < nRows) && (pos+3 < len))
 		{
 			if ((pos+1) >= rowlim) {
 				pos = rowlim;
@@ -307,21 +307,23 @@ BOOL CSoundFile::ReadPSM(LPCBYTE lpStream, DWORD dwMemLength)
 				rowlim += pos;
 				pos += 2;
 			}
+			if (row >= nRows) continue;
+
 			flags = p[pos++];
 			ch = p[pos++];
 			if (ch >= m_nChannels) {
 				sp = &dummy;
-                        } else {
+            } else {
 				sp = &m[ch];
-                        }
+            }
 			// Note + Instr
-                        if ((flags & 0x80) && (pos+1 < len))
-                        {
-                                UINT note = p[pos++];
-                                note = (note>>4)*12+(note&0x0f)+12+1;
-                                if (note > 0x80) note = 0;
-				m[ch].note = note;
-                        }
+            if ((flags & 0x80) && (pos+1 < len))
+        	{
+                UINT note = p[pos++];
+                note = (note>>4)*12+(note&0x0f)+12+1;
+                if (note > 0x80) note = 0;
+				sp->note = note;
+            }
 			if ((flags & 0x40) && (pos+1 < len))
 			{
 				UINT nins = p[pos++];
@@ -329,13 +331,13 @@ BOOL CSoundFile::ReadPSM(LPCBYTE lpStream, DWORD dwMemLength)
 				//if (!nPat) Log("note+ins: %02X.%02X\n", note, nins);
 				if ((!nPat) && (nins >= m_nSamples)) Log("WARNING: invalid instrument number (%d)\n", nins);
 			#endif
-				m[ch].instr = samplemap[nins];
+				sp->instr = samplemap[nins];
 			}
 			// Volume
 			if ((flags & 0x20) && (pos < len))
 			{
-				m[ch].volcmd = VOLCMD_VOLUME;
-				m[ch].vol = p[pos++] / 2;
+				sp->volcmd = VOLCMD_VOLUME;
+				sp->vol = p[pos++] / 2;
 			}
 			// Effect
 			if ((flags & 0x10) && (pos+1 < len))
@@ -384,8 +386,8 @@ BOOL CSoundFile::ReadPSM(LPCBYTE lpStream, DWORD dwMemLength)
 				#endif
 					command = param = 0;
 				}
-				m[ch].command = (BYTE)command;
-				m[ch].param = (BYTE)param;
+				sp->command = (BYTE)command;
+				sp->param = (BYTE)param;
 			}
 		}
 	#ifdef PSM_LOG
@@ -862,4 +864,3 @@ CONST
   END;
 
 */
-

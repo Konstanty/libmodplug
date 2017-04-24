@@ -39,7 +39,7 @@
 #define PAN_RIGHT   0xD0
 #define MAX_POLYPHONY 16  // max notes in one midi channel
 #define MAX_TRACKS    (MAX_BASECHANNELS-6)  // max mod tracks
-#define WHEELSHIFT    10  // how many bits the 13bit midi wheel value must shift right 
+#define WHEELSHIFT    10  // how many bits the 13bit midi wheel value must shift right
 
 #include "load_pat.h"
 
@@ -103,7 +103,7 @@ typedef struct _MIDTRACK
 
 typedef struct {
 	char *mm;
-	int sz;
+	unsigned int sz;
 	int pos;
 } MMFILE;
 
@@ -809,7 +809,7 @@ static void MID_Cleanup(MIDHANDLE *handle)
 
 static int mid_is_global_event(MIDEVENT *e)
 {
-	return (e->fx == tmpo || e->fx == fxbrk); 
+	return (e->fx == tmpo || e->fx == fxbrk);
 }
 
 static MIDEVENT *mid_next_global(MIDEVENT *e)
@@ -1256,6 +1256,7 @@ BOOL CSoundFile::ReadMID(const BYTE *lpStream, DWORD dwMemLength)
 			return FALSE;
 		}
 		miditracklen = mid_read_long(h);
+		if (mm.sz < miditracklen) continue;
 		runningstatus = 0;
 		if( t && h->midiformat == 1 ) mid_rewind_tracks(h); // tracks sound simultaneously
 		while( miditracklen > 0 ) {
@@ -1341,7 +1342,7 @@ BOOL CSoundFile::ReadMID(const BYTE *lpStream, DWORD dwMemLength)
 							break;
 						case 0x0b: // expression
 							break;
-						case 0x7b: 
+						case 0x7b:
 							if( midibyte[1] == 0x00 ) // all notes off
 								mid_all_notes_off(h, ch);
 							break;
@@ -1386,7 +1387,7 @@ BOOL CSoundFile::ReadMID(const BYTE *lpStream, DWORD dwMemLength)
 							midibyte[1] = mid_read_byte(h);
 							miditracklen--;
 							if( h->debug )
-								printf("%2d %08ld song position pointer: %d", 
+								printf("%2d %08ld song position pointer: %d",
 								t, (long)(h->tracktime), midishort(midibyte));
 							break;
 						case 0xf7:
@@ -1492,7 +1493,7 @@ BOOL CSoundFile::ReadMID(const BYTE *lpStream, DWORD dwMemLength)
 		}
 	}
 	if( metalen & 0x03ff ) {
-		if( (metalen & 0x0f00) == 0x0400 ) 
+		if( (metalen & 0x0f00) == 0x0400 )
 			h->percussion = 10; // buggy sng2mid uses channel 10
 		else
 			h->percussion = 9;

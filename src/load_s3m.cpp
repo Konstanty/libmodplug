@@ -135,7 +135,7 @@ void CSoundFile::S3MSaveConvert(UINT *pcmd, UINT *pprm, BOOL bIT) const
 	case CMD_FINEVIBRATO:		command = 'U'; break;
 	case CMD_GLOBALVOLUME:		command = 'V'; break;
 	case CMD_GLOBALVOLSLIDE:	command = 'W'; break;
-	case CMD_PANNING8:			
+	case CMD_PANNING8:
 		command = 'X';
 		if ((bIT) && (m_nType != MOD_TYPE_IT) && (m_nType != MOD_TYPE_XM))
 		{
@@ -403,7 +403,7 @@ BOOL CSoundFile::ReadS3M(const BYTE *lpStream, DWORD dwMemLength)
 		if (inspack[iRaw-1] == 4) flags = RS_ADPCM4;
 		dwMemPos = insfile[iRaw];
 		if (dwMemPos < dwMemLength)
-			dwMemPos += ReadSample(&Ins[iRaw], flags, (LPSTR)(lpStream + dwMemPos), dwMemLength - dwMemPos);
+			ReadSample(&Ins[iRaw], flags, (LPSTR)(lpStream + dwMemPos), dwMemLength - dwMemPos);
 	}
 	m_nMinPeriod = 64;
 	m_nMaxPeriod = 32767;
@@ -668,4 +668,3 @@ BOOL CSoundFile::SaveS3M(LPCSTR lpszFileName, UINT nPacking)
 #endif
 
 #endif // MODPLUG_NO_FILESAVE
-

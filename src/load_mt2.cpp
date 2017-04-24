@@ -547,6 +547,7 @@ BOOL CSoundFile::ReadMT2(LPCBYTE lpStream, DWORD dwMemLength)
 			{
 				MODINSTRUMENT *psmp = &Ins[iSmp];
 				psmp->nGlobalVol = 64;
+				if (dwMemPos+sizeof(MT2SAMPLE) > dwMemLength) return TRUE;
 				psmp->nVolume = (pms->wVolume >> 7);
 				psmp->nPan = (pms->nPan == 0x80) ? 128 : (pms->nPan^0x80);
 				psmp->nLength = pms->dwLength;
@@ -609,7 +610,7 @@ BOOL CSoundFile::ReadMT2(LPCBYTE lpStream, DWORD dwMemLength)
 		MODINSTRUMENT *psmp = &Ins[iData+1];
 		if (!(pms->nFlags & 5))
 		{
-			if (psmp->nLength > 0) 
+			if (psmp->nLength > 0 && dwMemPos < dwMemLength)
 			{
 			#ifdef MT2DEBUG
 				Log("  Reading sample #%d at offset 0x%04X (len=%d)\n", iData+1, dwMemPos, psmp->nLength);

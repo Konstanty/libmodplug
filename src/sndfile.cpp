@@ -229,7 +229,7 @@ BOOL CSoundFile::Create(LPCBYTE lpStream, DWORD dwMemLength)
 		if (pins->nGlobalVol > 64) pins->nGlobalVol = 64;
 	}
 	// Check invalid instruments
-	while ((m_nInstruments > 0) && (!Headers[m_nInstruments])) 
+	while ((m_nInstruments > 0) && (!Headers[m_nInstruments]))
 		m_nInstruments--;
 	// Set default values
 	if (m_nSongPreAmp < 0x20) m_nSongPreAmp = 0x20;
@@ -1098,11 +1098,12 @@ UINT CSoundFile::WriteSample(FILE *f, MODINSTRUMENT *pins, UINT nFlags, UINT nMa
 UINT CSoundFile::ReadSample(MODINSTRUMENT *pIns, UINT nFlags, LPCSTR lpMemFile, DWORD dwMemLength)
 //------------------------------------------------------------------------------
 {
-	UINT len = 0, mem = pIns->nLength+6;
+	UINT len = 0, mem;
 
 	// Disable >2Gb samples,(preventing buffer overflow in AllocateSample)
 	if ((!pIns) || ((int)pIns->nLength < 4) || (!lpMemFile)) return 0;
 	if (pIns->nLength > MAX_SAMPLE_LENGTH) pIns->nLength = MAX_SAMPLE_LENGTH;
+	mem = pIns->nLength+6;
 	pIns->uFlags &= ~(CHN_16BIT|CHN_STEREO);
 	if (nFlags & RSF_16BIT)
 	{
@@ -1152,7 +1153,7 @@ UINT CSoundFile::ReadSample(MODINSTRUMENT *pIns, UINT nFlags, LPCSTR lpMemFile, 
 	case RS_ADPCM4:
 		{
 			len = (pIns->nLength + 1) / 2;
-			if (len > dwMemLength - 16) break;
+			if (len > dwMemLength - 16 || dwMemLength < 16) break;
 			memcpy(CompressionTable, lpMemFile, 16);
 			lpMemFile += 16;
 			signed char *pSample = pIns->pSample;
@@ -1404,8 +1405,9 @@ UINT CSoundFile::ReadSample(MODINSTRUMENT *pIns, UINT nFlags, LPCSTR lpMemFile, 
 			DWORD bitbuf = bswapLE32(*((DWORD *)ibuf));
 			UINT bitnum = 32;
 			BYTE dlt = 0, lowbyte = 0;
+			LPBYTE ibufend = (LPBYTE)lpMemFile + dwMemLength - 1;
 			ibuf += 4;
-			for (UINT j=0; j<pIns->nLength; j++)
+			for (UINT j=0; j<pIns->nLength && ibuf < ibufend; j++)
 			{
 				BYTE hibyte;
 				BYTE sign;
@@ -1417,8 +1419,10 @@ UINT CSoundFile::ReadSample(MODINSTRUMENT *pIns, UINT nFlags, LPCSTR lpMemFile, 
 				} else
 				{
 					hibyte = 8;
-					while (!MDLReadBits(bitbuf, bitnum, ibuf, 1)) hibyte += 0x10;
-					hibyte += MDLReadBits(bitbuf, bitnum, ibuf, 4);
+					while (ibuf < ibufend && !MDLReadBits(bitbuf, bitnum, ibuf, 1))
+						hibyte += 0x10;
+					if (ibuf < ibufend)
+						hibyte += MDLReadBits(bitbuf, bitnum, ibuf, 4);
 				}
 				if (sign) hibyte = ~hibyte;
 				dlt += hibyte;
@@ -1903,4 +1907,3 @@ BOOL CSoundFile::DestroySample(UINT nSample)
 }
 
 #endif // MODPLUG_FASTSOUNDLIB
-
