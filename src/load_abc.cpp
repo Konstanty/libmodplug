@@ -2023,7 +2023,7 @@ static void abc_song_to_parts(ABCHANDLE *h, char **abcparts, BYTE partp[27][2])
 	ABCEVENT *e;
 	int i, fading, loop, normal, partno, partsegno, partloop, partcoda, parttocoda, partfine, skip, x, y;
 	int vmask[27],nextp[27];
-	uint32_t ptt[27];
+	uint32_t ptt[27] = {};
 	char buf[256];	// must be enough, mod's cannot handle more than 240 patterns
 	char *pfade;
 	if( !h || !h->track || !h->track->capostart ) return;
@@ -2147,7 +2147,8 @@ static void abc_song_to_parts(ABCHANDLE *h, char **abcparts, BYTE partp[27][2])
 			if( buf[i] != buf[i-1] + 1 ) {
 				x = buf[i-1] - 'A';
 				y = buf[i] - 'A';
-				abc_keeptiednotes(h, ptt[x+1], ptt[y]);
+				if (x < 26 && y < 26)
+					abc_keeptiednotes(h, ptt[x+1], ptt[y]);
 			}
 		}
 	}
