@@ -1224,6 +1224,7 @@ void ITUnpack8Bit(signed char *pSample, DWORD dwLen, LPBYTE lpMemFile, DWORD dwM
 	UINT bitnum = 0;
 	BYTE bLeft = 0, bTemp = 0, bTemp2 = 0;
 
+
 	while (dwLen)
 	{
 		if (!wCount)
@@ -1235,12 +1236,14 @@ void ITUnpack8Bit(signed char *pSample, DWORD dwLen, LPBYTE lpMemFile, DWORD dwM
 			bTemp = bTemp2 = 0;
 			bitbuf = bitnum = 0;
 		}
+
 		DWORD d = wCount;
 		if (d > dwLen) d = dwLen;
 		// Unpacking
 		DWORD dwPos = 0;
 		do
 		{
+			if (pSrc >= lpMemFile+dwMemLength-bLeft) return;
 			WORD wBits = (WORD)ITReadBits(bitbuf, bitnum, pSrc, bLeft);
 			if (bLeft < 7)
 			{
@@ -1324,6 +1327,7 @@ void ITUnpack16Bit(signed char *pSample, DWORD dwLen, LPBYTE lpMemFile, DWORD dw
 		DWORD dwPos = 0;
 		do
 		{
+			if (pSrc >= lpMemFile+dwMemLength-bLeft) return;
 			DWORD dwBits = ITReadBits(bitbuf, bitnum, pSrc, bLeft);
 			if (bLeft < 7)
 			{

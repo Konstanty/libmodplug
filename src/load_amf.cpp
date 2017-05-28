@@ -310,6 +310,7 @@ BOOL CSoundFile::ReadAMF(LPCBYTE lpStream, const DWORD dwMemLength)
 	// Setup sequence list
 	for (UINT iOrd=0; iOrd<MAX_ORDERS; iOrd++)
 	{
+		if (dwMemPos + 4 > dwMemLength) return TRUE;
 		Order[iOrd] = 0xFF;
 		if (iOrd < pfh->numorders)
 		{

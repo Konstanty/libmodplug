@@ -184,7 +184,7 @@ BOOL MMCMP_Unpack(LPCBYTE *ppMemFile, LPDWORD pdwMemLength)
 		LPMMCMPBLOCK pblk;
 		LPMMCMPSUBBLOCK psubblk;
 
-		if (dwMemPos >= dwMemLength - 20) break;
+		if (dwMemPos >= dwMemLength - 28) break;
 		memcpy(tmp1, lpMemFile+dwMemPos, 28);
 		pblk = (LPMMCMPBLOCK)(tmp1);
 		psubblk = (LPMMCMPSUBBLOCK)(tmp1+20);
@@ -324,7 +324,7 @@ BOOL MMCMP_Unpack(LPCBYTE *ppMemFile, LPDWORD pdwMemLength)
 			bb.pSrc = lpMemFile+dwMemPos+pblk->tt_entries;
 			bb.pEnd = lpMemFile+dwMemPos+pblk->pk_size;
 			if (bb.pEnd > lpMemFile+dwMemLength)
-				bb.pEnd = lpMemFile+dwMemLength;	
+				bb.pEnd = lpMemFile+dwMemLength;
 			while (subblk < pblk->sub_blk)
 			{
 				UINT newval = 0x100;
