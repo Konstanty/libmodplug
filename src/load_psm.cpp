@@ -104,6 +104,7 @@ BOOL CSoundFile::ReadPSM(LPCBYTE lpStream, DWORD dwMemLength)
 	DWORD patptrs[MAX_PATTERNS];
 	BYTE samplemap[MAX_SAMPLES];
 	UINT nPatterns;
+	UINT nPatterns = 0;
 
 	if (dwMemLength < 256) return FALSE;
 
