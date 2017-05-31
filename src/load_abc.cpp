@@ -3692,7 +3692,7 @@ BOOL CSoundFile::ReadABC(const uint8_t *lpStream, DWORD dwMemLength)
 	while( mmsp > 0 ) {
 		mmsp--;
 		while((line=abc_gets(h, mmstack[mmsp]))) {
-			char blankline[3] = "%%";
+			char blankline[3] = "% ";
 			for( p=line; isspace(*p); p++ ) ;
 			switch(abcstate) {
 				case INSKIPFORX:
@@ -3805,7 +3805,7 @@ BOOL CSoundFile::ReadABC(const uint8_t *lpStream, DWORD dwMemLength)
 						sprintf(barsig, "%s%s", sig[abckey], sig[abckey]);	// reset the key signature
 						p = abc_skip_word(p+2);
 						h->ktrans = abc_transpose(p);
-						*p = '%'; // force skip rest of line
+						p = blankline; // force skip rest of line
 						if( snotelen == 0 ) {	// calculate default notelen from meter M:
 							if( mnotediv == 0 ) mnotediv = mnotelen = 1;	// do'nt get nuked
 							snotelen = 100 * mnotelen / mnotediv;
@@ -3898,7 +3898,7 @@ BOOL CSoundFile::ReadABC(const uint8_t *lpStream, DWORD dwMemLength)
 						sprintf(barsig, "%s%s", sig[abckey], sig[abckey]);	// reset the key signature
 						p = abc_skip_word(p+2);
 						h->ktrans = abc_transpose(p);
-						*p = '%';	// make me skip the rest of the line....
+						p = blankline;	// make me skip the rest of the line....
 					}
 					if( !strncmp(p,"L:",2) ) {
 						sscanf(p+2," %d / %d", &snotelen, &snotediv);
