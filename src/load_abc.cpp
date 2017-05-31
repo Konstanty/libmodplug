@@ -810,6 +810,10 @@ static int abc_transpose(const char *v)
 		if( j ) {
 			while( *v && *v != ' ' && *v != ']' ) v++;
 		}
+		// NOTE: for loops increment AFTER the body
+		// therefore if we have gotten to the end of
+		// the string, we should move back one.
+		if (!*v) v--;
 	}
 	if( strlen(mv) > 0 ) // someone set the middle note
 		t += abc_interval(mv, m);
