@@ -3939,7 +3939,8 @@ BOOL CSoundFile::ReadABC(const uint8_t *lpStream, DWORD dwMemLength)
 					char *pm = p;
 					if (mmstack[mmsp]->pos < dwMemLength) {
 						pm = abc_continuated(h, mmstack[mmsp], p);
-						abc_new_macro(h, pm+2);
+						if (pm+2)
+							abc_new_macro(h, pm+2);
 					}
 					if( pm != p ) {
 						free(pm);
