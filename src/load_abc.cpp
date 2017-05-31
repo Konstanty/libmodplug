@@ -4066,7 +4066,7 @@ BOOL CSoundFile::ReadABC(const uint8_t *lpStream, DWORD dwMemLength)
 					// plough thru the songline gathering mos....
 					ch0 = ' ';
 					pp = 0;
-					while( (ch = *p++) ) {
+					while( *p && (ch = *p++) ) {
 						if( !pp && isalpha(ch) && *p != ':' ) { // maybe a macro
 							for( mp=h->umacro; mp; mp=mp->next ) {
 								if( ch == mp->name[0] ) {
@@ -4424,7 +4424,7 @@ BOOL CSoundFile::ReadABC(const uint8_t *lpStream, DWORD dwMemLength)
  									if( h->tp == h->tpc ) abc_add_chord(p, h, h->tpc, h->tracktime); // only do chords for one voice
 								}
 								abcto = 0;
-								while( (ch=*p++) && (ch != '"') ) {
+								while( *p && (ch=*p++) && (ch != '"') ) {
 									if( !strncasecmp(p,"fade",4) && h->track && h->track->slidevol > -2 )
 										abc_globalslide(h, h->tracktime, -2); // set volumeslide to fade away...
 									if( !strncasecmp(p,"to coda",7) ) {
@@ -4633,7 +4633,7 @@ BOOL CSoundFile::ReadABC(const uint8_t *lpStream, DWORD dwMemLength)
 								else {
 									h->tp = abc_check_track(h, h->tp);
 									abcvol = abc_parse_decorations(h, h->tp, p);
-									while( (ch=*p++) && (ch != '+') )
+									while( *p && (ch=*p++) && (ch != '+') )
 										;
 								}
 								break;
