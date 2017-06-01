@@ -20,7 +20,7 @@ BOOL CSoundFile::ReadWav(const BYTE *lpStream, DWORD dwMemLength)
 	DWORD dwMemPos = 0;
 	WAVEFILEHEADER *phdr = (WAVEFILEHEADER *)lpStream;
 	WAVEFORMATHEADER *pfmt = (WAVEFORMATHEADER *)(lpStream + sizeof(WAVEFILEHEADER));
-	if ((!lpStream) || (dwMemLength < (DWORD)sizeof(WAVEFILEHEADER))) return FALSE;
+	if ((!lpStream) || (dwMemLength < (DWORD)sizeof(WAVEFILEHEADER) + sizeof(WAVEFORMATHEADER))) return FALSE;
 	if ((phdr->id_RIFF != IFFID_RIFF) || (phdr->id_WAVE != IFFID_WAVE)
 	 || (pfmt->id_fmt != IFFID_fmt)) return FALSE;
 	dwMemPos = sizeof(WAVEFILEHEADER) + 8 + pfmt->hdrlen;
