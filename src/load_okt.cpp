@@ -100,11 +100,12 @@ BOOL CSoundFile::ReadOKT(const BYTE *lpStream, DWORD dwMemLength)
 		dwMemPos += bswapBE32(*((DWORD *)(lpStream + dwMemPos + 4))) + 8;
 	}
 	// PATT
-	if (dwMemPos >= dwMemLength - 4) return TRUE;
+	if (dwMemPos >= dwMemLength - 10) return TRUE;
 	if (*((DWORD *)(lpStream + dwMemPos)) == 0x54544150)
 	{
 		UINT orderlen = norders;
 		if (orderlen >= MAX_ORDERS) orderlen = MAX_ORDERS-1;
+		if (dwMemPos >= dwMemLength - 10 - orderlen) return TRUE;
 		for (UINT i=0; i<orderlen; i++) Order[i] = lpStream[dwMemPos+10+i];
 		for (UINT j=orderlen; j>1; j--) { if (Order[j-1]) break; Order[j-1] = 0xFF; }
 		dwMemPos += bswapBE32(*((DWORD *)(lpStream + dwMemPos + 4))) + 8;
