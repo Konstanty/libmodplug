@@ -3578,8 +3578,8 @@ BOOL CSoundFile::ReadABC(const uint8_t *lpStream, DWORD dwMemLength)
 	char	*line, *p, *pp, ch, ch0=0;
 	char barsig[52];	// for propagated accidental key signature within bar
 	char *abcparts;
-	uint8_t partpat[27][2], *orderlist;
-	int orderlen;
+	uint8_t partpat[27][2], *orderlist = NULL;
+	int orderlen = 0;
 	enum { NOWHERE, INBETWEEN, INHEAD, INBODY, INSKIPFORX, INSKIPFORQUOTE } abcstate;
 	ABCEVENT_JUMPTYPE j;
 	ABCEVENT_X_EFFECT abceffect;
@@ -3669,8 +3669,6 @@ BOOL CSoundFile::ReadABC(const uint8_t *lpStream, DWORD dwMemLength)
 	abc_init_partpat(partpat);
 	abc_MIDI_beat(h, ""); // reset beat array
 	abc_MIDI_beatstring(h, ""); // reset beatstring
-	orderlist  = NULL;
-	orderlen   = 0;
 	mmsp       = 1;
 	mmstack[0] = mmfile;
 	mmfseek(mmfile,0,SEEK_SET);
