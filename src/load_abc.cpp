@@ -3396,6 +3396,7 @@ static int abc_partpat_to_orderlist(BYTE partp[27][2], const char *abcparts, ABC
 	if( abcparts ) {
 		partsused = 0;
 		for( p = abcparts; *p; p++ ) {
+			if (*p < 'A' || *p > 'Z') break;
 			for( t = partp[*p - 'A'][0]; t < partp[*p - 'A'][1]; t++ ) {
 				if( orderlen == ordersize ) {
 					ordersize <<= 1;
