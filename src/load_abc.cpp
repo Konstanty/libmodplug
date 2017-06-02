@@ -1286,6 +1286,9 @@ static int abc_add_noteon(ABCHANDLE *h, int ch, const char *p, uint32_t tracktim
 			i = 0;
 			break;
 	}
+	// nothing good inside - early exit
+	if ( n == 0 )
+		return 0;
 	for( k=0; k<51; k++ ) {
 		if( n == barkey[k] )
 			break;
@@ -2225,6 +2228,8 @@ static void abc_substitute(ABCHANDLE *h, char *target, char *s)
 			strcpy(p,s);
 			for( q=p+l; *q; q++ ) *p++ = *q;
 		}
+		// ensure end of string is initialized
+		*p = 0;
 	}
 }
 
