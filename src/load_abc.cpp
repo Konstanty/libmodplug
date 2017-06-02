@@ -4766,8 +4766,8 @@ BOOL CSoundFile::ReadABC(const uint8_t *lpStream, DWORD dwMemLength)
 	}
 	ABC_CleanupMacros(h);	// we dont need them anymore
 	if( !h->track ) {
-		char buf[10];
-		sprintf(buf,"%u",abcxnumber);
+		char buf[11];
+		sprintf(buf,"%u", abcxnumber);
 		abc_message("abc X:%s has no body", buf);
 		h->track = abc_check_track(h, h->track); // for sanity...
 	}
