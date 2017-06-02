@@ -328,11 +328,14 @@ BOOL CSoundFile::ReadPSM(LPCBYTE lpStream, DWORD dwMemLength)
 			if ((flags & 0x40) && (pos+1 < len))
 			{
 				UINT nins = p[pos++];
+				if (nins >= m_nSamples) {
 			#ifdef PSM_LOG
 				//if (!nPat) Log("note+ins: %02X.%02X\n", note, nins);
 				if ((!nPat) && (nins >= m_nSamples)) Log("WARNING: invalid instrument number (%d)\n", nins);
 			#endif
-				sp->instr = samplemap[nins];
+				} else {
+					sp->instr = samplemap[nins];
+				}
 			}
 			// Volume
 			if ((flags & 0x20) && (pos < len))
