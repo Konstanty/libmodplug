@@ -2384,7 +2384,7 @@ static ABCHANDLE *ABC_Init(void)
 	return retval;
 }
 
-static void ABC_CleanupTrack(ABCTRACK *tp)
+static void ABC_CleanupTrackEvents(ABCTRACK *tp)
 {
 	ABCEVENT *ep, *en;
 	if( tp ) {
@@ -2413,7 +2413,8 @@ static void ABC_CleanupTracks(ABCHANDLE *handle)
 	if(handle) {
 		for( tp=handle->track; tp; tp = tn ) {
 			tn=tp->next;
-			ABC_CleanupTrack(tp);
+			ABC_CleanupTrackEvents(tp);
+			free(tp);
 		}
 		handle->track = NULL;
 	}
