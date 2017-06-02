@@ -96,6 +96,7 @@ BOOL CSoundFile::ReadOKT(const BYTE *lpStream, DWORD dwMemLength)
 	if (dwMemPos >= dwMemLength - 4) return TRUE;
 	if (*((DWORD *)(lpStream + dwMemPos)) == 0x4E454C50)
 	{
+		if (dwMemPos >= dwMemLength - 10) return TRUE;
 		norders = lpStream[dwMemPos+9];
 		dwMemPos += bswapBE32(*((DWORD *)(lpStream + dwMemPos + 4))) + 8;
 	}
