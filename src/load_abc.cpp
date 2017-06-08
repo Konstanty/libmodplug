@@ -4343,7 +4343,7 @@ BOOL CSoundFile::ReadABC(const uint8_t *lpStream, DWORD dwMemLength)
 								int barticks = notelen_notediv_to_ticks(h->speed,1,mnotediv);
 								if (barticks == 0) barticks = 1;
 								abcbeatvol = abc_beat_vol(h, abcvol, (h->tracktime - bartime)/barticks);
-								while( (ch=*p++) && (ch != '}') ) {
+								while( *p && (ch=*p++) && (ch != '}') ) {
 									p += abc_add_noteon(h, ch, p, h->tracktime+abcgrace, barsig, abcbeatvol, none, 0);
 									p += abc_notelen(p, &notelen, &notediv);
 									if( *p=='-' ) {
