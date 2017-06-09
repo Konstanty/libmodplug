@@ -2300,12 +2300,12 @@ static int abc_parse_decorations(ABCHANDLE *h, ABCTRACK *tp, const char *p)
 	if( !strncmp(p,"sfz",3) ) vol = 100;
 	if( *p == 'p' ) {
 		vol = 60;
-		while( *p++ == 'p' ) vol -= 15;
+		while( *p && *p++ == 'p' ) vol -= 15;
 		if( vol < 1 ) vol = 1;
 	}
 	if( *p == 'f' ) {
 		vol = 105;
-		while( *p++ == 'f' ) vol += 15;
+		while( *p && *p++ == 'f' ) vol += 15;
 		if( vol > 135 ) vol = 127;	// ffff
 		if( vol > 127 ) vol = 125;	// fff
 	}
@@ -4175,7 +4175,7 @@ BOOL CSoundFile::ReadABC(const uint8_t *lpStream, DWORD dwMemLength)
 									h->tp = abc_check_track(h, h->tp);
 									abc_track_clear_tiedvpos(h);
 									abcbeatvol = abc_beat_vol(h, abcvol, (h->tracktime - bartime)/barticks);
-									while( (ch=*p++) && (ch != ']') ) {
+									while( *p && (ch=*p++) && (ch != ']') ) {
 										h->tp = abc_locate_track(h, h->tp->v, abcchord? abcchord+DRONEPOS2: 0);
 										p += abc_add_noteon(h, ch, p, h->tracktime, barsig, abcbeatvol, abceffect, abceffoper);
 										p += abc_notelen(p, &notelen, &notediv);
