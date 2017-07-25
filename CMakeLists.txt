@@ -46,7 +46,6 @@ if (WIN32 AND NOT (MINGW OR MSYS))
   endif()
 endif()
 
-check_function_exists("setenv" HAVE_SETENV)
 check_function_exists("sinf" HAVE_SINF)
 
 # Allow the developer to select if Dynamic or Static libraries are built
@@ -124,9 +123,6 @@ install(FILES
 
 set(VERSION "0.8.8.5")
 
-if(HAVE_SETENV)
-  add_definitions(-DHAVE_SETENV)
-endif(HAVE_SETENV)
 if(HAVE_SINF)
   add_definitions(-DHAVE_SINF)
 endif(HAVE_SINF)
