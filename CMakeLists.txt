@@ -4,12 +4,17 @@ project(libmodplug)
 add_definitions(-DMODPLUG_BUILD)
 
 include (CheckFunctionExists)
+include (CheckIncludeFile)
 
 include_directories(AFTER
   src
   src/libmodplug
   ${PROJECT_BINARY_DIR}
   )
+
+if (UNIX)
+  set (CMAKE_REQUIRED_LIBRARIES m)
+endif()
 
 if (WIN32)
   add_definitions(-D_USE_MATH_DEFINES)
@@ -43,6 +48,11 @@ if (WIN32 AND NOT (MINGW OR MSYS))
     message(WARNING
       "Compilation may fail if inttypes.h is not natively supported by the compiler."
       "You can get inttypes.h from http://code.google.com/p/msinttypes/")
+  endif()
+else()
+  check_include_file("stdint.h" HAVE_STDINT)
+  if (HAVE_STDINT)
+    add_definitions(-DHAVE_STDINT_H)
   endif()
 endif()
 
