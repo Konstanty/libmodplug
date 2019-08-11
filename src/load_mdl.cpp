@@ -342,6 +342,7 @@ BOOL CSoundFile::ReadMDL(const BYTE *lpStream, DWORD dwMemLength)
 					}
 				}
 				dwPos += 34 + 14*lpStream[dwPos+1];
+				if (dwPos > dwMemLength - 2) break;
 			}
 			for (j=1; j<=m_nInstruments; j++) if (!Headers[j])
 			{
