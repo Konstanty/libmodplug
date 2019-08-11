@@ -78,7 +78,7 @@ BOOL CSoundFile::ReadOKT(const BYTE *lpStream, DWORD dwMemLength)
 		dwMemPos += sizeof(OKTSAMPLE);
 	}
 	// SPEE
-	if (dwMemPos >= dwMemLength - 4) return TRUE;
+	if (dwMemPos >= dwMemLength - 12) return TRUE;
 	if (*((DWORD *)(lpStream + dwMemPos)) == 0x45455053)
 	{
 		m_nDefaultSpeed = lpStream[dwMemPos+9];
