@@ -2249,7 +2249,7 @@ static void abc_preprocess(ABCHANDLE *h, ABCMACRO *m)
 				a = m->subst[j];
 				if( a > 'g' && islower(a) ) {
 					b = a - 'n';
-					a = "CDEFGABCDEFGABcdefgabcdefgab"[i+b+7];
+					a = "CDEFGABCDEFGABcdefgabcdefgabcdefgab"[i+b+7];
 					*p++ = a;
 					if( i+b < 0 )
 						*p++ = ',';
