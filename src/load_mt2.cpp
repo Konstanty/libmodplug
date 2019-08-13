@@ -473,7 +473,7 @@ BOOL CSoundFile::ReadMT2(LPCBYTE lpStream, DWORD dwMemLength)
 						}
 					}
 
-					// envelopes exceed file length?					
+					// envelopes exceed file length?
 					if (dwEnvPos > dwMemLength) return TRUE;
 
 				}
@@ -552,7 +552,7 @@ BOOL CSoundFile::ReadMT2(LPCBYTE lpStream, DWORD dwMemLength)
 	m_nSamples = (pfh->wSamples < MAX_SAMPLES) ? pfh->wSamples : MAX_SAMPLES-1;
 	for (UINT iSmp=1; iSmp<=256; iSmp++)
 	{
-		if (dwMemPos+36 > dwMemLength) return TRUE;
+		if (dwMemPos+36 > dwMemLength || dwMemPos > dwMemLength) return TRUE;
 		const MT2SAMPLE *pms = (MT2SAMPLE *)(lpStream+dwMemPos);
 	#ifdef MT2DEBUG
 		if (iSmp <= m_nSamples) Log("  Sample #%d at offset %04X: %d bytes\n", iSmp, dwMemPos, pms->dwDataLen);
