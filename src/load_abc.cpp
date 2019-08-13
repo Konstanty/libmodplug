@@ -1662,6 +1662,7 @@ static int abc_notelen(const char *p, int *len, int *div)
 	else k = 1;
 	*div = h * k;
 	if ( *div > 4096 ) *div = 4096;
+	if ( *div <= 0 ) *div = 1;
 	return i;
 }
 
@@ -4167,7 +4168,7 @@ BOOL CSoundFile::ReadABC(const uint8_t *lpStream, DWORD dwMemLength)
 									break;
 								}
 								if( *p && strchr("abcdefgABCDEFG^_=",*p) ) {
-									int cnl[8],cnd[8],vnl,nl0=0,nd0=0,barticks;	// for chords with notes of varying length
+									int cnl[8]={},cnd[8]={},vnl,nl0=0,nd0=0,barticks;	// for chords with notes of varying length
 									barticks = notelen_notediv_to_ticks(h->speed,1,mnotediv);
 									if (barticks == 0) barticks = 1;
 									abcchord = 0;
