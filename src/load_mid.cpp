@@ -708,21 +708,26 @@ static void mid_add_pitchwheel(MIDHANDLE *h, int mch, int wheel)
 
 static uint32_t mid_read_long(MIDHANDLE *h)
 {
-	BYTE buf[4];
-	mmreadUBYTES(buf, 4, h->mmf);
+	BYTE buf[4] = {};
+	if (h->mmf->pos < h->mmf->sz - 4)
+		mmreadUBYTES(buf, 4, h->mmf);
 	return (buf[0]<<24)|(buf[1]<<16)|(buf[2]<<8)|buf[3];
 }
 
 static short int mid_read_short(MIDHANDLE *h)
 {
-	BYTE buf[2];
-	mmreadUBYTES(buf, 2, h->mmf);
+	BYTE buf[2] = {};
+	if (h->mmf->pos < h->mmf->sz - 2)
+		mmreadUBYTES(buf, 2, h->mmf);
 	return (buf[0]<<8)|buf[1];
 }
 
 static BYTE mid_read_byte(MIDHANDLE *h)
 {
-	return mmreadUBYTE(h->mmf);
+	if (h->mmf->pos < h->mmf->sz - 1)
+		return mmreadUBYTE(h->mmf);
+	else
+		return 0;
 }
 
 static int mid_read_delta(MIDHANDLE *h)
@@ -751,7 +756,7 @@ BOOL CSoundFile::TestMID(const BYTE *lpStream, DWORD dwMemLength)
 	mm.mm = (char *)lpStream;
 	mm.sz = dwMemLength;
 	h.mmf = &mm;
-	if (h.mmf->sz < 4) return FALSE;
+	if (h.mmf->sz < 8) return FALSE;
 	mmfseek(h.mmf,0,SEEK_SET);
 	mmreadSBYTES(id, 4, h.mmf);
 	id[4] = '\0';
@@ -767,6 +772,7 @@ static MIDHANDLE *MID_Init(void)
 	retval->track      = NULL;
 	retval->percussion = 0;
 	retval->debug      = NULL;
+	retval->miditracks = 0;
 	return retval;
 }
 
@@ -1189,12 +1195,15 @@ BOOL CSoundFile::ReadMID(const BYTE *lpStream, DWORD dwMemLength)
 	h->verbose = getenv(ENV_MMMID_VERBOSE);
 	pat_resetsmp();
 	pat_init_patnames();
+
 	mmfseek(h->mmf,8,SEEK_SET);
-	h->midiformat	= mid_read_short(h);
-	h->miditracks = mid_read_short(h);
-	h->resolution = mid_read_short(h);
+	if (h->mmf->pos < dwMemLength - 6) {
+		h->midiformat	= mid_read_short(h);
+		h->miditracks = mid_read_short(h);
+		h->resolution = mid_read_short(h);
+		if( h->midiformat == 0 ) h->miditracks = 1;
+	}
 	// at this point the h->mmf is positioned at first miditrack
-	if( h->midiformat == 0 ) h->miditracks = 1;
 	if( h->resolution & 0x8000 )
 		h->divider = ((h->resolution & 0x7f00)>>8)*(h->resolution & 0xff);
 	else
@@ -1247,7 +1256,11 @@ BOOL CSoundFile::ReadMID(const BYTE *lpStream, DWORD dwMemLength)
 	}
 	for( t=0; t<(uint32_t)h->miditracks; t++ ) {
 		if( h->verbose ) printf("Parsing track %d\n", t+1);
-		mmreadSBYTES(buf,4,h->mmf);
+		if (h->mmf->pos < dwMemLength - 4) {
+			mmreadSBYTES(buf,4,h->mmf);
+		} else {
+			buf[0] = '\0'; // make sure start is \0
+		}
 		buf[4] = '\0';
 		if( strcmp(buf,"MTrk") ) {
 			mid_message("invalid track-chunk '%s' is not 'MTrk'",buf);
