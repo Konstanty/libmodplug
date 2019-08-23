@@ -662,7 +662,7 @@ BOOL CSoundFile::ReadMed(const BYTE *lpStream, DWORD dwMemLength)
 			}
 			UINT pseq = 0;
 
-			if ((playseqtable) && (playseqtable < dwMemLength - 4) && (nplayseq*(4+1) < dwMemLength - playseqtable))
+			if ((playseqtable) && (playseqtable < dwMemLength - 4) && ((nplayseq+1)*4 < dwMemLength - playseqtable))
 			{
 				pseq = bswapBE32(((LPDWORD)(lpStream+playseqtable))[nplayseq]);
 			}
@@ -768,7 +768,7 @@ BOOL CSoundFile::ReadMed(const BYTE *lpStream, DWORD dwMemLength)
 					if (trknamelen > MAX_CHANNELNAME) trknamelen = MAX_CHANNELNAME;
 					if ((trknameofs) && (trknamelen < dwMemLength) && (trknameofs < dwMemLength - trknamelen))
 					{
-						lstrcpyn(ChnSettings[i].szName, (LPCSTR)(lpStream+trknameofs), MAX_CHANNELNAME);
+						lstrcpyn(ChnSettings[i].szName, (LPCSTR)(lpStream+trknameofs), trknamelen);
 						ChnSettings[i].szName[MAX_CHANNELNAME-1] = '\0';
 					}
 				}
