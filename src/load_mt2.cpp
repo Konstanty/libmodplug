@@ -646,12 +646,12 @@ BOOL CSoundFile::ReadMT2(LPCBYTE lpStream, DWORD dwMemLength)
 				dwMemPos += ReadSample(psmp, rsflags, (LPCSTR)(lpStream+dwMemPos), dwMemLength-dwMemPos);
 			}
 		} else
-		if (dwMemPos+4 < dwMemLength)
+		if (dwMemPos < dwMemLength-4)
 		{
 			UINT nNameLen = *(DWORD *)(lpStream+dwMemPos);
 			dwMemPos += nNameLen + 16;
 		}
-		if (dwMemPos+4 >= dwMemLength) break;
+		if (dwMemPos >= dwMemLength-4) break;
 	}
 	return TRUE;
 }
