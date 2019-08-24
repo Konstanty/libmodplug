@@ -1491,7 +1491,7 @@ static void	abc_add_chord(const char *p, ABCHANDLE *h, ABCTRACK *tp, uint32_t tr
 			d[chordnote] = i;
 			break;
 		}
-	p++;
+	if (*p) p++;
 	switch(*p) {
 		case 'b':
 			d[chordnote]--;
@@ -1513,7 +1513,7 @@ static void	abc_add_chord(const char *p, ABCHANDLE *h, ABCTRACK *tp, uint32_t tr
 				d[chordbase] = i;
 				break;
 			}
-		p++;
+		if (*p) p++;
 		switch(*p) {
 			case 'b':
 				d[chordbase]--;
@@ -2012,7 +2012,7 @@ static uint32_t abc_fade_tracks(ABCHANDLE *h, char *abcparts, uint32_t ptt[27])
 			tp->slidevoltime = e0->tracktick;
 		}
 		tp->mute = 0; // unmute track for safety, notes in a muted track already have zero volume...
-		while( vol > 5 ) {
+		while( vol > 5 && tp->slidevoltime != 0) {
 			for( p=abcparts; *p && vol > 5; p++ ) {
 				pt1 = ptt[*p-'A'];
 				pt2 = ptt[*p-'A'+1];
