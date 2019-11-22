@@ -63,7 +63,7 @@ typedef struct tagS3MFILEHEADER
 	WORD special;
 	BYTE channels[32];
 } S3MFILEHEADER;
-
+#pragma pack()
 
 void CSoundFile::S3MConvert(MODCOMMAND *m, BOOL bIT) const
 //--------------------------------------------------------
