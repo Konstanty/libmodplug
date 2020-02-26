@@ -5,6 +5,7 @@ add_definitions(-DMODPLUG_BUILD)
 
 include (CheckFunctionExists)
 include (CheckIncludeFile)
+include (GNUInstallDirs)
 
 include_directories(AFTER
   src
@@ -119,7 +120,7 @@ add_library(modplug ${LIB_TYPE}
   )
 
 # install the library:
-install(TARGETS modplug DESTINATION lib)
+install(TARGETS modplug DESTINATION ${CMAKE_INSTALL_LIBDIR})
 
 # incstall the headers:
 install(FILES
@@ -129,7 +130,7 @@ install(FILES
   src/modplug.h
 
   DESTINATION
-  include/libmodplug
+  ${CMAKE_INSTALL_INCLUDEDIR}/libmodplug
   )
 
 set(VERSION "0.8.8.5")
@@ -142,14 +143,14 @@ if(HAVE_SINF)
 endif(HAVE_SINF)
 
 if (NOT WIN32)
-  set(prefix "${CMAKE_INSTALL_PREFIX}")
-  set(exec_prefix "${CMAKE_INSTALL_PREFIX}")
-  set(libdir "${CMAKE_INSTALL_PREFIX}/lib")
-  set(includedir "${CMAKE_INSTALL_PREFIX}/include")
+  set(prefix ${CMAKE_INSTALL_PREFIX})
+  set(exec_prefix ${CMAKE_INSTALL_PREFIX})
+  set(libdir ${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR})
+  set(includedir ${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_INCLUDEDIR})
   configure_file(libmodplug.pc.in libmodplug.pc)
 
   # install pkg-config file:
   install(FILES "${PROJECT_BINARY_DIR}/libmodplug.pc"
-    DESTINATION lib/pkgconfig
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig
   )
 endif (NOT WIN32)
