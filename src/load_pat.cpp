@@ -46,14 +46,14 @@
 
 #include "load_pat.h"
 
-#ifdef MSC_VER
+#ifdef _WIN32
 #define DIRDELIM		'\\'
 #define TIMIDITYCFG	"C:\\TIMIDITY\\TIMIDITY.CFG"
 #define PATHFORPAT	"C:\\TIMIDITY\\INSTRUMENTS"
 #else
 #define DIRDELIM		'/'
-#define TIMIDITYCFG	"/usr/local/share/timidity/timidity.cfg"
-#define PATHFORPAT	"/usr/local/share/timidity/instruments"
+#define TIMIDITYCFG	"/etc/timidity.cfg" /*"/usr/share/timidity/timidity.cfg"*/
+#define PATHFORPAT	"/usr/share/timidity/instruments"
 #endif
 
 #define PAT_ENV_PATH2CFG			"MMPAT_PATH_TO_CFG"
@@ -764,10 +764,7 @@ BOOL CSoundFile::TestPAT(const BYTE *lpStream, DWORD dwMemLength)
 // =====================================================================================
 static PATHANDLE *PAT_Init(void)
 {
-	PATHANDLE   *retval;
-	retval = (PATHANDLE *)calloc(1,sizeof(PATHANDLE));
-	if( !retval ) return NULL;
-	return retval;
+	return (PATHANDLE *)calloc(1,sizeof(PATHANDLE));
 }
 
 // =====================================================================================
