@@ -2,7 +2,7 @@ dnl Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.63)
 
-AC_INIT([libmodplug], [0.8.9.0])
+AC_INIT([libmodplug], [0.8.10.0])
 AC_CONFIG_SRCDIR([Makefile.am])
 
 AM_INIT_AUTOMAKE

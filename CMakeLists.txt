@@ -132,7 +132,7 @@ install(FILES
   include/libmodplug
   )
 
-set(VERSION "0.8.8.5")
+set(VERSION "0.8.10.0")
 
 if(HAVE_SETENV)
   add_definitions(-DHAVE_SETENV)
