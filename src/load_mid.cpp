@@ -435,6 +435,10 @@ static MIDTRACK *mid_locate_track(MIDHANDLE *h, int mch, int pos)
 		for( tr=h->track; tr; tr=tr->next ) {
 			if( tr->chan == mch ) {
 				e = tr->workevent;
+				if (!e) {
+					trunused = tr;
+					break;
+				}
 				if( h->tracktime > e->tracktick + tmin ) {
 					tmin = h->tracktime - e->tracktick;
 					trunused = tr;
@@ -451,6 +455,10 @@ static MIDTRACK *mid_locate_track(MIDHANDLE *h, int mch, int pos)
 		for( tr=h->track; tr; tr=tr->next ) {
 			if( tr->chan == mch ) {
 				e = tr->workevent;
+				if (!e) {
+					trunused = tr;
+					break;
+				}
 				if( h->tracktime >= e->tracktick + tmin ) {
 					tmin = h->tracktime - e->tracktick;
 					trunused = tr;
@@ -464,6 +472,10 @@ static MIDTRACK *mid_locate_track(MIDHANDLE *h, int mch, int pos)
 		tmin = 0;
 		for( tr=h->track; tr; tr=tr->next ) {
 			e = tr->workevent;
+			if (!e) {
+				trunused = tr;
+				break;
+			}
 			if( h->tracktime >= e->tracktick + tmin ) {
 				tmin = h->tracktime - e->tracktick;
 				trunused = tr;
