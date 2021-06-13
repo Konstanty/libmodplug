@@ -1149,8 +1149,8 @@ static void mid_prog_to_notes(MIDTRACK *tp, ULONG adjust, ULONG tmin)
 		}
 	}
 	if( ton > toff ) {
-		char info[40];
-		sprintf(info,"channel %d, %ld > %ld note %d", tp->chan + 1, (long)ton, (long)toff, n);
+		char info[128];
+		snprintf(info,sizeof(info),"channel %d, %ld > %ld note %d", tp->chan + 1, (long)ton, (long)toff, n);
 		mid_message("melody track ends with note on (%s)", info);
 	}
 	if( lno && lno->next ) mid_stripoff(tp, lno);
