@@ -290,7 +290,7 @@ BOOL CSoundFile::ReadXM(const BYTE *lpStream, DWORD dwMemLength)
 		memcpy(Headers[iIns]->name, pih->name, 22);
 		if ((nsamples = pih->samples) > 0)
 		{
-			if (dwMemPos + sizeof(XMSAMPLEHEADER) > dwMemLength) return TRUE;
+			if (dwMemPos + sizeof(XMINSTRUMENTHEADER) + sizeof(XMSAMPLEHEADER) > dwMemLength) return TRUE;
 			memcpy(&xmsh, lpStream+dwMemPos+sizeof(XMINSTRUMENTHEADER), sizeof(XMSAMPLEHEADER));
 			xmsh.shsize = bswapLE32(xmsh.shsize);
 			for (int i = 0; i < 24; ++i) {

@@ -139,7 +139,7 @@ BOOL CSoundFile::ReadFAR(const BYTE *lpStream, DWORD dwMemLength)
 		UINT patbrk = lpStream[dwMemPos];
 		const BYTE *p = lpStream + dwMemPos + 2;
 		UINT max = rows*16*4;
-		if (max > patlen-2) max = patlen-2;
+		if (max > ((patlen-2) & ~3)) max = ((patlen-2) & ~3);
 		for (UINT len=0; len<max; len += 4, m++)
 		{
 			BYTE note = p[len];

@@ -98,7 +98,7 @@ void swap_PSMSAMPLE(PSMSAMPLE* p){
 BOOL CSoundFile::ReadPSM(LPCBYTE lpStream, DWORD dwMemLength)
 //-----------------------------------------------------------
 {
-	PSMCHUNK pfh = *(const PSMCHUNK *)lpStream;
+	PSMCHUNK pfh;
 	DWORD dwMemPos, dwSongPos;
 	DWORD smpnames[MAX_SAMPLES];
 	DWORD patptrs[MAX_PATTERNS];
@@ -108,6 +108,7 @@ BOOL CSoundFile::ReadPSM(LPCBYTE lpStream, DWORD dwMemLength)
 	if (dwMemLength < 256) return FALSE;
 
 	// Swap chunk
+	pfh = *(const PSMCHUNK *)lpStream;
 	swap_PSMCHUNK(&pfh);
 
 	// Chunk0: "PSM ",filesize,"FILE"

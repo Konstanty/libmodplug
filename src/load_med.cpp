@@ -662,7 +662,7 @@ BOOL CSoundFile::ReadMed(const BYTE *lpStream, DWORD dwMemLength)
 			}
 			UINT pseq = 0;
 
-			if ((playseqtable) && (playseqtable < dwMemLength) && (nplayseq*4 < dwMemLength - playseqtable))
+			if ((playseqtable) && (playseqtable < dwMemLength) && (nplayseq*4 + 4 < dwMemLength - playseqtable))
 			{
 				pseq = bswapBE32(((LPDWORD)(lpStream+playseqtable))[nplayseq]);
 			}
