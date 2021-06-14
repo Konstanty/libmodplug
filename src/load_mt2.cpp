@@ -419,8 +419,9 @@ BOOL CSoundFile::ReadMT2(LPCBYTE lpStream, DWORD dwMemLength)
 	#ifdef MT2DEBUG
 		if (iIns <= pfh->wInstruments) Log("  Instrument #%d at offset %04X: %d bytes\n", iIns, dwMemPos, pmi->dwDataLen);
 	#endif
-		if (((LONG)pmi->dwDataLen > 0) && (dwMemPos <= dwMemLength - 40) && (pmi->dwDataLen <= dwMemLength - (dwMemPos + 40)))
+		if (pmi->dwDataLen > 0)
 		{
+			if (dwMemPos + sizeof(MT2INSTRUMENT) - 4 > dwMemLength) return TRUE;
 			InstrMap[iIns-1] = pmi;
 			if (penv)
 			{
@@ -433,6 +434,7 @@ BOOL CSoundFile::ReadMT2(LPCBYTE lpStream, DWORD dwMemLength)
 				if (pfh->wVersion <= 0x201)
 				{
 					DWORD dwEnvPos = dwMemPos + sizeof(MT2INSTRUMENT) - 4;
+					if (dwEnvPos + 2*sizeof(MT2ENVELOPE) > dwMemLength) return TRUE;
 					pehdr[0] = (MT2ENVELOPE *)(lpStream+dwEnvPos);
 					pehdr[1] = (MT2ENVELOPE *)(lpStream+dwEnvPos+8);
 					pehdr[2] = pehdr[3] = NULL;
@@ -442,10 +444,12 @@ BOOL CSoundFile::ReadMT2(LPCBYTE lpStream, DWORD dwMemLength)
 				} else
 				{
 					DWORD dwEnvPos = dwMemPos + sizeof(MT2INSTRUMENT);
+					if (dwEnvPos > dwMemLength) return TRUE;
 					for (UINT i=0; i<4; i++)
 					{
 						if (pmi->wEnvFlags1 & (1<<i))
 						{
+							if (dwEnvPos + sizeof(MT2ENVELOPE) > dwMemLength) return TRUE;
 							pehdr[i] = (MT2ENVELOPE *)(lpStream+dwEnvPos);
 							pedata[i] = (WORD *)pehdr[i]->EnvData;
 							dwEnvPos += sizeof(MT2ENVELOPE);
