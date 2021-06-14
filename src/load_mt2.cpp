@@ -275,7 +275,7 @@ BOOL CSoundFile::ReadMT2(LPCBYTE lpStream, DWORD dwMemLength)
 		const MT2PATTERN *pmp = (MT2PATTERN *)(lpStream+dwMemPos);
 		UINT wDataLen = (pmp->wDataLen + 1) & ~1;
 		dwMemPos += 6;
-		if (dwMemPos + wDataLen > dwMemLength) break;
+		if (dwMemPos > dwMemLength - wDataLen || wDataLen > dwMemLength) break;
 		UINT nLines = pmp->wLines;
 		if ((iPat < MAX_PATTERNS) && (nLines > 0) && (nLines <= 256))
 		{
@@ -289,7 +289,7 @@ BOOL CSoundFile::ReadMT2(LPCBYTE lpStream, DWORD dwMemLength)
 			UINT len = wDataLen;
 			if (pfh->fulFlags & 1) // Packed Patterns
 			{
-				BYTE *p = (BYTE *)(lpStream+dwMemPos);
+				const BYTE *p = lpStream+dwMemPos;
 				UINT pos = 0, row=0, ch=0;
 				while (pos < len)
 				{
@@ -298,6 +298,7 @@ BOOL CSoundFile::ReadMT2(LPCBYTE lpStream, DWORD dwMemLength)
 					UINT rptcount = 0;
 					if (infobyte == 0xff)
 					{
+						if (pos + 2 > len) break;
 						rptcount = p[pos++];
 						infobyte = p[pos++];
 				#if 0
@@ -311,13 +312,13 @@ BOOL CSoundFile::ReadMT2(LPCBYTE lpStream, DWORD dwMemLength)
 					{
 						UINT patpos = row*m_nChannels+ch;
 						cmd.note = cmd.instr = cmd.vol = cmd.pan = cmd.fxcmd = cmd.fxparam1 = cmd.fxparam2 = 0;
-						if (infobyte & 1) cmd.note = p[pos++];
-						if (infobyte & 2) cmd.instr = p[pos++];
-						if (infobyte & 4) cmd.vol = p[pos++];
-						if (infobyte & 8) cmd.pan = p[pos++];
-						if (infobyte & 16) cmd.fxcmd = p[pos++];
-						if (infobyte & 32) cmd.fxparam1 = p[pos++];
-						if (infobyte & 64) cmd.fxparam2 = p[pos++];
+						if ((infobyte & 1)  && (pos < len)) cmd.note = p[pos++];
+						if ((infobyte & 2)  && (pos < len)) cmd.instr = p[pos++];
+						if ((infobyte & 4)  && (pos < len)) cmd.vol = p[pos++];
+						if ((infobyte & 8)  && (pos < len)) cmd.pan = p[pos++];
+						if ((infobyte & 16) && (pos < len)) cmd.fxcmd = p[pos++];
+						if ((infobyte & 32) && (pos < len)) cmd.fxparam1 = p[pos++];
+						if ((infobyte & 64) && (pos < len)) cmd.fxparam2 = p[pos++];
 					#ifdef MT2DEBUG
 						if (cmd.fxcmd)
 						{
@@ -333,11 +334,12 @@ BOOL CSoundFile::ReadMT2(LPCBYTE lpStream, DWORD dwMemLength)
 			} else
 			{
 				const MT2COMMAND *p = (MT2COMMAND *)(lpStream+dwMemPos);
+				UINT pos = 0;
 				UINT n = 0;
-				while ((len > sizeof(MT2COMMAND)) && (n < m_nChannels*nLines))
+				while ((pos + sizeof(MT2COMMAND) <= len) && (n < m_nChannels*nLines))
 				{
 					ConvertMT2Command(this, m, p);
-					len -= sizeof(MT2COMMAND);
+					pos += sizeof(MT2COMMAND);
 					n++;
 					p++;
 					m++;
