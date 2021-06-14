@@ -578,12 +578,12 @@ BOOL CSoundFile::ReadMT2(LPCBYTE lpStream, DWORD dwMemLength)
 #endif
 	for (UINT iMap=0; iMap<255; iMap++) if (InstrMap[iMap])
 	{
-		if (dwMemPos+8 > dwMemLength) return TRUE;
 		const MT2INSTRUMENT *pmi = InstrMap[iMap];
 		INSTRUMENTHEADER *penv = NULL;
 		if (iMap<m_nInstruments) penv = Headers[iMap+1];
 		for (UINT iGrp=0; iGrp<pmi->wSamples; iGrp++)
 		{
+			if (dwMemPos+8 > dwMemLength) return TRUE;
 			if (penv)
 			{
 				const MT2GROUP *pmg = (MT2GROUP *)(lpStream+dwMemPos);
