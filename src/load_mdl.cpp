@@ -446,7 +446,7 @@ BOOL CSoundFile::ReadMDL(const BYTE *lpStream, DWORD dwMemLength)
 					lpTracks += 2;
 				}
 
-				if ( len > dwMemLength - dwTrackPos ) len = 0;
+				if ( len > dwMemLength - (lpTracks - lpStream) ) len = 0;
 
 				UnpackMDLTrack(m, m_nChannels, PatternSize[ipat], nTrack, lpTracks, len);
 			    }
