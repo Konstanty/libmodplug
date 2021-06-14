@@ -280,14 +280,17 @@ BOOL CSoundFile::ReadPSM(LPCBYTE lpStream, DWORD dwMemLength)
 	{
 		PSMPATTERN pPsmPat = *(const PSMPATTERN *)(lpStream+patptrs[nPat]+8);
 		swap_PSMPATTERN(&pPsmPat);
-		ULONG len = *(DWORD *)(lpStream+patptrs[nPat]+4) - 12;
+		PSMCHUNK pchunk = *(const PSMCHUNK *)(lpStream+patptrs[nPat]);
+		swap_PSMCHUNK(&pchunk);
+
+		ULONG len = pchunk.len - 12;
 		UINT nRows = pPsmPat.rows;
 		if (len > pPsmPat.size) len = pPsmPat.size;
 		if ((nRows < 64) || (nRows > 256)) nRows = 64;
 		PatternSize[nPat] = nRows;
 		if ((Patterns[nPat] = AllocatePattern(nRows, m_nChannels)) == NULL) break;
 		MODCOMMAND *m = Patterns[nPat];
-		BYTE *p = pPsmPat.data;
+		const BYTE *p = lpStream + patptrs[nPat] + 20;
 		MODCOMMAND *sp, dummy;
 		UINT pos = 0;
 		UINT row = 0;
@@ -314,17 +317,17 @@ BOOL CSoundFile::ReadPSM(LPCBYTE lpStream, DWORD dwMemLength)
 			ch = p[pos++];
 			if (ch >= m_nChannels) {
 				sp = &dummy;
-            } else {
+			} else {
 				sp = &m[ch];
-            }
+			}
 			// Note + Instr
-            if ((flags & 0x80) && (pos+1 < len))
-        	{
-                UINT note = p[pos++];
-                note = (note>>4)*12+(note&0x0f)+12+1;
-                if (note > 0x80) note = 0;
+			if ((flags & 0x80) && (pos+1 < len))
+			{
+				UINT note = p[pos++];
+				note = (note>>4)*12+(note&0x0f)+12+1;
+				if (note > 0x80) note = 0;
 				sp->note = note;
-            }
+			}
 			if ((flags & 0x40) && (pos+1 < len))
 			{
 				UINT nins = p[pos++];
