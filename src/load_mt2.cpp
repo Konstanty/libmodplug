@@ -211,6 +211,7 @@ BOOL CSoundFile::ReadMT2(LPCBYTE lpStream, DWORD dwMemLength)
 	memcpy(m_szNames[0], pfh->szSongName, 32);
 	m_szNames[0][31] = 0;
 	dwMemPos = sizeof(MT2FILEHEADER);
+	if (dwMemPos+2 > dwMemLength) return TRUE;
 	nDrumDataLen = *(WORD *)(lpStream + dwMemPos);
 	dwDrumDataPos = dwMemPos + 2;
 	if (nDrumDataLen >= 2) pdd = (MT2DRUMSDATA *)(lpStream+dwDrumDataPos);
