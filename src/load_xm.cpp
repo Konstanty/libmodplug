@@ -193,13 +193,14 @@ BOOL CSoundFile::ReadXM(const BYTE *lpStream, DWORD dwMemLength)
 					UINT vol = 0;
 					if (b & 0x80)
 					{
-						if (b & 1) p->note = src[j++];
-						if (b & 2) p->instr = src[j++];
-						if (b & 4) vol = src[j++];
-						if (b & 8) p->command = src[j++];
-						if (b & 16) p->param = src[j++];
+						if ((b & 1)  && j < packsize) p->note = src[j++];
+						if ((b & 2)  && j < packsize) p->instr = src[j++];
+						if ((b & 4)  && j < packsize) vol = src[j++];
+						if ((b & 8)  && j < packsize) p->command = src[j++];
+						if ((b & 16) && j < packsize) p->param = src[j++];
 					} else
 					{
+						if (j + 5 > packsize) break;
 						p->note = b;
 						p->instr = src[j++];
 						vol = src[j++];
