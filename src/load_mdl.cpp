@@ -217,6 +217,7 @@ BOOL CSoundFile::ReadMDL(const BYTE *lpStream, DWORD dwMemLength)
 			m_szNames[0][31] = 0;
 			norders = pmib->norders;
 			if (norders > MAX_ORDERS) norders = MAX_ORDERS;
+			if (blocklen < sizeof(MDLINFOBLOCK) + norders - sizeof(pmib->seq)) return FALSE;
 			m_nRestartPos = pmib->repeatpos;
 			m_nDefaultGlobalVolume = pmib->globalvol;
 			m_nDefaultTempo = pmib->tempo;
