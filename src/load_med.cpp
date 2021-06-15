@@ -789,10 +789,11 @@ BOOL CSoundFile::ReadMed(const BYTE *lpStream, DWORD dwMemLength)
 	#endif
 		if ((len > MAX_SAMPLE_LENGTH) || (dwPos + len + 6 > dwMemLength)) len = 0;
 		UINT flags = RS_PCM8S, stype = bswapBE16(psdh->type);
-		LPSTR psdata = (LPSTR)(lpStream + dwPos + 6);
+		dwPos += 6;
 		if (stype & 0x80)
 		{
-			psdata += (stype & 0x20) ? 14 : 6;
+			dwPos += (stype & 0x20) ? 14 : 6;
+			if (dwPos >= dwMemLength) continue;
 		} else
 		{
 			if (stype & 0x10)
@@ -807,7 +808,7 @@ BOOL CSoundFile::ReadMed(const BYTE *lpStream, DWORD dwMemLength)
 			if (stype & 0x20) len /= 2;
 		}
 		Ins[iSmp+1].nLength = len;
-		ReadSample(&Ins[iSmp+1], flags, psdata, dwMemLength - dwPos - 6);
+		ReadSample(&Ins[iSmp+1], flags, (const char *)(lpStream + dwPos), dwMemLength - dwPos);
 	}
 	// Reading patterns (blocks)
 	if (wNumBlocks > MAX_PATTERNS) wNumBlocks = MAX_PATTERNS;
