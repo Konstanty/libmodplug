@@ -237,7 +237,7 @@ BOOL CSoundFile::ReadMT2(LPCBYTE lpStream, DWORD dwMemLength)
 		DWORD dwId = *(DWORD *)(lpStream+dwMemPos);
 		DWORD dwLen = *(DWORD *)(lpStream+dwMemPos+4);
 		dwMemPos += 8;
-		if (dwMemPos + dwLen > dwMemLength) return TRUE;
+		if (dwLen >= dwMemLength || dwMemPos > dwMemLength - dwLen) return TRUE;
 #ifdef MT2DEBUG
 		CHAR s[5];
 		memcpy(s, &dwId, 4);
