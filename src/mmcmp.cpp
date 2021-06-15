@@ -191,7 +191,7 @@ BOOL MMCMP_Unpack(LPCBYTE *ppMemFile, LPDWORD pdwMemLength)
 		memcpy(pblk, lpMemFile+dwMemPos, 20);
 		swap_block(pblk);
 
-		if (dwMemPos + 20 + pblk->sub_blk*8 >= dwMemLength) break;
+		if (pblk->sub_blk*8 >= dwMemLength - dwMemPos - 20) break;
 		dwSubPos = dwMemPos + 20;
 		dwMemPos += 20 + pblk->sub_blk*8;
 
