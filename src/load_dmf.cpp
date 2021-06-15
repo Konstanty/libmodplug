@@ -87,8 +87,9 @@ BOOL CSoundFile::ReadDMF(const BYTE *lpStream, DWORD dwMemLength)
 //---------------------------------------------------------------
 {
 	const DMFHEADER *pfh = (DMFHEADER *)lpStream;
-	DMFINFO *psi;
-	DMFSEQU *sequ;
+	const DMFINFO *psi;
+	const DMFPATT *patt;
+	const DMFSEQU *sequ;
 	DWORD dwMemPos;
 	BYTE infobyte[32];
 	BYTE smplflags[MAX_SAMPLES], hasSMPI = 0;
@@ -150,9 +151,9 @@ BOOL CSoundFile::ReadDMF(const BYTE *lpStream, DWORD dwMemLength)
 
 		// "PATT"
 		case 0x54544150:
+			patt = (DMFPATT *)(lpStream+dwMemPos);
 			if (!m_nChannels)
 			{
-				DMFPATT *patt = (DMFPATT *)(lpStream+dwMemPos);
 				UINT numpat;
 				DWORD dwPos = dwMemPos + 11;
 				if ((patt->patsize >= dwMemLength) || (dwMemPos + patt->patsize + 8 > dwMemLength)) goto dmfexit;
@@ -164,7 +165,7 @@ BOOL CSoundFile::ReadDMF(const BYTE *lpStream, DWORD dwMemLength)
 				if (m_nChannels < 4) m_nChannels = 4;
 				for (UINT npat=0; npat<numpat; npat++)
 				{
-					DMFTRACK *pt = (DMFTRACK *)(lpStream+dwPos);
+					const DMFTRACK *pt = (DMFTRACK *)(lpStream+dwPos);
 				#ifdef DMFLOG
 					Log("Pattern #%d: %d tracks, %d rows\n", npat, pt->tracks, pt->ticks);
 				#endif
@@ -371,15 +372,15 @@ BOOL CSoundFile::ReadDMF(const BYTE *lpStream, DWORD dwMemLength)
 				#endif
 					if (dwPos + 8 >= dwMemLength) break;
 				}
-				dwMemPos += patt->patsize + 8;
 			}
+			dwMemPos += patt->patsize + 8;
 			break;
 
 		// "SMPI": Sample Info
 		case 0x49504d53:
 			{
 				hasSMPI = 1;
-				DMFSMPI *pds = (DMFSMPI *)(lpStream+dwMemPos);
+				const DMFSMPI *pds = (DMFSMPI *)(lpStream+dwMemPos);
 				if (pds->size <= dwMemLength - dwMemPos)
 				{
 					DWORD dwPos = dwMemPos + 9;
@@ -397,7 +398,7 @@ BOOL CSoundFile::ReadDMF(const BYTE *lpStream, DWORD dwMemLength)
 							m_szNames[iSmp][rlen] = 0;
 						}
 						dwPos += namelen + 1;
-						DMFSAMPLE *psh = (DMFSAMPLE *)(lpStream+dwPos);
+						const DMFSAMPLE *psh = (DMFSAMPLE *)(lpStream+dwPos);
 						MODINSTRUMENT *psmp = &Ins[iSmp];
 						psmp->nLength = psh->len;
 						psmp->nLoopStart = psh->loopstart;
