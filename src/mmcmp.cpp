@@ -185,15 +185,20 @@ BOOL MMCMP_Unpack(LPCBYTE *ppMemFile, LPDWORD pdwMemLength)
 		LPMMCMPSUBBLOCK psubblk;
 
 		if (dwMemPos >= dwMemLength - 20) break;
-		memcpy(tmp1, lpMemFile+dwMemPos, 28);
 		pblk = (LPMMCMPBLOCK)(tmp1);
 		psubblk = (LPMMCMPSUBBLOCK)(tmp1+20);
+
+		memcpy(pblk, lpMemFile+dwMemPos, 20);
 		swap_block(pblk);
-		swap_subblock(psubblk);
 
 		if (dwMemPos + 20 + pblk->sub_blk*8 >= dwMemLength) break;
 		dwSubPos = dwMemPos + 20;
 		dwMemPos += 20 + pblk->sub_blk*8;
+
+		if (!pblk->sub_blk) continue;
+		memcpy(psubblk, lpMemFile + dwSubPos, 8);
+		swap_subblock(psubblk);
+
 #ifdef MMCMP_LOG
 		Log("block %d: flags=%04X sub_blocks=%d", nBlock, (UINT)pblk->flags, (UINT)pblk->sub_blk);
 		Log(" pksize=%d unpksize=%d", pblk->pk_size, pblk->unpk_size);
@@ -213,7 +218,7 @@ BOOL MMCMP_Unpack(LPCBYTE *ppMemFile, LPDWORD pdwMemLength)
 #endif
 				memcpy(pBuffer+psubblk->unpk_pos, lpMemFile+dwMemPos, psubblk->unpk_size);
 				dwMemPos += psubblk->unpk_size;
-				memcpy(tmp1+20,lpMemFile+dwSubPos+i*8,8);
+				memcpy(psubblk,lpMemFile+dwSubPos+i*8,8);
 				swap_subblock(psubblk);
 			}
 		} else
@@ -293,7 +298,7 @@ BOOL MMCMP_Unpack(LPCBYTE *ppMemFile, LPDWORD pdwMemLength)
 				if (dwPos >= dwSize)
 				{
 					subblk++;
-					memcpy(tmp1+20,lpMemFile+dwSubPos+subblk*8,8);
+					memcpy(psubblk,lpMemFile+dwSubPos+subblk*8,8);
 					swap_subblock(psubblk);
 					dwPos = 0;
 					dwSize = psubblk->unpk_size >> 1;
@@ -370,7 +375,7 @@ BOOL MMCMP_Unpack(LPCBYTE *ppMemFile, LPDWORD pdwMemLength)
 				if (dwPos >= dwSize)
 				{
 					subblk++;
-					memcpy(tmp1+20,lpMemFile+dwSubPos+subblk*8,8);
+					memcpy(psubblk,lpMemFile+dwSubPos+subblk*8,8);
 					swap_subblock(psubblk);
 					dwPos = 0;
 					dwSize = psubblk->unpk_size;
