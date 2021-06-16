@@ -877,9 +877,15 @@ BOOL CSoundFile::ReadMed(const BYTE *lpStream, DWORD dwMemLength)
 				{
 					DWORD nameofs = bswapBE32(pbi->blockname);
 					UINT namelen = bswapBE32(pbi->blocknamelen);
-					if ((nameofs < dwMemLength) && (namelen < dwMemLength + nameofs))
+					if ((namelen < dwMemLength) && (nameofs < dwMemLength - namelen))
 					{
-						SetPatternName(iBlk, (LPCSTR)(lpStream+nameofs));
+						// SetPatternName expects a nul-terminated string.
+						char blockname[MAX_PATTERNNAME];
+						if (namelen >= MAX_PATTERNNAME) namelen = MAX_PATTERNNAME - 1;
+						memcpy(blockname, lpStream + nameofs, namelen);
+						blockname[namelen] = '\0';
+
+						SetPatternName(iBlk, blockname);
 					}
 				}
 				if (pbi->cmdexttable)
