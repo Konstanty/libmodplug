@@ -548,6 +548,7 @@ BOOL CSoundFile::ReadMT2(LPCBYTE lpStream, DWORD dwMemLength)
 		{
 			memcpy(m_szNames[iSmp], pms->szName, 32);
 		}
+		if (pms->dwDataLen > dwMemLength - (dwMemPos+36)) return TRUE;
 		if (pms->dwDataLen > 0)
 		{
 			SampleMap[iSmp-1] = pms;
