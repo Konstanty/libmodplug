@@ -232,8 +232,8 @@ BOOL MMCMP_Unpack(LPCBYTE *ppMemFile, LPDWORD pdwMemLength)
 			UINT numbits = pblk->num_bits;
 			UINT subblk = 0, oldval = 0;
 
-			if (dwSize * 2 > dwFileSize-psubblk->unpk_pos ||
-				psubblk->unpk_pos > dwMemLength-dwMemPos)
+			if (psubblk->unpk_pos >= dwFileSize ||
+				dwSize * 2 > dwFileSize - psubblk->unpk_pos)
 				break;
 
 #ifdef MMCMP_LOG
@@ -252,11 +252,6 @@ BOOL MMCMP_Unpack(LPCBYTE *ppMemFile, LPDWORD pdwMemLength)
 			{
 				UINT newval = 0x10000;
 				DWORD d = bb.GetBits(numbits+1);
-
-				if ((psubblk->unpk_pos >= dwFileSize) ||
-					(psubblk->unpk_size >= dwFileSize) ||
-					(psubblk->unpk_size > dwFileSize - psubblk->unpk_pos))
-					dwPos = dwSize;
 
 				if (d >= MMCMP16BitCommands[numbits])
 				{
@@ -303,7 +298,7 @@ BOOL MMCMP_Unpack(LPCBYTE *ppMemFile, LPDWORD pdwMemLength)
 					dwPos = 0;
 					dwSize = psubblk->unpk_size >> 1;
 					if ( psubblk->unpk_pos >= dwFileSize ||
-					 	dwSize * 2 > dwFileSize ) {
+						dwSize * 2 > dwFileSize - psubblk->unpk_pos) {
 						break;
 					}
 					pDest = (LPWORD)(pBuffer + psubblk->unpk_pos);
@@ -320,8 +315,8 @@ BOOL MMCMP_Unpack(LPCBYTE *ppMemFile, LPDWORD pdwMemLength)
 			UINT subblk = 0, oldval = 0;
 			LPCBYTE ptable = lpMemFile+dwMemPos;
 
-			if (dwSize > dwFileSize-psubblk->unpk_pos ||
-				psubblk->unpk_pos > dwMemLength-dwMemPos)
+			if (psubblk->unpk_pos >= dwFileSize ||
+				dwSize > dwFileSize - psubblk->unpk_pos)
 				break;
 
 			bb.bitcount = 0;
@@ -334,11 +329,6 @@ BOOL MMCMP_Unpack(LPCBYTE *ppMemFile, LPDWORD pdwMemLength)
 			{
 				UINT newval = 0x100;
 				DWORD d = bb.GetBits(numbits+1);
-
-				if ((psubblk->unpk_pos >= dwFileSize) ||
-					(psubblk->unpk_size >= dwFileSize) ||
-					(psubblk->unpk_size > dwFileSize - (psubblk->unpk_pos)))
-					dwPos = dwSize;
 
 				if (d >= MMCMP8BitCommands[numbits])
 				{
@@ -380,7 +370,7 @@ BOOL MMCMP_Unpack(LPCBYTE *ppMemFile, LPDWORD pdwMemLength)
 					dwPos = 0;
 					dwSize = psubblk->unpk_size;
 					if ( psubblk->unpk_pos >= dwFileSize ||
-					 	dwSize > dwFileSize )
+						dwSize > dwFileSize - psubblk->unpk_pos)
 						break;
 					pDest = pBuffer + psubblk->unpk_pos;
 				}
