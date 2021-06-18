@@ -116,7 +116,7 @@ BOOL CSoundFile::ReadDMF(const BYTE *lpStream, DWORD dwMemLength)
 		case 0x47534d43:
 			psi = (DMFINFO *)(lpStream+dwMemPos);
 			if (id == 0x47534d43) dwMemPos++;
-			if ((psi->infosize > dwMemLength) || (psi->infosize + dwMemPos + 8 > dwMemLength)) goto dmfexit;
+			if ((psi->infosize > dwMemLength) || (dwMemPos + 8 > dwMemLength - psi->infosize)) goto dmfexit;
 			if ((psi->infosize >= 8) && (!m_lpszSongComments))
 			{
 			    m_lpszSongComments = new char[psi->infosize]; // changed from CHAR
@@ -139,9 +139,10 @@ BOOL CSoundFile::ReadDMF(const BYTE *lpStream, DWORD dwMemLength)
 		// "SEQU"
 		case 0x55514553:
 			sequ = (DMFSEQU *)(lpStream+dwMemPos);
-			if ((sequ->seqsize >= dwMemLength) || (dwMemPos + sequ->seqsize + 12 > dwMemLength)) goto dmfexit;
+			if ((sequ->seqsize >= dwMemLength) || (dwMemPos + 8 > dwMemLength - sequ->seqsize)) goto dmfexit;
+			if (sequ->seqsize >= 4)
 			{
-				UINT nseq = sequ->seqsize >> 1;
+				UINT nseq = (sequ->seqsize - 4) >> 1;
 				if (nseq >= MAX_ORDERS-1) nseq = MAX_ORDERS-1;
 				if (sequ->loopstart < nseq) m_nRestartPos = sequ->loopstart;
 				for (UINT i=0; i<nseq; i++) Order[i] = (BYTE)sequ->sequ[i];
@@ -381,7 +382,8 @@ BOOL CSoundFile::ReadDMF(const BYTE *lpStream, DWORD dwMemLength)
 			{
 				hasSMPI = 1;
 				const DMFSMPI *pds = (DMFSMPI *)(lpStream+dwMemPos);
-				if (pds->size <= dwMemLength - dwMemPos)
+				if ((pds->size >= dwMemLength) || (dwMemPos + 8 > dwMemLength - pds->size)) goto dmfexit;
+				if (pds->size >= 1)
 				{
 					DWORD dwPos = dwMemPos + 9;
 					m_nSamples = pds->samples;
