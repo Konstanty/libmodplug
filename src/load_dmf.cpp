@@ -152,11 +152,11 @@ BOOL CSoundFile::ReadDMF(const BYTE *lpStream, DWORD dwMemLength)
 		// "PATT"
 		case 0x54544150:
 			patt = (DMFPATT *)(lpStream+dwMemPos);
+			if ((patt->patsize >= dwMemLength) || (dwMemPos + 8 > dwMemLength - patt->patsize)) goto dmfexit;
 			if (!m_nChannels)
 			{
 				UINT numpat;
 				DWORD dwPos = dwMemPos + 11;
-				if ((patt->patsize >= dwMemLength) || (dwMemPos + patt->patsize + 8 > dwMemLength)) goto dmfexit;
 				numpat = patt->numpat;
 				if (numpat > MAX_PATTERNS) numpat = MAX_PATTERNS;
 				m_nChannels = patt->tracks;
