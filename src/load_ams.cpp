@@ -119,7 +119,7 @@ BOOL CSoundFile::ReadAMS(LPCBYTE lpStream, DWORD dwMemLength)
 	// Read Song Comments
 	tmp = *((WORD *)(lpStream+dwMemPos));
 	dwMemPos += 2;
-	if (dwMemPos + tmp >= dwMemLength) return TRUE;
+	if (tmp >= dwMemLength || dwMemPos > dwMemLength - tmp) return TRUE;
 	if (tmp)
 	{
 		m_lpszSongComments = new char[tmp+1];  // changed from CHAR
@@ -129,6 +129,7 @@ BOOL CSoundFile::ReadAMS(LPCBYTE lpStream, DWORD dwMemLength)
 		dwMemPos += tmp;
 	}
 	// Read Order List
+	if (2*pfh->orders >= dwMemLength || dwMemPos > dwMemLength - 2*pfh->orders) return TRUE;
 	for (UINT iOrd=0; iOrd<pfh->orders; iOrd++, dwMemPos += 2)
 	{
 		UINT n = *((WORD *)(lpStream+dwMemPos));
@@ -140,7 +141,7 @@ BOOL CSoundFile::ReadAMS(LPCBYTE lpStream, DWORD dwMemLength)
 		if (dwMemPos + 4 >= dwMemLength) return TRUE;
 		UINT len = *((DWORD *)(lpStream + dwMemPos));
 		dwMemPos += 4;
-		if ((len >= dwMemLength) || (dwMemPos + len > dwMemLength)) return TRUE;
+		if ((len >= dwMemLength) || (dwMemPos > dwMemLength - len)) return TRUE;
 		PatternSize[iPat] = 64;
 		MODCOMMAND *m = AllocatePattern(PatternSize[iPat], m_nChannels);
 		if (!m) return TRUE;
@@ -156,6 +157,7 @@ BOOL CSoundFile::ReadAMS(LPCBYTE lpStream, DWORD dwMemLength)
 			// Note+Instr
 			if (!(b0 & 0x40))
 			{
+				if (i+1 >= len) break;
 				b2 = p[i++];
 				if (ch < m_nChannels)
 				{
@@ -164,6 +166,7 @@ BOOL CSoundFile::ReadAMS(LPCBYTE lpStream, DWORD dwMemLength)
 				}
 				if (b1 & 0x80)
 				{
+					if (i+1 >= len) break;
 					b0 |= 0x40;
 					b1 = p[i++];
 				}
@@ -181,6 +184,7 @@ BOOL CSoundFile::ReadAMS(LPCBYTE lpStream, DWORD dwMemLength)
 					}
 				} else
 				{
+					if (i+1 >= len) break;
 					b2 = p[i++];
 					if (ch < m_nChannels)
 					{
@@ -223,6 +227,7 @@ BOOL CSoundFile::ReadAMS(LPCBYTE lpStream, DWORD dwMemLength)
 				}
 				if (b1 & 0x80)
 				{
+					if (i+1 >= len) break;
 					b1 = p[i++];
 					if (i <= len) goto anothercommand;
 				}
