@@ -246,7 +246,7 @@ BOOL CSoundFile::ReadAMS(LPCBYTE lpStream, DWORD dwMemLength)
 	{
 		if (dwMemPos >= dwMemLength - 9) return TRUE;
 		UINT flags = (Ins[iSmp].uFlags & CHN_16BIT) ? RS_AMS16 : RS_AMS8;
-		dwMemPos += ReadSample(&Ins[iSmp], flags, (LPSTR)(lpStream+dwMemPos), dwMemLength-dwMemPos);
+		dwMemPos += ReadSample(&Ins[iSmp], flags, (LPCSTR)(lpStream+dwMemPos), dwMemLength-dwMemPos);
 	}
 	return TRUE;
 }
@@ -345,7 +345,7 @@ BOOL CSoundFile::ReadAMS2(LPCBYTE lpStream, DWORD dwMemLength)
 	{
 		if (dwMemPos >= dwMemLength) return TRUE;
 		UINT insnamelen = lpStream[dwMemPos];
-		CHAR *pinsname = (CHAR *)(lpStream+dwMemPos+1);
+		const CHAR *pinsname = (CHAR *)(lpStream+dwMemPos+1);
 		dwMemPos += insnamelen + 1;
 		const AMS2INSTRUMENT *pins = (AMS2INSTRUMENT *)(lpStream + dwMemPos);
 		dwMemPos += sizeof(AMS2INSTRUMENT);
@@ -564,7 +564,7 @@ BOOL CSoundFile::ReadAMS2(LPCBYTE lpStream, DWORD dwMemLength)
 		{
 			flags = (Ins[iSmp].uFlags & CHN_16BIT) ? RS_PCM16S : RS_PCM8S;
 		}
-		dwMemPos += ReadSample(&Ins[iSmp], flags, (LPSTR)(lpStream+dwMemPos), dwMemLength-dwMemPos);
+		dwMemPos += ReadSample(&Ins[iSmp], flags, (LPCSTR)(lpStream+dwMemPos), dwMemLength-dwMemPos);
 	}
 	return TRUE;
 }
