@@ -573,7 +573,7 @@ void AMSUnpack(const char *psrc, UINT inputlen, char *pdest, UINT dmax, char pac
 {
 	UINT tmplen = dmax;
 	signed char *amstmp = new signed char[tmplen];
-	
+
 	if (!amstmp) return;
 	// Unpack Loop
 	{
@@ -595,6 +595,12 @@ void AMSUnpack(const char *psrc, UINT inputlen, char *pdest, UINT dmax, char pac
 					}
 				} else p[j++] = packcharacter;
 			} else p[j++] = ch;
+		}
+		if (j < tmplen)
+		{
+			// Truncated or invalid; don't try to unpack this.
+			delete[] amstmp;
+			return;
 		}
 	}
 	// Bit Unpack Loop
