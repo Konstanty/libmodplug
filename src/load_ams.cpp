@@ -588,9 +588,11 @@ void AMSUnpack(const char *psrc, UINT inputlen, char *pdest, UINT dmax, char pac
 			signed char ch = psrc[i++];
 			if (ch == packcharacter)
 			{
+				if (i >= inputlen) break;
 				BYTE ch2 = psrc[i++];
 				if (ch2)
 				{
+					if (i >= inputlen) break;
 					ch = psrc[i++];
 					while (ch2--)
 					{
