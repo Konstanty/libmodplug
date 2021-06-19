@@ -46,10 +46,10 @@ BOOL CSoundFile::ReadAMS(LPCBYTE lpStream, DWORD dwMemLength)
 //-----------------------------------------------------------
 {
 	BYTE pkinf[MAX_SAMPLES];
-	AMSFILEHEADER *pfh = (AMSFILEHEADER *)lpStream;
+	const AMSFILEHEADER *pfh = (AMSFILEHEADER *)lpStream;
 	DWORD dwMemPos;
 	UINT tmp, tmp2;
-	
+
 	if ((!lpStream) || (dwMemLength < 1024)) return FALSE;
 	if ((pfh->verhi != 0x01) || (strncmp(pfh->szHeader, "Extreme", 7))
 	 || (!pfh->patterns) || (!pfh->orders) || (!pfh->samples) || (pfh->samples >= MAX_SAMPLES)
@@ -65,7 +65,7 @@ BOOL CSoundFile::ReadAMS(LPCBYTE lpStream, DWORD dwMemLength)
 	m_nSamples = pfh->samples;
 	for (UINT nSmp=1; nSmp<=m_nSamples; nSmp++, dwMemPos += sizeof(AMSSAMPLEHEADER))
 	{
-		AMSSAMPLEHEADER *psh = (AMSSAMPLEHEADER *)(lpStream + dwMemPos);
+		const AMSSAMPLEHEADER *psh = (AMSSAMPLEHEADER *)(lpStream + dwMemPos);
 		MODINSTRUMENT *pins = &Ins[nSmp];
 		pins->nLength = psh->length;
 		pins->nLoopStart = psh->loopstart;
@@ -316,7 +316,7 @@ BOOL CSoundFile::ReadAMS2(LPCBYTE lpStream, DWORD dwMemLength)
 //------------------------------------------------------------
 {
 	const AMS2FILEHEADER *pfh = (AMS2FILEHEADER *)lpStream;
-	AMS2SONGHEADER *psh;
+	const AMS2SONGHEADER *psh;
 	DWORD dwMemPos;
 	BYTE smpmap[16];
 	BYTE packedsamples[MAX_SAMPLES];
@@ -345,10 +345,10 @@ BOOL CSoundFile::ReadAMS2(LPCBYTE lpStream, DWORD dwMemLength)
 		UINT insnamelen = lpStream[dwMemPos];
 		CHAR *pinsname = (CHAR *)(lpStream+dwMemPos+1);
 		dwMemPos += insnamelen + 1;
-		AMS2INSTRUMENT *pins = (AMS2INSTRUMENT *)(lpStream + dwMemPos);
+		const AMS2INSTRUMENT *pins = (AMS2INSTRUMENT *)(lpStream + dwMemPos);
 		dwMemPos += sizeof(AMS2INSTRUMENT);
 		if (dwMemPos + 1024 >= dwMemLength) return TRUE;
-		AMS2ENVELOPE *volenv, *panenv, *pitchenv;
+		const AMS2ENVELOPE *volenv, *panenv, *pitchenv;
 		volenv = (AMS2ENVELOPE *)(lpStream+dwMemPos);
 		dwMemPos += 5 + volenv->points*3;
 		panenv = (AMS2ENVELOPE *)(lpStream+dwMemPos);
@@ -403,16 +403,19 @@ BOOL CSoundFile::ReadAMS2(LPCBYTE lpStream, DWORD dwMemLength)
 		// Read Samples
 		for (UINT ismp=0; ismp<pins->samples; ismp++)
 		{
+			if (dwMemPos + 1 > dwMemLength) return TRUE;
 			MODINSTRUMENT *psmp = ((ismp < 16) && (smpmap[ismp])) ? &Ins[smpmap[ismp]] : NULL;
 			UINT smpnamelen = lpStream[dwMemPos];
+			if (dwMemPos + smpnamelen + 1 > dwMemLength) return TRUE;
 			if ((psmp) && (smpnamelen) && (smpnamelen <= 22))
 			{
 				memcpy(m_szNames[smpmap[ismp]], lpStream+dwMemPos+1, smpnamelen);
 			}
 			dwMemPos += smpnamelen + 1;
+			if (dwMemPos + sizeof(AMS2SAMPLE) > dwMemLength) return TRUE;
 			if (psmp)
 			{
-				AMS2SAMPLE *pams = (AMS2SAMPLE *)(lpStream+dwMemPos);
+				const AMS2SAMPLE *pams = (AMS2SAMPLE *)(lpStream+dwMemPos);
 				psmp->nGlobalVol = 64;
 				psmp->nPan = 128;
 				psmp->nLength = pams->length;
