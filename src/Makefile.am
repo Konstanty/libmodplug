@@ -38,6 +38,7 @@ libmodplug_la_SOURCES = tables.h         \
                         load_j2b.cpp       \
                         load_mt2.cpp       \
                         load_psm.cpp       \
+                        load_gdm.cpp       \
                         load_abc.cpp       \
                         load_mid.cpp       \
                         load_pat.cpp       \
