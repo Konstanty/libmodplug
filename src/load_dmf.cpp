@@ -402,6 +402,7 @@ BOOL CSoundFile::ReadDMF(const BYTE *lpStream, DWORD dwMemLength)
 					if (m_nSamples >= MAX_SAMPLES) m_nSamples = MAX_SAMPLES-1;
 					for (UINT iSmp=1; iSmp<=m_nSamples; iSmp++)
 					{
+						if (dwPos >= dwMemPos + pds->size + 8) break;
 						UINT namelen = lpStream[dwPos];
 						smplflags[iSmp] = 0;
 						if (dwPos+namelen+1+sizeof(DMFSAMPLE) > dwMemPos+pds->size+8) break;
