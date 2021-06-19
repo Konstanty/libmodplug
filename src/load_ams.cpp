@@ -117,6 +117,7 @@ BOOL CSoundFile::ReadAMS(LPCBYTE lpStream, DWORD dwMemLength)
 		dwMemPos += tmp;
 	}
 	// Read Song Comments
+	if (dwMemPos + 2 > dwMemLength) return TRUE;
 	tmp = *((WORD *)(lpStream+dwMemPos));
 	dwMemPos += 2;
 	if (tmp >= dwMemLength || dwMemPos > dwMemLength - tmp) return TRUE;
