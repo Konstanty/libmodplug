@@ -343,17 +343,20 @@ BOOL CSoundFile::ReadAMS2(LPCBYTE lpStream, DWORD dwMemLength)
 	if (psh->flags & 0x40) m_dwSongFlags |= SONG_LINEARSLIDES;
 	for (UINT nIns=1; nIns<=m_nInstruments; nIns++)
 	{
+		if (dwMemPos >= dwMemLength) return TRUE;
 		UINT insnamelen = lpStream[dwMemPos];
 		CHAR *pinsname = (CHAR *)(lpStream+dwMemPos+1);
 		dwMemPos += insnamelen + 1;
 		const AMS2INSTRUMENT *pins = (AMS2INSTRUMENT *)(lpStream + dwMemPos);
 		dwMemPos += sizeof(AMS2INSTRUMENT);
-		if (dwMemPos + 1024 >= dwMemLength) return TRUE;
 		const AMS2ENVELOPE *volenv, *panenv, *pitchenv;
+		if (dwMemPos + sizeof(AMS2ENVELOPE) > dwMemLength) return TRUE;
 		volenv = (AMS2ENVELOPE *)(lpStream+dwMemPos);
 		dwMemPos += 5 + volenv->points*3;
+		if (dwMemPos + sizeof(AMS2ENVELOPE) > dwMemLength) return TRUE;
 		panenv = (AMS2ENVELOPE *)(lpStream+dwMemPos);
 		dwMemPos += 5 + panenv->points*3;
+		if (dwMemPos + sizeof(AMS2ENVELOPE) > dwMemLength) return TRUE;
 		pitchenv = (AMS2ENVELOPE *)(lpStream+dwMemPos);
 		dwMemPos += 5 + pitchenv->points*3;
 		INSTRUMENTHEADER *penv = new INSTRUMENTHEADER;
@@ -395,6 +398,7 @@ BOOL CSoundFile::ReadAMS2(LPCBYTE lpStream, DWORD dwMemLength)
 				penv->VolPoints[i] = (WORD)pos;
 			}
 		}
+		if (dwMemPos + 5 > dwMemLength) return TRUE;
 		penv->nFadeOut = (((lpStream[dwMemPos+2] & 0x0F) << 8) | (lpStream[dwMemPos+1])) << 3;
 		UINT envflags = lpStream[dwMemPos+3];
 		if (envflags & 0x01) penv->dwFlags |= ENV_VOLLOOP;
