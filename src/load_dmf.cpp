@@ -534,8 +534,8 @@ BYTE DMFReadBits(DMF_HTREE *tree, UINT nbits)
 		{
 			tree->bitnum--;
 		} else
-		{
-			tree->bitbuf = (tree->ibuf < tree->ibufmax) ? *(tree->ibuf++) : 0;
+		if (tree->ibuf < tree->ibufmax) {
+			tree->bitbuf = *(tree->ibuf++);
 			tree->bitnum = 7;
 		}
 		if (tree->bitbuf & 1) x |= bitv;
@@ -590,14 +590,24 @@ int DMFUnpack(LPBYTE psample, LPBYTE ibuf, LPBYTE ibufmax, UINT maxlen)
 	DMF_HTREE tree;
 	UINT actnode;
 	BYTE value, sign, delta = 0;
-	
+
 	memset(&tree, 0, sizeof(tree));
 	tree.ibuf = ibuf;
 	tree.ibufmax = ibufmax;
 	DMFNewNode(&tree);
 	value = 0;
+
+	if (tree.ibuf >= ibufmax) return tree.ibuf - ibuf;
+
 	for (UINT i=0; i<maxlen; i++)
 	{
+		if ((tree.ibuf >= tree.ibufmax) && (!tree.bitnum))
+		{
+		#ifdef DMFLOG
+			Log("DMFUnpack: unexpected EOF at output byte %d / %d\n", i, maxlen);
+		#endif
+			break;
+		}
 		actnode = 0;
 		sign = DMFReadBits(&tree, 1);
 		do
