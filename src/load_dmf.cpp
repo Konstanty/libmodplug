@@ -92,7 +92,7 @@ BOOL CSoundFile::ReadDMF(const BYTE *lpStream, DWORD dwMemLength)
 	const DMFSEQU *sequ;
 	DWORD dwMemPos;
 	BYTE infobyte[32];
-	BYTE smplflags[MAX_SAMPLES], hasSMPI = 0;
+	BYTE smplflags[MAX_SAMPLES], hasSMPI = 0, hasSMPD = 0;
 
 	if ((!lpStream) || (dwMemLength < 1024)) return FALSE;
 	if ((pfh->id != 0x464d4444) || (!pfh->version) || (pfh->version & 0xF0)) return FALSE;
@@ -439,7 +439,7 @@ BOOL CSoundFile::ReadDMF(const BYTE *lpStream, DWORD dwMemLength)
 			{
 				DWORD dwPos = dwMemPos + 8;
 				UINT ismpd = 0;
-				for (UINT iSmp=1; iSmp<=m_nSamples; iSmp++)
+				for (UINT iSmp=1; iSmp<=m_nSamples && !hasSMPD; iSmp++)
 				{
 					ismpd++;
 					DWORD pksize;
@@ -472,6 +472,7 @@ BOOL CSoundFile::ReadDMF(const BYTE *lpStream, DWORD dwMemLength)
 					}
 					dwPos += pksize;
 				}
+				hasSMPD = 1;
 				dwMemPos = dwPos;
 			}
 			break;
