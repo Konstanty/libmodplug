@@ -41,6 +41,7 @@ typedef struct AMSSAMPLEHEADER
 #pragma pack()
 
 
+static BOOL AMSUnpackCheck(const BYTE *lpStream, DWORD dwMemLength, MODINSTRUMENT *ins);
 
 BOOL CSoundFile::ReadAMS(LPCBYTE lpStream, DWORD dwMemLength)
 //-----------------------------------------------------------
@@ -246,6 +247,7 @@ BOOL CSoundFile::ReadAMS(LPCBYTE lpStream, DWORD dwMemLength)
 	{
 		if (dwMemPos >= dwMemLength - 9) return TRUE;
 		UINT flags = (Ins[iSmp].uFlags & CHN_16BIT) ? RS_AMS16 : RS_AMS8;
+		if (!AMSUnpackCheck(lpStream+dwMemPos, dwMemLength-dwMemPos, &Ins[iSmp])) break;
 		dwMemPos += ReadSample(&Ins[iSmp], flags, (LPCSTR)(lpStream+dwMemPos), dwMemLength-dwMemPos);
 	}
 	return TRUE;
@@ -311,6 +313,7 @@ typedef struct AMS2SAMPLE
 
 
 #pragma pack()
+
 
 
 BOOL CSoundFile::ReadAMS2(LPCBYTE lpStream, DWORD dwMemLength)
@@ -560,6 +563,7 @@ BOOL CSoundFile::ReadAMS2(LPCBYTE lpStream, DWORD dwMemLength)
 		if (packedsamples[iSmp] & 0x03)
 		{
 			flags = (Ins[iSmp].uFlags & CHN_16BIT) ? RS_AMS16 : RS_AMS8;
+			if (!AMSUnpackCheck(lpStream+dwMemPos, dwMemLength-dwMemPos, &Ins[iSmp])) break;
 		} else
 		{
 			flags = (Ins[iSmp].uFlags & CHN_16BIT) ? RS_PCM16S : RS_PCM8S;
@@ -569,6 +573,29 @@ BOOL CSoundFile::ReadAMS2(LPCBYTE lpStream, DWORD dwMemLength)
 	return TRUE;
 }
 
+
+// Precheck AMS packed sample size to determine whether or not it could fit the actual size.
+static BOOL AMSUnpackCheck(const BYTE *lpStream, DWORD dwMemLength, MODINSTRUMENT *ins)
+// -----------------------------------------------------------------------------------
+{
+	if (dwMemLength < 9) return FALSE;
+	DWORD packedbytes = *((DWORD *)(lpStream + 4));
+
+	DWORD samplebytes = ins->nLength;
+	if (samplebytes > MAX_SAMPLE_LENGTH) samplebytes = MAX_SAMPLE_LENGTH;
+	if (ins->uFlags & CHN_16BIT) samplebytes *= 2;
+
+	// RLE can pack a run of up to 255 bytes into 3 bytes.
+	DWORD packedmin = (samplebytes * 3) >> 8;
+	if (packedbytes < packedmin)
+	{
+		samplebytes = packedbytes * (255 / 3) + 2;
+		ins->nLength = samplebytes;
+		if (ins->uFlags & CHN_16BIT) ins->nLength >>= 1;
+	}
+
+	return TRUE;
+}
 
 /////////////////////////////////////////////////////////////////////
 // AMS Sample unpacking
