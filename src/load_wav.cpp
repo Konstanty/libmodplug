@@ -37,6 +37,7 @@ BOOL CSoundFile::ReadWav(const BYTE *lpStream, DWORD dwMemLength)
 	{
 		pdata = (WAVEDATAHEADER *)(lpStream + dwMemPos);
 		if (pdata->id_data == IFFID_data) break;
+		if (pdata->length >= dwMemLength || dwMemPos > dwMemLength - pdata->length) return FALSE;
 		dwMemPos += pdata->length + 8;
 		if (dwMemPos >= dwMemLength - 8) return FALSE;
 	}
