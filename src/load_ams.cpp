@@ -362,6 +362,7 @@ BOOL CSoundFile::ReadAMS2(LPCBYTE lpStream, DWORD dwMemLength)
 		if (dwMemPos + sizeof(AMS2ENVELOPE) > dwMemLength) return TRUE;
 		pitchenv = (AMS2ENVELOPE *)(lpStream+dwMemPos);
 		dwMemPos += 5 + pitchenv->points*3;
+		if (dwMemPos >= dwMemLength) return TRUE;
 		INSTRUMENTHEADER *penv = new INSTRUMENTHEADER;
 		if (!penv) return TRUE;
 		memset(smpmap, 0, sizeof(smpmap));
