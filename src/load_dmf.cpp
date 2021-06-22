@@ -221,7 +221,11 @@ BOOL CSoundFile::ReadDMF(const BYTE *lpStream, DWORD dwMemLength)
 							if (d+1 > dwPos) break;
 							MODCOMMAND cmd = {0,0,0,0,0,0};
 							BYTE info = lpStream[d++];
-							if (info & 0x80) infobyte[i] = lpStream[d++];
+							if (info & 0x80)
+							{
+								if (d+1 > dwPos) break;
+								infobyte[i] = lpStream[d++];
+							}
 							// Instrument
 							if (info & 0x40)
 							{
@@ -300,7 +304,7 @@ BOOL CSoundFile::ReadDMF(const BYTE *lpStream, DWORD dwMemLength)
 							// Effect 3
 							if (info & 0x02)
 							{
-								if (d+1 >= dwPos) break;
+								if (d+2 > dwPos) break;
 
 								BYTE efx = lpStream[d++];
 								BYTE eval = lpStream[d++];
