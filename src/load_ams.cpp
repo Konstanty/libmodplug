@@ -159,7 +159,7 @@ BOOL CSoundFile::ReadAMS(LPCBYTE lpStream, DWORD dwMemLength)
 			// Note+Instr
 			if (!(b0 & 0x40))
 			{
-				if (i+1 >= len) break;
+				if (i+1 > len) break;
 				b2 = p[i++];
 				if (ch < m_nChannels)
 				{
@@ -168,7 +168,7 @@ BOOL CSoundFile::ReadAMS(LPCBYTE lpStream, DWORD dwMemLength)
 				}
 				if (b1 & 0x80)
 				{
-					if (i+1 >= len) break;
+					if (i+1 > len) break;
 					b0 |= 0x40;
 					b1 = p[i++];
 				}
@@ -186,7 +186,7 @@ BOOL CSoundFile::ReadAMS(LPCBYTE lpStream, DWORD dwMemLength)
 					}
 				} else
 				{
-					if (i+1 >= len) break;
+					if (i+1 > len) break;
 					b2 = p[i++];
 					if (ch < m_nChannels)
 					{
@@ -229,7 +229,7 @@ BOOL CSoundFile::ReadAMS(LPCBYTE lpStream, DWORD dwMemLength)
 				}
 				if (b1 & 0x80)
 				{
-					if (i+1 >= len) break;
+					if (i+1 > len) break;
 					b1 = p[i++];
 					if (i <= len) goto anothercommand;
 				}
