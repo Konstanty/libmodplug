@@ -8,5 +8,5 @@ Description: The ModPlug mod file playing library.
 Version: @VERSION@
 Requires: 
 Libs: -L${libdir} -lmodplug 
-Libs.private: -lstdc++ -lm
+Libs.private: @LIBS_PRIVATE@
 Cflags: -I${includedir}
