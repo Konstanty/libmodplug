@@ -98,14 +98,7 @@ MODPLUG_LIBRARY_VERSION=1:0:0
 
 AC_SUBST(MODPLUG_LIBRARY_VERSION)
 
-case "${host_os}" in
-	cygwin*|mingw*)
-		LIBS_PRIVATE="-luser32"
-		;;
-	*)
-		LIBS_PRIVATE="-lstdc++ -lm"
-		;;
-esac
+LIBS_PRIVATE="-lstdc++ -lm"
 
 AC_SUBST(LIBS_PRIVATE)
 
