@@ -119,7 +119,10 @@ add_library(modplug ${LIB_TYPE}
   )
 
 # install the library:
-install(TARGETS modplug DESTINATION lib)
+install(TARGETS modplug
+        RUNTIME DESTINATION bin
+        LIBRARY DESTINATION lib
+        ARCHIVE DESTINATION lib)
 
 # incstall the headers:
 install(FILES
