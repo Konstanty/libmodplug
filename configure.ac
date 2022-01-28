@@ -31,7 +31,7 @@ AC_CHECK_INCLUDES_DEFAULT
 AC_PROG_EGREP
 
 AC_CHECK_HEADERS([inttypes.h stdint.h malloc.h])
-AC_CHECK_FUNCS(setenv sinf)
+AC_CHECK_FUNCS(sinf)
 
 CXXFLAGS="$CXXFLAGS -fno-exceptions -Wall -ffast-math -fno-common -D_REENTRANT"
 
@@ -98,6 +98,6 @@ MODPLUG_LIBRARY_VERSION=1:0:0
 AC_SUBST(MODPLUG_LIBRARY_VERSION)
 
 AC_CONFIG_FILES([Makefile
-          src/Makefile
+	  src/Makefile
 	  libmodplug.pc])
 AC_OUTPUT
