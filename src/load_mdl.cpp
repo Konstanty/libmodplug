@@ -436,26 +436,28 @@ BOOL CSoundFile::ReadMDL(const BYTE *lpStream, DWORD dwMemLength)
 		for (UINT ipat=0; ipat<npatterns; ipat++)
 		{
 			if ((Patterns[ipat] = AllocatePattern(PatternSize[ipat], m_nChannels)) == NULL) break;
-			for (UINT chn=0; chn<m_nChannels; chn++) if ((patterntracks[ipat*32+chn]) && (patterntracks[ipat*32+chn] <= ntracks) && (*(WORD *)lpStream+dwTrackPos) < dwMemLength-dwTrackPos)
+			for (UINT chn=0; chn<m_nChannels; chn++) if ((patterntracks[ipat*32+chn]) && (patterntracks[ipat*32+chn] <= ntracks))
 			{
-				MODCOMMAND *m = Patterns[ipat] + chn;
-				UINT nTrack = patterntracks[ipat*32+chn];
-				const BYTE *lpTracks = lpStream + dwTrackPos;
+			    const BYTE *lpTracks = lpStream + dwTrackPos;
 				UINT len = 0;
 				if (dwTrackPos + 2 < dwMemLength)
 					len = lpTracks[0] | (lpTracks[1] << 8);
+			    if (len < dwMemLength-dwTrackPos) {
+					MODCOMMAND *m = Patterns[ipat] + chn;
+					UINT nTrack = patterntracks[ipat*32+chn];
 
-				lpTracks += 2;
-				for (UINT ntrk=1; ntrk<nTrack && lpTracks < (dwMemLength + lpStream - len - 2); ntrk++)
-				{
-					lpTracks += len;
-					len = lpTracks[0] | (lpTracks[1] << 8);
 					lpTracks += 2;
-				}
+					for (UINT ntrk=1; ntrk<nTrack && lpTracks < (dwMemLength + lpStream - len - 2); ntrk++)
+					{
+						lpTracks += len;
+						len = lpTracks[0] | (lpTracks[1] << 8);
+						lpTracks += 2;
+					}
 
-				if ( len > dwMemLength - (lpTracks - lpStream) ) len = 0;
+					if ( len > dwMemLength - (lpTracks - lpStream) ) len = 0;
 
-				UnpackMDLTrack(m, m_nChannels, PatternSize[ipat], nTrack, lpTracks, len);
+					UnpackMDLTrack(m, m_nChannels, PatternSize[ipat], nTrack, lpTracks, len);
+			    }
 			}
 		}
 	}
