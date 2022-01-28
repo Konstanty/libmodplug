@@ -1293,7 +1293,7 @@ DWORD ITUnpack8Bit(signed char *pSample, DWORD dwLen, LPBYTE lpMemFile, DWORD dw
 			dwPos++;
 			writePos += channels;
 		Next:
-			if (pSrc >= pStop + 1) return;
+			if (pSrc >= pStop + 1) return(pStop - lpMemFile);
 		} while (dwPos < d);
 		// Move On
 		wCount -= d;
@@ -1379,7 +1379,7 @@ DWORD ITUnpack16Bit(signed char *pSample, DWORD dwLen, LPBYTE lpMemFile, DWORD d
 			dwPos++;
 			writePos += channels;
 		Next:
-			if (pSrc >= pStop + 1) return;
+			if (pSrc >= pStop + 1) return(pStop - lpMemFile);
 		} while (dwPos < d);
 		// Move On
 		wCount -= d;
