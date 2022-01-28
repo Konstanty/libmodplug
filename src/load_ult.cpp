@@ -146,7 +146,7 @@ BOOL CSoundFile::ReadUlt(const BYTE *lpStream, DWORD dwMemLength)
 		for (UINT nPat=0; nPat<nop; nPat++)
 		{
 			MODCOMMAND *pat = NULL;
-			
+
 			if (nPat < MAX_PATTERNS)
 			{
 				pat = Patterns[nPat];
@@ -155,15 +155,18 @@ BOOL CSoundFile::ReadUlt(const BYTE *lpStream, DWORD dwMemLength)
 			UINT row = 0;
 			while (row < 64)
 			{
-				if (dwMemPos + 6 > dwMemLength) return TRUE;
+				if (dwMemPos + 5 > dwMemLength) return TRUE;
 				UINT rep = 1;
 				UINT note = lpStream[dwMemPos++];
 				if (note == 0xFC)
 				{
+					if (dwMemPos + 7 > dwMemLength) return TRUE;
 					rep = lpStream[dwMemPos];
 					note = lpStream[dwMemPos+1];
 					dwMemPos += 2;
+                    if (dwMemPos + 4 > dwMemLength) return TRUE;
 				}
+
 				UINT instr = lpStream[dwMemPos++];
 				UINT eff = lpStream[dwMemPos++];
 				UINT dat1 = lpStream[dwMemPos++];
@@ -221,4 +224,3 @@ BOOL CSoundFile::ReadUlt(const BYTE *lpStream, DWORD dwMemLength)
 	}
 	return TRUE;
 }
-
