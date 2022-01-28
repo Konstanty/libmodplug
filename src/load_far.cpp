@@ -125,6 +125,7 @@ BOOL CSoundFile::ReadFAR(const BYTE *lpStream, DWORD dwMemLength)
 			continue;
 		}
 		if (dwMemPos + patlen >= dwMemLength) return TRUE;
+		UINT max  = (patlen - 2) & ~3;
 		UINT rows = (patlen - 2) >> 6;
 		if (!rows)
 		{
@@ -133,14 +134,12 @@ BOOL CSoundFile::ReadFAR(const BYTE *lpStream, DWORD dwMemLength)
 		}
 		if (rows > 256) rows = 256;
 		if (rows < 16) rows = 16;
+		if (max > rows*16*4) max = rows*16*4;
 		PatternSize[ipat] = rows;
 		if ((Patterns[ipat] = AllocatePattern(rows, m_nChannels)) == NULL) return TRUE;
 		MODCOMMAND *m = Patterns[ipat];
 		UINT patbrk = lpStream[dwMemPos];
 		const BYTE *p = lpStream + dwMemPos + 2;
-		UINT max = rows*16*4;
-		if (max > patlen-2) max = patlen-2;
-		if (dwMemPos + max > dwMemLength - 4 - 1) return TRUE;
 		for (UINT len=0; len<max; len += 4, m++)
 		{
 			BYTE note = p[len];

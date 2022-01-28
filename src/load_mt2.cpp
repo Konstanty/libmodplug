@@ -224,6 +224,7 @@ BOOL CSoundFile::ReadMT2(LPCBYTE lpStream, DWORD dwMemLength)
 	memcpy(m_szNames[0], pfh->szSongName, 32);
 	m_szNames[0][31] = 0;
 	dwMemPos = sizeof(MT2FILEHEADER);
+	if (dwMemPos+2 > dwMemLength) return TRUE;
 	nDrumDataLen = *(WORD *)(lpStream + dwMemPos);
 	dwDrumDataPos = dwMemPos + 2;
 	if (nDrumDataLen >= 2) pdd = (MT2DRUMSDATA *)(lpStream+dwDrumDataPos);
@@ -249,7 +250,7 @@ BOOL CSoundFile::ReadMT2(LPCBYTE lpStream, DWORD dwMemLength)
 		DWORD dwId = *(DWORD *)(lpStream+dwMemPos);
 		DWORD dwLen = *(DWORD *)(lpStream+dwMemPos+4);
 		dwMemPos += 8;
-		if (dwMemPos + dwLen > dwMemLength) return TRUE;
+		if (dwLen >= dwMemLength || dwMemPos > dwMemLength - dwLen) return TRUE;
 #ifdef MT2DEBUG
 		CHAR s[5];
 		memcpy(s, &dwId, 4);
@@ -304,7 +305,7 @@ BOOL CSoundFile::ReadMT2(LPCBYTE lpStream, DWORD dwMemLength)
 
 			if (pfh->fulFlags & 1) // Packed Patterns
 			{
-				BYTE *p = (BYTE *)(lpStream+dwMemPos);
+				const BYTE *p = lpStream+dwMemPos;
 				UINT pos = 0, row=0, ch=0;
 				while (pos < len - 4)
 				{
@@ -313,6 +314,7 @@ BOOL CSoundFile::ReadMT2(LPCBYTE lpStream, DWORD dwMemLength)
 					UINT rptcount = 0;
 					if (infobyte == 0xff)
 					{
+						if (pos + 2 > len) break;
 						rptcount = p[pos++];
 						infobyte = p[pos++];
 				#if 0
@@ -349,11 +351,12 @@ BOOL CSoundFile::ReadMT2(LPCBYTE lpStream, DWORD dwMemLength)
 			} else
 			{
 				const MT2COMMAND *p = (MT2COMMAND *)(lpStream+dwMemPos);
+				UINT pos = 0;
 				UINT n = 0;
-				while ((len > sizeof(MT2COMMAND)) && (n < m_nChannels*nLines))
+				while ((pos + sizeof(MT2COMMAND) <= len) && (n < m_nChannels*nLines))
 				{
 					ConvertMT2Command(this, m, p);
-					len -= sizeof(MT2COMMAND);
+					pos += sizeof(MT2COMMAND);
 					n++;
 					p++;
 					m++;
@@ -436,8 +439,10 @@ BOOL CSoundFile::ReadMT2(LPCBYTE lpStream, DWORD dwMemLength)
 	#ifdef MT2DEBUG
 		if (iIns <= pfh->wInstruments) Log("  Instrument #%d at offset %04X: %d bytes\n", iIns, dwMemPos, pmi->dwDataLen);
 	#endif
-		if (((LONG)pmi->dwDataLen > 0) && (dwMemPos <= dwMemLength - 40) && (pmi->dwDataLen <= dwMemLength - (dwMemPos + 40)))
+		if (pmi->dwDataLen > dwMemLength - (dwMemPos+36)) return TRUE;
+		if (pmi->dwDataLen > 0)
 		{
+			if (dwMemPos + sizeof(MT2INSTRUMENT) - 4 > dwMemLength) return TRUE;
 			InstrMap[iIns-1] = pmi;
 			if (penv && pmi->dwDataLen >= sizeof(MT2INSTRUMENT) - 40)
 			{
@@ -450,6 +455,7 @@ BOOL CSoundFile::ReadMT2(LPCBYTE lpStream, DWORD dwMemLength)
 				if (pfh->wVersion <= 0x201)
 				{
 					DWORD dwEnvPos = dwMemPos + sizeof(MT2INSTRUMENT) - 4;
+					if (dwEnvPos + 2*sizeof(MT2ENVELOPE) > dwMemLength) return TRUE;
 					pehdr[0] = (MT2ENVELOPE *)(lpStream+dwEnvPos);
 					pehdr[1] = (MT2ENVELOPE *)(lpStream+dwEnvPos+8);
 					pehdr[2] = pehdr[3] = NULL;
@@ -459,10 +465,12 @@ BOOL CSoundFile::ReadMT2(LPCBYTE lpStream, DWORD dwMemLength)
 				} else
 				{
 					DWORD dwEnvPos = dwMemPos + sizeof(MT2INSTRUMENT);
+					if (dwEnvPos > dwMemLength) return TRUE;
 					for (UINT i=0; i<4; i++)
 					{
 						if (pmi->wEnvFlags1 & (1<<i))
 						{
+							if (dwEnvPos + sizeof(MT2ENVELOPE) > dwMemLength) return TRUE;
 							pehdr[i] = (MT2ENVELOPE *)(lpStream+dwEnvPos);
 							pedata[i] = (WORD *)pehdr[i]->EnvData;
 							dwEnvPos += sizeof(MT2ENVELOPE);
@@ -561,6 +569,7 @@ BOOL CSoundFile::ReadMT2(LPCBYTE lpStream, DWORD dwMemLength)
 		{
 			memcpy(m_szNames[iSmp], pms->szName, 32);
 		}
+		if (pms->dwDataLen > dwMemLength - (dwMemPos+36)) return TRUE;
 		if (pms->dwDataLen > 0)
 		{
 			SampleMap[iSmp-1] = pms;
@@ -594,13 +603,12 @@ BOOL CSoundFile::ReadMT2(LPCBYTE lpStream, DWORD dwMemLength)
 #endif
 	for (UINT iMap=0; iMap<255; iMap++) if (InstrMap[iMap])
 	{
-		if (dwMemPos+8 > dwMemLength) return TRUE;
 		const MT2INSTRUMENT *pmi = InstrMap[iMap];
 		INSTRUMENTHEADER *penv = NULL;
 		if (iMap<m_nInstruments) penv = Headers[iMap+1];
 		for (UINT iGrp=0; iGrp<pmi->wSamples; iGrp++)
 		{
-			if (penv && dwMemPos < dwMemLength && dwMemPos < dwMemLength - 4)
+			if (penv && dwMemPos < dwMemLength && dwMemPos < dwMemLength - 8)
 			{
 				const MT2GROUP *pmg = (MT2GROUP *)(lpStream+dwMemPos);
 				for (UINT i=0; i<96; i++)
