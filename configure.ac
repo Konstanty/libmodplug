@@ -1,8 +1,8 @@
 dnl Process this file with autoconf to produce a configure script.
 
-AC_PREREQ(2.63)
+AC_PREREQ([2.71])
 
-AC_INIT([libmodplug], [0.8.9.0])
+AC_INIT([libmodplug],[0.8.9.1])
 AC_CONFIG_SRCDIR([Makefile.am])
 
 AM_INIT_AUTOMAKE
@@ -12,12 +12,6 @@ AC_CONFIG_MACRO_DIR([m4])
 AM_MAINTAINER_MODE([enable])
 
 dnl Checks for programs.
-dnl  I am disabling static libraries here because otherwise libtool insists on
-dnl  compiling everything twice -- once with and once without -fPIC.  Pisses me
-dnl  off.  Just do everything with -fPIC, damnit!  Compiling everything twice
-dnl  probably wastes more cycles than not using -fPIC saves.
-AC_DISABLE_STATIC
-AC_DISABLE_STATIC([])
 AC_PROG_CC
 AC_PROG_CXX
 AC_LANG([C++])
@@ -27,7 +21,15 @@ AC_C_BIGENDIAN
 #AC_PROG_LIBTOOL
 LT_INIT([win32-dll])
 
-AC_HEADER_STDC
+m4_warn([obsolete],
+[The preprocessor macro `STDC_HEADERS' is obsolete.
+  Except in unusual embedded environments, you can safely include all
+  ISO C90 headers unconditionally.])dnl
+# Autoupdate added the next two lines to ensure that your configure
+# script's behavior did not change.  They are probably safe to remove.
+AC_CHECK_INCLUDES_DEFAULT
+AC_PROG_EGREP
+
 AC_CHECK_HEADERS([inttypes.h stdint.h malloc.h])
 AC_CHECK_FUNCS(setenv sinf)
 
@@ -55,11 +57,8 @@ esac
 ac_save_CXXFLAGS="$CXXFLAGS"
 CXXFLAGS="$CXXFLAGS -fvisibility=hidden -Werror"
 AC_CACHE_CHECK([if compiler supports visibility attributes],[libmodplug_cv_gcc_visibility],
-	AC_TRY_COMPILE([void foo(void);
-__attribute__((visibility("default"))) void foo(void) {}],
-		[],
-		[libmodplug_cv_gcc_visibility=yes],
-		[libmodplug_cv_gcc_visibility=no])
+	AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[void foo(void);
+__attribute__((visibility("default"))) void foo(void) {}]], [[]])],[libmodplug_cv_gcc_visibility=yes],[libmodplug_cv_gcc_visibility=no])
 	)
 # we want symbol -fvisibility for elf targets, however it works
 # with darwin/macho too.  other than that, windows, dos and os2
