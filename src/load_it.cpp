@@ -433,16 +433,16 @@ BOOL CSoundFile::ReadIT(const BYTE *lpStream, DWORD dwMemLength)
 				if (pis.flags & 2)
 				{
 					flags += 5;
-					if (pis.flags & 4) flags |= RSF_STEREO;
 					pins->uFlags |= CHN_16BIT;
 					// IT 2.14 16-bit packed sample ?
 					if (pis.flags & 8) flags = ((pifh.cmwt >= 0x215) && (pis.cvt & 4)) ? RS_IT21516 : RS_IT21416;
+					if (pis.flags & 4) flags |= RSF_STEREO;
 				} else
 				{
-					if (pis.flags & 4) flags |= RSF_STEREO;
 					if (pis.cvt == 0xFF) flags = RS_ADPCM4; else
 					// IT 2.14 8-bit packed sample ?
 					if (pis.flags & 8)	flags =	((pifh.cmwt >= 0x215) && (pis.cvt & 4)) ? RS_IT2158 : RS_IT2148;
+					if (pis.flags & 4) flags |= RSF_STEREO;
 				}
 				ReadSample(&Ins[nsmp+1], flags, (LPSTR)(lpStream+pis.samplepointer), dwMemLength - pis.samplepointer);
 			}
@@ -1216,11 +1216,12 @@ DWORD ITReadBits(DWORD &bitbuf, UINT &bitnum, LPBYTE &ibuf, LPBYTE ibufend, CHAR
 }
 
 #define IT215_SUPPORT
-void ITUnpack8Bit(signed char *pSample, DWORD dwLen, LPBYTE lpMemFile, DWORD dwMemLength, BOOL b215)
-//-------------------------------------------------------------------------------------------
+DWORD ITUnpack8Bit(signed char *pSample, DWORD dwLen, LPBYTE lpMemFile, DWORD dwMemLength, DWORD channels, BOOL b215)
+//-------------------------------------------------------------------------------------------------------------------
 {
 	signed char *pDst = pSample;
 	LPBYTE pSrc = lpMemFile;
+	DWORD writePos = 0;
 	LPBYTE pStop = lpMemFile + dwMemLength;
 	DWORD wHdr = 0;
 	DWORD wCount = 0;
@@ -1284,28 +1285,30 @@ void ITUnpack8Bit(signed char *pSample, DWORD dwLen, LPBYTE lpMemFile, DWORD dwM
 			bTemp = (BYTE)wBits;
 			bTemp2 += bTemp;
 #ifdef IT215_SUPPORT
-			pDst[dwPos] = (b215) ? bTemp2 : bTemp;
+			pDst[writePos] = (b215) ? bTemp2 : bTemp;
 #else
-			pDst[dwPos] = bTemp;
+			pDst[writePos] = bTemp;
 #endif
 		SkipByte:
 			dwPos++;
+			writePos += channels;
 		Next:
 			if (pSrc >= pStop + 1) return;
 		} while (dwPos < d);
 		// Move On
 		wCount -= d;
 		dwLen -= d;
-		pDst += d;
 	}
+	return (DWORD)(pSrc - lpMemFile);
 }
 
 
-void ITUnpack16Bit(signed char *pSample, DWORD dwLen, LPBYTE lpMemFile, DWORD dwMemLength, BOOL b215)
-//--------------------------------------------------------------------------------------------
+DWORD ITUnpack16Bit(signed char *pSample, DWORD dwLen, LPBYTE lpMemFile, DWORD dwMemLength, DWORD channels, BOOL b215)
+//--------------------------------------------------------------------------------------------------------------------
 {
 	signed short *pDst = (signed short *)pSample;
 	LPBYTE pSrc = lpMemFile;
+	DWORD writePos = 0;
 	LPBYTE pStop = lpMemFile + dwMemLength;
 	DWORD wHdr = 0;
 	DWORD wCount = 0;
@@ -1368,21 +1371,24 @@ void ITUnpack16Bit(signed char *pSample, DWORD dwLen, LPBYTE lpMemFile, DWORD dw
 			wTemp = (signed short)dwBits;
 			wTemp2 += wTemp;
 #ifdef IT215_SUPPORT
-			pDst[dwPos] = (b215) ? wTemp2 : wTemp;
+			pDst[writePos] = (b215) ? wTemp2 : wTemp;
 #else
-			pDst[dwPos] = wTemp;
+			pDst[writePos] = wTemp;
 #endif
 		SkipByte:
 			dwPos++;
+			writePos += channels;
 		Next:
 			if (pSrc >= pStop + 1) return;
 		} while (dwPos < d);
 		// Move On
 		wCount -= d;
 		dwLen -= d;
+
 		pDst += d;
 		if (pSrc >= pStop) break;
 	}
+	return (DWORD)(pSrc - lpMemFile);
 }
 
 
