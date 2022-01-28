@@ -135,7 +135,7 @@ install(FILES
   ${CMAKE_INSTALL_INCLUDEDIR}/libmodplug
   )
 
-set(VERSION "0.8.8.5")
+set(VERSION "0.8.9.1")
 
 if(HAVE_SETENV)
   add_definitions(-DHAVE_SETENV)
