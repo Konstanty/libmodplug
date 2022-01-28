@@ -783,11 +783,11 @@ BOOL CSoundFile::TestMID(const BYTE *lpStream, DWORD dwMemLength)
 	char id[5];
 	MIDHANDLE h;
 	MMFILE mm;
+	if (dwMemLength < 14) return FALSE;
 	mm.mm = (char *)lpStream;
 	mm.sz = dwMemLength;
 	mm.err = 0;
 	h.mmf = &mm;
-	if (h.mmf->sz < 8) return FALSE;
 	mmfseek(h.mmf,0,SEEK_SET);
 	mmreadSBYTES(id, 4, h.mmf);
 	id[4] = '\0';
@@ -1224,15 +1224,13 @@ BOOL CSoundFile::ReadMID(const BYTE *lpStream, DWORD dwMemLength)
 	pat_init_patnames();
 
 	mmfseek(h->mmf,8,SEEK_SET);
-	if (h->mmf->pos < dwMemLength - 6) {
-		h->midiformat	= mid_read_short(h);
-		h->miditracks = mid_read_short(h);
-		h->resolution = mid_read_short(h);
-		if( h->midiformat == 0 ) h->miditracks = 1;
-	}
+	h->midiformat	= mid_read_short(h);
+	h->miditracks = mid_read_short(h);
+	h->resolution = mid_read_short(h);
 	if (mm.err) goto ErrorCleanup;
 
 	// at this point the h->mmf is positioned at first miditrack
+	if( h->midiformat == 0 ) h->miditracks = 1;
 	if( h->resolution & 0x8000 )
 		h->divider = ((h->resolution & 0x7f00)>>8)*(h->resolution & 0xff);
 	else
