@@ -255,7 +255,7 @@ BOOL CSoundFile::ReadDBM(const BYTE *lpStream, DWORD dwMemLength)
 					MODCOMMAND *m = AllocatePattern(nRows, m_nChannels);
 					if (m)
 					{
-						LPBYTE pkdata = (LPBYTE)&pph->patterndata;
+						LPBYTE pkdata = (LPBYTE)pph->patterndata;
 						UINT row = 0;
 						UINT i = 0;
 
@@ -371,4 +371,3 @@ BOOL CSoundFile::ReadDBM(const BYTE *lpStream, DWORD dwMemLength)
 	}
 	return TRUE;
 }
-

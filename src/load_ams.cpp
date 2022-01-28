@@ -37,7 +37,6 @@ typedef struct AMSSAMPLEHEADER
 	BYTE infobyte;
 } AMSSAMPLEHEADER;
 
-
 #pragma pack()
 
 
@@ -46,7 +45,7 @@ static BOOL AMSUnpackCheck(const BYTE *lpStream, DWORD dwMemLength, MODINSTRUMEN
 BOOL CSoundFile::ReadAMS(LPCBYTE lpStream, DWORD dwMemLength)
 //-----------------------------------------------------------
 {
-	BYTE pkinf[MAX_SAMPLES];
+//	BYTE pkinf[MAX_SAMPLES];
 	const AMSFILEHEADER *pfh = (AMSFILEHEADER *)lpStream;
 	DWORD dwMemPos;
 	UINT tmp, tmp2;
@@ -79,7 +78,7 @@ BOOL CSoundFile::ReadAMS(LPCBYTE lpStream, DWORD dwMemLength)
 		pins->nFineTune = MOD2XMFineTune(psh->finetune_and_pan & 0x0F);
 		pins->uFlags = (psh->infobyte & 0x80) ? CHN_16BIT : 0;
 		if ((pins->nLoopEnd <= pins->nLength) && (pins->nLoopStart+4 <= pins->nLoopEnd)) pins->uFlags |= CHN_LOOP;
-		pkinf[nSmp] = psh->infobyte;
+	//	pkinf[nSmp] = psh->infobyte;
 	}
 	// Read Song Name
 	tmp = lpStream[dwMemPos++];

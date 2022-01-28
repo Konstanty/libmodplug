@@ -26,7 +26,6 @@ typedef struct tagFILEHEADER669
 	BYTE breaks[128];
 } FILEHEADER669;
 
-
 typedef struct tagSAMPLE669
 {
 	BYTE filename[13];
@@ -37,9 +36,9 @@ typedef struct tagSAMPLE669
 
 static DWORD lengthArrayToDWORD(const BYTE length[4]) {
 	DWORD len = (length[3] << 24) +
-		(length[2] << 16) +
-		(length[1] << 8) +
-		(length[0]);
+		    (length[2] << 16) +
+		    (length[1] << 8) +
+		    (length[0]);
 
 	return(len);
 }
@@ -48,14 +47,14 @@ static DWORD lengthArrayToDWORD(const BYTE length[4]) {
 BOOL CSoundFile::Read669(const BYTE *lpStream, DWORD dwMemLength)
 //---------------------------------------------------------------
 {
-	BOOL b669Ext;
+//	BOOL b669Ext;
 	const FILEHEADER669 *pfh = (const FILEHEADER669 *)lpStream;
 	const SAMPLE669 *psmp = (const SAMPLE669 *)(lpStream + 0x1F1);
 	DWORD dwMemPos = 0;
 
 	if ((!lpStream) || (dwMemLength < sizeof(FILEHEADER669))) return FALSE;
 	if ((bswapLE16(pfh->sig) != 0x6669) && (bswapLE16(pfh->sig) != 0x4E4A)) return FALSE;
-	b669Ext = (bswapLE16(pfh->sig) == 0x4E4A) ? TRUE : FALSE;
+//	b669Ext = (bswapLE16(pfh->sig) == 0x4E4A) ? TRUE : FALSE;
 	if ((!pfh->samples) || (pfh->samples > 64) || (pfh->restartpos >= 128)
 	 || (!pfh->patterns) || (pfh->patterns > 128)) return FALSE;
 	DWORD dontfuckwithme = 0x1F1 + pfh->samples * sizeof(SAMPLE669) + pfh->patterns * 0x600;
@@ -156,9 +155,9 @@ BOOL CSoundFile::Read669(const BYTE *lpStream, DWORD dwMemLength)
 					case 0x04:	command = CMD_VIBRATO; param |= 0x40; break;
 					case 0x05:	if (param) command = CMD_SPEED; else command = 0; break;
 					case 0x06:	if (param == 0) { command = CMD_PANNINGSLIDE; param = 0xFE; }
-								else if (param == 1) { command = CMD_PANNINGSLIDE; param = 0xEF; }
-								else command = 0;
-								break;
+							else if (param == 1) { command = CMD_PANNINGSLIDE; param = 0xEF; }
+							else command = 0;
+							break;
 					default:	command = 0;
 					}
 					if (command)

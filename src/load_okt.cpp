@@ -51,7 +51,7 @@ BOOL CSoundFile::ReadOKT(const BYTE *lpStream, DWORD dwMemLength)
 {
 	const OKTFILEHEADER *pfh = (OKTFILEHEADER *)lpStream;
 	DWORD dwMemPos = sizeof(OKTFILEHEADER), dwSize;
-	UINT nsamples = 0, npatterns = 0, norders = 0;
+	UINT nsamples = 0, norders = 0;//, npatterns = 0
 
 	if ((!lpStream) || (dwMemLength < 1024)) return FALSE;
 	if ((bswapBE32(pfh->okta) != MAGIC('O','K','T','A'))
@@ -102,7 +102,7 @@ BOOL CSoundFile::ReadOKT(const BYTE *lpStream, DWORD dwMemLength)
 	if (dwMemPos + 10 > dwMemLength) return TRUE;
 	if (readBE32(lpStream + dwMemPos) == MAGIC('S','L','E','N'))
 	{
-		npatterns = lpStream[dwMemPos+9];
+	//	npatterns = lpStream[dwMemPos+9];
 
 		dwSize = readBE32(lpStream + dwMemPos + 4);
 		if (dwSize > dwMemLength - 8 || dwMemPos > dwMemLength - dwSize - 8) return TRUE;
