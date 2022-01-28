@@ -185,15 +185,20 @@ BOOL MMCMP_Unpack(LPCBYTE *ppMemFile, LPDWORD pdwMemLength)
 		LPMMCMPSUBBLOCK psubblk;
 
 		if (dwMemPos >= dwMemLength - 20) break;
-		memcpy(tmp1, lpMemFile+dwMemPos, 28);
 		pblk = (LPMMCMPBLOCK)(tmp1);
 		psubblk = (LPMMCMPSUBBLOCK)(tmp1+20);
-		swap_block(pblk);
-		swap_subblock(psubblk);
 
-		if (dwMemPos + 20 + pblk->sub_blk*8 >= dwMemLength) break;
+		memcpy(pblk, lpMemFile+dwMemPos, 20);
+		swap_block(pblk);
+
+		if (pblk->sub_blk*8 >= dwMemLength - dwMemPos - 20) break;
 		dwSubPos = dwMemPos + 20;
 		dwMemPos += 20 + pblk->sub_blk*8;
+
+		if (!pblk->sub_blk) continue;
+		memcpy(psubblk, lpMemFile + dwSubPos, 8);
+		swap_subblock(psubblk);
+
 #ifdef MMCMP_LOG
 		Log("block %d: flags=%04X sub_blocks=%d", nBlock, (UINT)pblk->flags, (UINT)pblk->sub_blk);
 		Log(" pksize=%d unpksize=%d", pblk->pk_size, pblk->unpk_size);
@@ -213,7 +218,7 @@ BOOL MMCMP_Unpack(LPCBYTE *ppMemFile, LPDWORD pdwMemLength)
 #endif
 				memcpy(pBuffer+psubblk->unpk_pos, lpMemFile+dwMemPos, psubblk->unpk_size);
 				dwMemPos += psubblk->unpk_size;
-				memcpy(tmp1+20,lpMemFile+dwSubPos+i*8,8);
+				memcpy(psubblk,lpMemFile+dwSubPos+i*8,8);
 				swap_subblock(psubblk);
 			}
 		} else
@@ -227,8 +232,8 @@ BOOL MMCMP_Unpack(LPCBYTE *ppMemFile, LPDWORD pdwMemLength)
 			UINT numbits = pblk->num_bits;
 			UINT subblk = 0, oldval = 0;
 
-			if (dwSize * 2 > dwFileSize-psubblk->unpk_pos ||
-				psubblk->unpk_pos > dwMemLength-dwMemPos)
+			if (psubblk->unpk_pos >= dwFileSize ||
+				dwSize * 2 > dwFileSize - psubblk->unpk_pos)
 				break;
 
 #ifdef MMCMP_LOG
@@ -247,11 +252,6 @@ BOOL MMCMP_Unpack(LPCBYTE *ppMemFile, LPDWORD pdwMemLength)
 			{
 				UINT newval = 0x10000;
 				DWORD d = bb.GetBits(numbits+1);
-
-				if ((psubblk->unpk_pos >= dwFileSize) ||
-					(psubblk->unpk_size >= dwFileSize) ||
-					(psubblk->unpk_size > dwFileSize - psubblk->unpk_pos))
-					dwPos = dwSize;
 
 				if (d >= MMCMP16BitCommands[numbits])
 				{
@@ -293,12 +293,12 @@ BOOL MMCMP_Unpack(LPCBYTE *ppMemFile, LPDWORD pdwMemLength)
 				if (dwPos >= dwSize)
 				{
 					subblk++;
-					memcpy(tmp1+20,lpMemFile+dwSubPos+subblk*8,8);
+					memcpy(psubblk,lpMemFile+dwSubPos+subblk*8,8);
 					swap_subblock(psubblk);
 					dwPos = 0;
 					dwSize = psubblk->unpk_size >> 1;
 					if ( psubblk->unpk_pos >= dwFileSize ||
-					 	dwSize * 2 > dwFileSize ) {
+						dwSize * 2 > dwFileSize - psubblk->unpk_pos) {
 						break;
 					}
 					pDest = (LPWORD)(pBuffer + psubblk->unpk_pos);
@@ -315,8 +315,8 @@ BOOL MMCMP_Unpack(LPCBYTE *ppMemFile, LPDWORD pdwMemLength)
 			UINT subblk = 0, oldval = 0;
 			LPCBYTE ptable = lpMemFile+dwMemPos;
 
-			if (dwSize > dwFileSize-psubblk->unpk_pos ||
-				psubblk->unpk_pos > dwMemLength-dwMemPos)
+			if (psubblk->unpk_pos >= dwFileSize ||
+				dwSize > dwFileSize - psubblk->unpk_pos)
 				break;
 
 			bb.bitcount = 0;
@@ -324,16 +324,11 @@ BOOL MMCMP_Unpack(LPCBYTE *ppMemFile, LPDWORD pdwMemLength)
 			bb.pSrc = lpMemFile+dwMemPos+pblk->tt_entries;
 			bb.pEnd = lpMemFile+dwMemPos+pblk->pk_size;
 			if (bb.pEnd > lpMemFile+dwMemLength)
-				bb.pEnd = lpMemFile+dwMemLength;	
+				bb.pEnd = lpMemFile+dwMemLength;
 			while (subblk < pblk->sub_blk)
 			{
 				UINT newval = 0x100;
 				DWORD d = bb.GetBits(numbits+1);
-
-				if ((psubblk->unpk_pos >= dwFileSize) ||
-					(psubblk->unpk_size >= dwFileSize) ||
-					(psubblk->unpk_size > dwFileSize - (psubblk->unpk_pos)))
-					dwPos = dwSize;
 
 				if (d >= MMCMP8BitCommands[numbits])
 				{
@@ -370,12 +365,12 @@ BOOL MMCMP_Unpack(LPCBYTE *ppMemFile, LPDWORD pdwMemLength)
 				if (dwPos >= dwSize)
 				{
 					subblk++;
-					memcpy(tmp1+20,lpMemFile+dwSubPos+subblk*8,8);
+					memcpy(psubblk,lpMemFile+dwSubPos+subblk*8, 8);
 					swap_subblock(psubblk);
 					dwPos = 0;
 					dwSize = psubblk->unpk_size;
 					if ( psubblk->unpk_pos >= dwFileSize ||
-					 	dwSize > dwFileSize )
+						dwSize > dwFileSize - psubblk->unpk_pos)
 						break;
 					pDest = pBuffer + psubblk->unpk_pos;
 				}
