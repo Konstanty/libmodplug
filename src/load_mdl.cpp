@@ -442,7 +442,8 @@ BOOL CSoundFile::ReadMDL(const BYTE *lpStream, DWORD dwMemLength)
 				UINT len = 0;
 				if (dwTrackPos + 2 < dwMemLength)
 					len = lpTracks[0] | (lpTracks[1] << 8);
-			    if (len < dwMemLength-dwTrackPos) {
+			    if (len < dwMemLength-dwTrackPos)
+				{
 					MODCOMMAND *m = Patterns[ipat] + chn;
 					UINT nTrack = patterntracks[ipat*32+chn];
 
