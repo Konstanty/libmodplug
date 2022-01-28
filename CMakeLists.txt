@@ -5,7 +5,6 @@ add_definitions(-DMODPLUG_BUILD)
 
 include (CheckFunctionExists)
 include (CheckIncludeFile)
-include (GNUInstallDirs)
 
 include_directories(AFTER
   src
@@ -120,14 +119,17 @@ add_library(modplug ${LIB_TYPE}
   )
 
 # install the library:
-install(TARGETS modplug DESTINATION ${CMAKE_INSTALL_LIBDIR})
+include (GNUInstallDirs)
+install(TARGETS modplug
+        ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+)
 
-# incstall the headers:
+# install the headers:
 install(FILES
-  src/libmodplug/it_defs.h
-  src/libmodplug/sndfile.h
-  src/libmodplug/stdafx.h
   src/modplug.h
+  ${HEADERS_CXX}
 
   DESTINATION
   ${CMAKE_INSTALL_INCLUDEDIR}/libmodplug
@@ -151,6 +153,6 @@ if (NOT WIN32)
 
   # install pkg-config file:
   install(FILES "${PROJECT_BINARY_DIR}/libmodplug.pc"
-    DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig
+     DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig
   )
 endif (NOT WIN32)
