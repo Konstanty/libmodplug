@@ -11,6 +11,16 @@
 extern "C" {
 #endif
 
+#define LIBMODPLUG_MAJOR		0L
+#define LIBMODPLUG_MINOR		8L
+#define LIBMODPLUG_REVISION		9L
+#define LIBMODPLUG_PATCH		1L
+#define LIBMODPLUG_VERSION		\
+    ((LIBMODPLUG_MAJOR   <<24) |	\
+     (LIBMODPLUG_MINOR   <<16) |	\
+     (LIBMODPLUG_REVISION<< 8) |	\
+     (LIBMODPLUG_PATCH))
+
 #if defined(_WIN32) || defined(__CYGWIN__)
 # if defined(MODPLUG_BUILD) && defined(DLL_EXPORT)	/* building libmodplug as a dll for windows */
 #   define MODPLUG_EXPORT __declspec(dllexport)
@@ -24,6 +34,8 @@ extern "C" {
 #else
 #define MODPLUG_EXPORT
 #endif
+
+MODPLUG_EXPORT long ModPlug_GetVersion(void);
 
 struct _ModPlugFile;
 typedef struct _ModPlugFile ModPlugFile;
