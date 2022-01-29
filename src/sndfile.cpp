@@ -167,7 +167,7 @@ BOOL CSoundFile::Create(LPCBYTE lpStream, DWORD dwMemLength)
 #ifdef MMCMP_SUPPORT
 		if (bMMCmp)
 		{
-			GlobalFreePtr(lpStream);
+			free((void*)lpStream);
 			lpStream = NULL;
 		}
 #endif
@@ -354,7 +354,7 @@ void CSoundFile::FreePattern(LPVOID pat)
 signed char* CSoundFile::AllocateSample(UINT nbytes)
 //-------------------------------------------
 {
-	signed char * p = (signed char *)GlobalAllocPtr(GHND, (nbytes+39) & ~7);
+	signed char * p = (signed char *)calloc(1, (nbytes+39) & ~7);
 	if (p) p += 16;
 	return p;
 }
@@ -363,9 +363,8 @@ signed char* CSoundFile::AllocateSample(UINT nbytes)
 void CSoundFile::FreeSample(LPVOID p)
 //-----------------------------------
 {
-	if (p)
-	{
-		GlobalFreePtr(((LPSTR)p)-16);
+	if (p) {
+		free((char*)p - 16);
 	}
 }
 
