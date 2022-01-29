@@ -224,8 +224,8 @@ BOOL MMCMP_Unpack(LPCBYTE *ppMemFile, LPDWORD pdwMemLength)
 		if (pblk->flags & MMCMP_16BIT && pblk->num_bits < 16)
 		{
 			MMCMPBITBUFFER bb;
-			LPWORD pDest = (LPWORD)(pBuffer + psubblk->unpk_pos);
-			DWORD dwSize = psubblk->unpk_size >> 1;
+			LPBYTE pDest = pBuffer + psubblk->unpk_pos;
+			DWORD dwSize = psubblk->unpk_size;
 			DWORD dwPos = 0;
 			UINT numbits = pblk->num_bits;
 			UINT subblk = 0, prevblk = 0, oldval = 0;
@@ -247,8 +247,8 @@ BOOL MMCMP_Unpack(LPCBYTE *ppMemFile, LPDWORD pdwMemLength)
 					prevblk = subblk;
 					memcpy(tmp1+20,lpMemFile+dwSubPos+subblk*8,8);
 					swap_subblock(psubblk);
-					dwSize = psubblk->unpk_size >> 1;
-					pDest = (LPWORD)(pBuffer + psubblk->unpk_pos);
+					dwSize = psubblk->unpk_size;
+					pDest = pBuffer + psubblk->unpk_pos;
 				}
 
 				UINT newval = 0x10000;
@@ -288,8 +288,8 @@ BOOL MMCMP_Unpack(LPCBYTE *ppMemFile, LPDWORD pdwMemLength)
 					{
 						newval ^= 0x8000;
 					}
-					WORD swapped = (WORD)newval;
-					pDest[dwPos++] = bswapLE16(swapped);
+					pDest[dwPos++] = (BYTE) (((WORD)newval) & 0xff);
+					pDest[dwPos++] = (BYTE) (((WORD)newval) >> 8);
 				}
 				if (dwPos >= dwSize)
 				{
