@@ -88,7 +88,7 @@ typedef struct _MIDTRACK
 	BYTE instr;	// current instrument for this track
 } MIDTRACK;
 
-#if defined(WIN32) && defined(_mm_free)
+#if defined(_WIN32) && defined(_mm_free)
 #undef _mm_free
 #endif
 
@@ -738,7 +738,7 @@ static void mid_add_pitchwheel(MIDHANDLE *h, int mch, int wheel)
 
 static uint32_t mid_read_long(MIDHANDLE *h)
 {
-	BYTE buf[4] = {};
+	BYTE buf[4] = {0,0,0,0};
 	if (h->mmf->pos < h->mmf->sz - 4)
 		mmreadUBYTES(buf, 4, h->mmf);
 	return (buf[0]<<24)|(buf[1]<<16)|(buf[2]<<8)|buf[3];
@@ -746,7 +746,7 @@ static uint32_t mid_read_long(MIDHANDLE *h)
 
 static short int mid_read_short(MIDHANDLE *h)
 {
-	BYTE buf[2] = {};
+	BYTE buf[2] = {0,0};
 	if (h->mmf->pos < h->mmf->sz - 2)
 		mmreadUBYTES(buf, 2, h->mmf);
 	return (buf[0]<<8)|buf[1];

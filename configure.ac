@@ -1,6 +1,6 @@
 dnl Process this file with autoconf to produce a configure script.
 
-AC_PREREQ([2.71])
+AC_PREREQ([2.63])
 
 AC_INIT([libmodplug],[0.8.9.1])
 AC_CONFIG_SRCDIR([Makefile.am])
@@ -17,48 +17,42 @@ AC_PROG_CXX
 AC_LANG([C++])
 AC_C_BIGENDIAN
 
-#AC_LIBTOOL_WIN32_DLL
-#AC_PROG_LIBTOOL
-LT_INIT([win32-dll])
-
-m4_warn([obsolete],
-[The preprocessor macro `STDC_HEADERS' is obsolete.
-  Except in unusual embedded environments, you can safely include all
-  ISO C90 headers unconditionally.])dnl
-# Autoupdate added the next two lines to ensure that your configure
-# script's behavior did not change.  They are probably safe to remove.
-AC_CHECK_INCLUDES_DEFAULT
-AC_PROG_EGREP
+LT_INIT([win32-dll disable-static])
 
 AC_CHECK_HEADERS([inttypes.h stdint.h malloc.h])
-AC_CHECK_FUNCS(sinf)
 
 CXXFLAGS="$CXXFLAGS -fno-exceptions -Wall -ffast-math -fno-common -D_REENTRANT"
 
 AC_CANONICAL_HOST
-case "$host" in
-	*mingw* | *cygwin*)
-		LT_LDFLAGS="-no-undefined"
-		;;
-	*)
-		LT_LDFLAGS=""
-		;;
-esac
-AC_SUBST(LT_LDFLAGS)
 
-# require 10.5+ for osx/x86_64 builds
-case "$host" in
-	x86_64-*-darwin*)
-		CXXFLAGS="$CXXFLAGS -mmacosx-version-min=10.5"
-		LDFLAGS="$LDFLAGS -mmacosx-version-min=10.5" ;;
+LIBM=
+case "${host_os}" in
+dnl Djgpp has all c89 math funcs in libc.a
+*djgpp)
+  ;;
+dnl These systems don't have libm or don't need it (list based on libtool)
+darwin*|haiku*|beos*|cegcc*|pw32*)
+  ;;
+dnl MinGW and Cygwin don't need libm, either
+mingw*|cygwin*)
+  ;;
+dnl All others:
+*) AC_CHECK_LIB(m, pow, LIBM="-lm")
+  if test x$LIBM != x; then
+    LIBS="${LIBS} ${LIBM}"
+  fi
+  ;;
 esac
+AC_CHECK_FUNCS(sinf)
 
 # symbol visibility
 ac_save_CXXFLAGS="$CXXFLAGS"
 CXXFLAGS="$CXXFLAGS -fvisibility=hidden -Werror"
 AC_CACHE_CHECK([if compiler supports visibility attributes],[libmodplug_cv_gcc_visibility],
 	AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[void foo(void);
-__attribute__((visibility("default"))) void foo(void) {}]], [[]])],[libmodplug_cv_gcc_visibility=yes],[libmodplug_cv_gcc_visibility=no])
+__attribute__((visibility("default"))) void foo(void) {}]], [])],
+		[libmodplug_cv_gcc_visibility=yes],
+		[libmodplug_cv_gcc_visibility=no])
 	)
 # we want symbol -fvisibility for elf targets, however it works
 # with darwin/macho too.  other than that, windows, dos and os2

@@ -287,8 +287,14 @@ CzWINDOWEDFIR sfir;
 // ----------------------------------------------------------------------------
 // MIXING MACROS
 // ----------------------------------------------------------------------------
+#if defined(__cplusplus) && (__cplusplus >= 201402L)
+#define REGISTER
+#else
+#define REGISTER register
+#endif
+
 #define SNDMIX_BEGINSAMPLELOOP8\
-	register MODCHANNEL * const pChn = pChannel;\
+	REGISTER MODCHANNEL * const pChn = pChannel;\
 	nPos = pChn->nPosLo;\
 	const signed char *p = (signed char *)(pChn->pCurrentSample+pChn->nPos);\
 	if (pChn->dwFlags & CHN_STEREO) p += pChn->nPos;\
@@ -296,7 +302,7 @@ CzWINDOWEDFIR sfir;
 	do {
 
 #define SNDMIX_BEGINSAMPLELOOP16\
-	register MODCHANNEL * const pChn = pChannel;\
+	REGISTER MODCHANNEL * const pChn = pChannel;\
 	nPos = pChn->nPosLo;\
 	const signed short *p = (signed short *)(pChn->pCurrentSample+(pChn->nPos*2));\
 	if (pChn->dwFlags & CHN_STEREO) p += pChn->nPos;\
@@ -1485,13 +1491,13 @@ UINT CSoundFile::CreateStereoMix(int count)
 	{
 		const LPMIXINTERFACE *pMixFuncTable;
 		MODCHANNEL * const pChannel = &Chn[ChnMix[nChn]];
-		UINT nFlags, nMasterCh;
+		UINT nFlags;//, nMasterCh
 		LONG nSmpCount;
 		int nsamples;
 		int *pbuffer;
 
 		if (!pChannel->pCurrentSample) continue;
-		nMasterCh = (ChnMix[nChn] < m_nChannels) ? ChnMix[nChn]+1 : pChannel->nMasterChn;
+		//nMasterCh = (ChnMix[nChn] < m_nChannels) ? ChnMix[nChn]+1 : pChannel->nMasterChn;
 		pOfsR = &gnDryROfsVol;
 		pOfsL = &gnDryLOfsVol;
 		nFlags = 0;
@@ -1606,7 +1612,7 @@ UINT CSoundFile::CreateStereoMix(int count)
 }
 
 
-#ifdef MSC_VER
+#ifdef _MSC_VER
 #pragma warning (disable:4100)
 #endif
 
@@ -1699,7 +1705,6 @@ DWORD MPPASMCALL X86_Convert32To8(LPVOID lp8, int *pBuffer, DWORD lSampleCount, 
 	return lSampleCount;
 }
 #endif //MSC_VER, else
-
 
 #if defined(_MSC_VER) && defined(_M_IX86)
 // Clip and convert to 16 bit

@@ -157,8 +157,9 @@ BOOL CSoundFile::ReadIT(const BYTE *lpStream, DWORD dwMemLength)
 	DWORD inspos[MAX_INSTRUMENTS];
 	DWORD smppos[MAX_SAMPLES];
 	DWORD patpos[MAX_PATTERNS];
-	BYTE chnmask[64], channels_used[64];
+	BYTE chnmask[64];//, channels_used[64]
 	MODCOMMAND lastvalue[64];
+	UINT j;
 
 	if ((!lpStream) || (dwMemLength < sizeof(ITFILEHEADER))) return FALSE;
 	ITFILEHEADER pifh = *(ITFILEHEADER *)lpStream;
@@ -231,9 +232,8 @@ BOOL CSoundFile::ReadIT(const BYTE *lpStream, DWORD dwMemLength)
 	if (inspossize > MAX_INSTRUMENTS) inspossize = MAX_INSTRUMENTS;
 	inspossize <<= 2;
 	memcpy(inspos, lpStream+dwMemPos, inspossize);
-	for (UINT j=0; j < (inspossize>>2); j++)
-	{
-	       inspos[j] = bswapLE32(inspos[j]);
+	for (j=0; j < (inspossize>>2); j++) {
+	    inspos[j] = bswapLE32(inspos[j]);
 	}
 	dwMemPos += pifh.insnum * 4;
 	// Reading Samples Offsets
@@ -242,9 +242,8 @@ BOOL CSoundFile::ReadIT(const BYTE *lpStream, DWORD dwMemLength)
 	if (smppossize > MAX_SAMPLES) smppossize = MAX_SAMPLES;
 	smppossize <<= 2;
 	memcpy(smppos, lpStream+dwMemPos, smppossize);
-	for (UINT j=0; j < (smppossize>>2); j++)
-	{
-	       smppos[j] = bswapLE32(smppos[j]);
+	for (j=0; j < (smppossize>>2); j++) {
+	    smppos[j] = bswapLE32(smppos[j]);
 	}
 	dwMemPos += pifh.smpnum * 4;
 	// Reading Patterns Offsets
@@ -253,9 +252,8 @@ BOOL CSoundFile::ReadIT(const BYTE *lpStream, DWORD dwMemLength)
 	if (patpossize > MAX_PATTERNS) patpossize = MAX_PATTERNS;
 	patpossize <<= 2;
 	memcpy(patpos, lpStream+dwMemPos, patpossize);
-	for (UINT j=0; j < (patpossize>>2); j++)
-	{
-	       patpos[j] = bswapLE32(patpos[j]);
+	for (j=0; j < (patpossize>>2); j++) {
+	    patpos[j] = bswapLE32(patpos[j]);
 	}
 	dwMemPos += pifh.patnum * 4;
 	// Reading IT Extra Info
@@ -509,7 +507,7 @@ BOOL CSoundFile::ReadIT(const BYTE *lpStream, DWORD dwMemLength)
 					if (note < 0x80) note++;
 					m[ch].note = note;
 					lastvalue[ch].note = note;
-					channels_used[ch] = TRUE;
+				//	channels_used[ch] = TRUE;
 				}
 			}
 			if (chnmask[ch] & 2)
@@ -1223,7 +1221,7 @@ DWORD ITUnpack8Bit(signed char *pSample, DWORD dwLen, LPBYTE lpMemFile, DWORD dw
 	LPBYTE pSrc = lpMemFile;
 	DWORD writePos = 0;
 	LPBYTE pStop = lpMemFile + dwMemLength;
-	DWORD wHdr = 0;
+//	DWORD wHdr = 0;
 	DWORD wCount = 0;
 	DWORD bitbuf = 0;
 	UINT bitnum = 0;
@@ -1235,7 +1233,7 @@ DWORD ITUnpack8Bit(signed char *pSample, DWORD dwLen, LPBYTE lpMemFile, DWORD dw
 		if (!wCount)
 		{
 			wCount = 0x8000;
-			wHdr = bswapLE16(*((LPWORD)pSrc));
+		//	wHdr = bswapLE16(*((LPWORD)pSrc));
 			pSrc += 2;
 			bLeft = 9;
 			bTemp = bTemp2 = 0;
@@ -1293,7 +1291,7 @@ DWORD ITUnpack8Bit(signed char *pSample, DWORD dwLen, LPBYTE lpMemFile, DWORD dw
 			dwPos++;
 			writePos += channels;
 		Next:
-			if (pSrc >= pStop + 1) return(pStop - lpMemFile);
+			if (pSrc >= pStop + 1) return (DWORD)(pSrc - lpMemFile);
 		} while (dwPos < d);
 		// Move On
 		wCount -= d;
@@ -1310,7 +1308,7 @@ DWORD ITUnpack16Bit(signed char *pSample, DWORD dwLen, LPBYTE lpMemFile, DWORD d
 	LPBYTE pSrc = lpMemFile;
 	DWORD writePos = 0;
 	LPBYTE pStop = lpMemFile + dwMemLength;
-	DWORD wHdr = 0;
+//	DWORD wHdr = 0;
 	DWORD wCount = 0;
 	DWORD bitbuf = 0;
 	UINT bitnum = 0;
@@ -1322,7 +1320,7 @@ DWORD ITUnpack16Bit(signed char *pSample, DWORD dwLen, LPBYTE lpMemFile, DWORD d
 		if (!wCount)
 		{
 			wCount = 0x4000;
-			wHdr = bswapLE16(*((LPWORD)pSrc));
+		//	wHdr = bswapLE16(*((LPWORD)pSrc));
 			pSrc += 2;
 			bLeft = 17;
 			wTemp = wTemp2 = 0;
@@ -1379,13 +1377,11 @@ DWORD ITUnpack16Bit(signed char *pSample, DWORD dwLen, LPBYTE lpMemFile, DWORD d
 			dwPos++;
 			writePos += channels;
 		Next:
-			if (pSrc >= pStop + 1) return(pStop - lpMemFile);
+			if (pSrc >= pStop + 1) return (DWORD)(pSrc - lpMemFile);
 		} while (dwPos < d);
 		// Move On
 		wCount -= d;
 		dwLen -= d;
-
-		pDst += d;
 		if (pSrc >= pStop) break;
 	}
 	return (DWORD)(pSrc - lpMemFile);
@@ -1432,9 +1428,8 @@ UINT CSoundFile::SaveMixPlugins(FILE *f, BOOL bUpdate)
 				writePluginInfo.dwPluginId2 = bswapLE32(p->Info.dwPluginId2);
 				writePluginInfo.dwInputRouting = bswapLE32(p->Info.dwInputRouting);
 				writePluginInfo.dwOutputRouting = bswapLE32(p->Info.dwOutputRouting);
-				for (UINT j=0; j<4; j++)
-				{
-				        writePluginInfo.dwReserved[j] = bswapLE32(p->Info.dwReserved[j]);
+				for (UINT j=0; j<4; j++) {
+				    writePluginInfo.dwReserved[j] = bswapLE32(p->Info.dwReserved[j]);
 				}
 
 				fwrite(&writePluginInfo, 1, sizeof(SNDMIXPLUGININFO), f);
@@ -1511,9 +1506,8 @@ UINT CSoundFile::LoadMixPlugins(const void *pData, UINT nLen)
 				m_MixPlugins[nPlugin].Info.dwPluginId2 = bswapLE32(m_MixPlugins[nPlugin].Info.dwPluginId2);
 				m_MixPlugins[nPlugin].Info.dwInputRouting = bswapLE32(m_MixPlugins[nPlugin].Info.dwInputRouting);
 				m_MixPlugins[nPlugin].Info.dwOutputRouting = bswapLE32(m_MixPlugins[nPlugin].Info.dwOutputRouting);
-				for (UINT j=0; j<4; j++)
-				{
-				        m_MixPlugins[nPlugin].Info.dwReserved[j] = bswapLE32(m_MixPlugins[nPlugin].Info.dwReserved[j]);
+				for (UINT j=0; j<4; j++) {
+				    m_MixPlugins[nPlugin].Info.dwReserved[j] = bswapLE32(m_MixPlugins[nPlugin].Info.dwReserved[j]);
 				}
 				if ((dwExtra) && (dwExtra <= nPluginSize-sizeof(SNDMIXPLUGININFO)-4))
 				{

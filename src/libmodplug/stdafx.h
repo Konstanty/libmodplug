@@ -38,20 +38,31 @@
 #include <mmsystem.h>
 #include <stdio.h>
 #include <malloc.h>
+#if defined(_MSC_VER) && (_MSC_VER < 1600)
+typedef signed char    int8_t;
+typedef signed short   int16_t;
+typedef signed int     int32_t;
+typedef unsigned char  uint8_t;
+typedef unsigned short uint16_t;
+typedef unsigned int   uint32_t;
+#else
 #include <stdint.h>
+#endif
 
 #define srandom(_seed)  srand(_seed)
 #define random()        rand()
 #define sleep(_ms)      Sleep(_ms)
 
-inline void ProcessPlugins(int n) {}
+inline void ProcessPlugins(int n) { (void)n; }
 
 #undef strcasecmp
 #undef strncasecmp
 #define strcasecmp(a,b)     _stricmp(a,b)
 #define strncasecmp(a,b,c)  _strnicmp(a,b,c)
 
+#if defined(_MSC_VER) || defined(__MINGW32__)
 #define HAVE_SINF 1
+#endif
 
 #ifndef isblank
 #define isblank(c) ((c) == ' ' || (c) == '\t')
@@ -88,12 +99,6 @@ typedef const char* LPCSTR;
 typedef void* PVOID;
 typedef void VOID;
 
-inline LONG MulDiv (long a, long b, long c)
-{
-/*if (!c) return 0;*/
-  return ((uint64_t) a * (uint64_t) b ) / c;
-}
-
 #define LPCTSTR LPCSTR
 #define lstrcpyn strncpy
 #define lstrcpy strcpy
@@ -112,7 +117,7 @@ inline int8_t * GlobalAllocPtr(unsigned int, size_t size)
   return p;
 }
 
-inline void ProcessPlugins(int n) {}
+inline void ProcessPlugins(int n) { (void)n; }
 
 #ifndef FALSE
 #define FALSE	false
