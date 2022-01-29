@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 2.8.12)
 
 project(libmodplug)
 
-set(VERSION "0.8.9.1")
+set(VERSION "0.8.10.0")
 
 option(BUILD_SHARED_LIBS "Build Shared Library (DLL)" OFF)
 
