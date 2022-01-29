@@ -431,7 +431,7 @@ static BOOL PP20_DoUnpack(const BYTE *pSrc, UINT nSrcLen, BYTE *pDst, UINT nDstL
 	PPBITBUFFER BitBuffer;
 	ULONG nBytesLeft;
 
-	BitBuffer.pStart = pSrc;
+	BitBuffer.pStart = pSrc + 4;
 	BitBuffer.pSrc = pSrc + nSrcLen - 4;
 	BitBuffer.bitbuffer = 0;
 	BitBuffer.bitcount = 0;
