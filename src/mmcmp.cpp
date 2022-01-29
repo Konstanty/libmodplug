@@ -156,7 +156,7 @@ BOOL MMCMP_Unpack(LPCBYTE *ppMemFile, LPDWORD pdwMemLength)
 {
 	DWORD dwMemLength;
 	LPCBYTE lpMemFile;
-	LPBYTE pBuffer, pEnd;
+	LPBYTE pBuffer,pBufEnd;
 	LPMMCMPFILEHEADER pmfh;
 	LPMMCMPHEADER pmmh;
 	const DWORD *pblk_table;
@@ -186,7 +186,7 @@ BOOL MMCMP_Unpack(LPCBYTE *ppMemFile, LPDWORD pdwMemLength)
 	dwFileSize = pmmh->filesize;
 	if ((pBuffer = (LPBYTE)GlobalAllocPtr(GHND, (dwFileSize + 31) & ~15)) == NULL)
 		return FALSE;
-	pEnd = pBuffer + dwFileSize;
+	pBufEnd = pBuffer + dwFileSize;
 	pblk_table = (const DWORD *)(lpMemFile+pmmh->blktable);
 	for (UINT nBlock=0; nBlock<pmmh->nblocks; nBlock++)
 	{
@@ -195,7 +195,7 @@ BOOL MMCMP_Unpack(LPCBYTE *ppMemFile, LPDWORD pdwMemLength)
 		LPMMCMPBLOCK pblk;
 		LPMMCMPSUBBLOCK psubblk;
 
-		if (dwMemPos + 20 >= dwMemLength)
+		if (dwMemPos >= dwMemLength - 20)
 			goto err;
 		memcpy(tmp1,lpMemFile+dwMemPos,28);
 		pblk = (LPMMCMPBLOCK)(tmp1);
@@ -207,7 +207,7 @@ BOOL MMCMP_Unpack(LPCBYTE *ppMemFile, LPDWORD pdwMemLength)
 			goto err;
 		if (pblk->pk_size <= pblk->tt_entries)
 			goto err;
-		if (dwMemPos + 20 + pblk->sub_blk*8 >= dwMemLength)
+		if (pblk->sub_blk*8 >= dwMemLength - dwMemPos - 20)
 			goto err;
 		if (pblk->flags & MMCMP_COMP) {
 			if (pblk->flags & MMCMP_16BIT) {
@@ -303,7 +303,7 @@ BOOL MMCMP_Unpack(LPCBYTE *ppMemFile, LPDWORD pdwMemLength)
 					{
 						newval ^= 0x8000;
 					}
-					if (pEnd - pDest < 2) goto err;
+					if (pBufEnd - pDest < 2) goto err;
 					dwPos += 2;
 					*pDest++ = (BYTE) (((WORD)newval) & 0xff);
 					*pDest++ = (BYTE) (((WORD)newval) >> 8);
