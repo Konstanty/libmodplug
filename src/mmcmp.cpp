@@ -417,7 +417,7 @@ BOOL MMCMP_Unpack(LPCBYTE *ppMemFile, LPDWORD pdwMemLength)
 #define PP_READ_BITS(nbits, var) do {                          \
   bit_cnt = (nbits);                                           \
   while (bits_left < bit_cnt) {                                \
-    if (buf_src < src) return 0; /* out of source bits */      \
+    if (buf_src <= src) return 0; /* out of source bits */     \
     bit_buffer |= (*--buf_src << bits_left);                   \
     bits_left += 8;                                            \
   }                                                            \
