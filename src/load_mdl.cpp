@@ -303,15 +303,14 @@ BOOL CSoundFile::ReadMDL(const BYTE *lpStream, DWORD dwMemLength)
 					if ((Headers[nins] = new INSTRUMENTHEADER) == NULL) break;
 					INSTRUMENTHEADER *penv = Headers[nins];
 					memset(penv, 0, sizeof(INSTRUMENTHEADER));
-					if (dwPos < dwMemLength - 34)
-						memcpy(penv->name, lpStream+dwPos+2, 32);
+					if (dwPos > dwMemLength - 34) break;
+					memcpy(penv->name, lpStream+dwPos+2, 32);
 					penv->nGlobalVol = 64;
 					penv->nPPC = 5*12;
 					if (34 + 14u*lpStream[dwPos+1] > dwMemLength - dwPos) break;
 					for (j=0; j<lpStream[dwPos+1]; j++)
 					{
 						const BYTE *ps = lpStream+dwPos+34+14*j;
-						if (dwPos+34+14*j >= dwMemLength - 12) break;
 						while ((note < (UINT)(ps[1]+12)) && (note < NOTE_MAX))
 						{
 							penv->NoteMap[note] = note+1;
