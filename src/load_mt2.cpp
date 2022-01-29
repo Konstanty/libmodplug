@@ -288,7 +288,7 @@ BOOL CSoundFile::ReadMT2(LPCBYTE lpStream, DWORD dwMemLength)
 		const MT2PATTERN *pmp = (MT2PATTERN *)(lpStream+dwMemPos);
 		UINT wDataLen = (pmp->wDataLen + 1) & ~1;
 		dwMemPos += 6;
-		if (dwMemLength - wDataLen > dwMemLength || dwMemPos + wDataLen > dwMemLength) break;
+		if (dwMemPos > dwMemLength - wDataLen || wDataLen > dwMemLength) break;
 
 		UINT nLines = pmp->wLines;
 		if ((iPat < MAX_PATTERNS) && (nLines > 0) && (nLines <= 256))
@@ -560,7 +560,7 @@ BOOL CSoundFile::ReadMT2(LPCBYTE lpStream, DWORD dwMemLength)
 	m_nSamples = (pfh->wSamples < MAX_SAMPLES) ? pfh->wSamples : MAX_SAMPLES-1;
 	for (UINT iSmp=1; iSmp<=256; iSmp++)
 	{
-		if (dwMemPos+36 > dwMemLength || dwMemPos > dwMemLength) return TRUE;
+		if (dwMemPos > dwMemLength - 36) return TRUE;
 		const MT2SAMPLE *pms = (MT2SAMPLE *)(lpStream+dwMemPos);
 	#ifdef MT2DEBUG
 		if (iSmp <= m_nSamples) Log("  Sample #%d at offset %04X: %d bytes\n", iSmp, dwMemPos, pms->dwDataLen);
