@@ -144,6 +144,14 @@ static void swap_subblock (LPMMCMPSUBBLOCK sblk)
 	sblk->unpk_size = bswapLE32(sblk->unpk_size);
 }
 
+static BOOL MMCMP_IsDstBlockValid(const MMCMPSUBBLOCK *psub, DWORD dstlen)
+{
+	if (psub->unpk_pos >= dstlen) return FALSE;
+	if (psub->unpk_size > dstlen) return FALSE;
+	if (psub->unpk_size > dstlen - psub->unpk_pos) return FALSE;
+	return TRUE;
+}
+
 
 BOOL MMCMP_Unpack(LPCBYTE *ppMemFile, LPDWORD pdwMemLength)
 //---------------------------------------------------------
@@ -208,14 +216,10 @@ BOOL MMCMP_Unpack(LPCBYTE *ppMemFile, LPDWORD pdwMemLength)
 		{
 			UINT i=0;
 			while (1) {
-				if ((psubblk->unpk_pos >= dwFileSize) ||
-				    (psubblk->unpk_size > dwFileSize) ||
-				    (psubblk->unpk_size > dwFileSize - psubblk->unpk_pos)) {
-				  goto err;
-				}
 #ifdef MMCMP_LOG
 				Log("  Unpacked sub-block %d: offset %d, size=%d\n", i, psubblk->unpk_pos, psubblk->unpk_size);
 #endif
+				if (!MMCMP_IsDstBlockValid(psubblk, dwFileSize)) goto err;
 				memcpy(pBuffer+psubblk->unpk_pos, lpMemFile+dwMemPos, psubblk->unpk_size);
 				dwMemPos += psubblk->unpk_size;
 				if (++i == pblk->sub_blk) break;
@@ -245,6 +249,8 @@ BOOL MMCMP_Unpack(LPCBYTE *ppMemFile, LPDWORD pdwMemLength)
 			bb.pEnd = lpMemFile+dwMemPos+pblk->pk_size;
 			while (1)
 			{
+				if (!MMCMP_IsDstBlockValid(psubblk, dwFileSize)) goto err;
+
 				UINT newval = 0x10000;
 				DWORD d = bb.GetBits(numbits+1);
 
@@ -312,6 +318,8 @@ BOOL MMCMP_Unpack(LPCBYTE *ppMemFile, LPDWORD pdwMemLength)
 			bb.pEnd = lpMemFile+dwMemPos+pblk->pk_size;
 			while (1)
 			{
+				if (!MMCMP_IsDstBlockValid(psubblk, dwFileSize)) goto err;
+
 				UINT newval = 0x100;
 				DWORD d = bb.GetBits(numbits+1);
 
