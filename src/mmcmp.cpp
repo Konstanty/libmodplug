@@ -171,7 +171,7 @@ BOOL MMCMP_Unpack(LPCBYTE *ppMemFile, LPDWORD pdwMemLength)
 	swap_mfh(pmfh);
 	swap_mmh(pmmh);
 
-	if ((memcmp(pmfh->id,"ziRCONia",8) != 0) || (pmfh->hdrsize < 14)
+	if ((memcmp(pmfh->id,"ziRCONia",8) != 0) || (pmfh->hdrsize != 14)
 	 || (!pmmh->nblocks) || (pmmh->filesize < 16) || (pmmh->filesize > 0x8000000)
 	 || (pmmh->blktable >= dwMemLength) || (pmmh->blktable + 4*pmmh->nblocks > dwMemLength)) return FALSE;
 	dwFileSize = pmmh->filesize;
