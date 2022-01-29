@@ -101,75 +101,14 @@ typedef struct _MIDTRACK
 #define _mm_recalloc(h,buf,sz,elsz)	realloc(buf,sz)
 #define _mm_free(h,p)				free(p)
 
-typedef struct {
-	char *mm;
-	unsigned int sz;
-	int pos;
-	int err;
-} MMFILE;
-
-static void mmfseek(MMFILE *mmfile, long p, int whence)
-{
-	switch(whence) {
-		case SEEK_SET:
-			mmfile->pos = p;
-			break;
-		case SEEK_CUR:
-			mmfile->pos += p;
-			break;
-		case SEEK_END:
-			mmfile->pos = mmfile->sz + p;
-			break;
-	}
-}
-
-static long mmftell(MMFILE *mmfile)
-{
-	return mmfile->pos;
-}
-
-static BYTE mmreadUBYTE(MMFILE *mmfile)
-{
-	BYTE b;
-	if ((unsigned int)mmfile->pos >= mmfile->sz)
-	{
-		mmfile->err = EOF;
-		return 0;
-	}
-	b = (BYTE)mmfile->mm[mmfile->pos];
-	mmfile->pos++;
-	return b;
-}
-
-static unsigned long mmreadUBYTES(BYTE *buf, unsigned long sz, MMFILE *mmfile)
-{
-	if ((unsigned long)mmfile->pos + sz >= mmfile->sz)
-	{
-		mmfile->err = EOF;
-		return 0;
-	}
-	memcpy(buf, &mmfile->mm[mmfile->pos], sz);
-	mmfile->pos += sz;
-	return sz;
-}
-
-static unsigned long mmreadSBYTES(char *buf, long sz, MMFILE *mmfile)
-{
-	if ((unsigned long)mmfile->pos + sz >= mmfile->sz)
-	{
-		mmfile->err = EOF;
-		return 0;
-	}
-	memcpy(buf, &mmfile->mm[mmfile->pos], sz);
-	mmfile->pos += sz;
-	return sz;
-}
-
 /**********************************************************************/
 
 typedef struct _MIDHANDLE
 {
-	MMFILE *mmf;
+	const BYTE *mm;
+	unsigned long sz;
+	unsigned long pos;
+	int err;
 	MIDTRACK *track;
 	MIDTRACK *tp;
 	ULONG tracktime;
@@ -738,26 +677,46 @@ static void mid_add_pitchwheel(MIDHANDLE *h, int mch, int wheel)
 
 static uint32_t mid_read_long(MIDHANDLE *h)
 {
-	BYTE buf[4] = {0,0,0,0};
-	if (h->mmf->pos < h->mmf->sz - 4)
-		mmreadUBYTES(buf, 4, h->mmf);
+	BYTE buf[4];
+	if (h->pos > h->sz - 4) {
+		h->err = EOF;
+		return 0;
+	}
+	memcpy(buf, h->mm + h->pos, 4);
+	h->pos += 4;
 	return (buf[0]<<24)|(buf[1]<<16)|(buf[2]<<8)|buf[3];
 }
 
 static short int mid_read_short(MIDHANDLE *h)
 {
-	BYTE buf[2] = {0,0};
-	if (h->mmf->pos < h->mmf->sz - 2)
-		mmreadUBYTES(buf, 2, h->mmf);
+	BYTE buf[2];
+	if (h->pos > h->sz - 2) {
+		h->err = EOF;
+		return 0;
+	}
+	memcpy(buf, h->mm + h->pos, 2);
+	h->pos += 2;
 	return (buf[0]<<8)|buf[1];
 }
 
 static BYTE mid_read_byte(MIDHANDLE *h)
 {
-	if (h->mmf->pos < h->mmf->sz - 1)
-		return mmreadUBYTE(h->mmf);
-	else
+	if (h->pos >= h->sz) {
+		h->err = EOF;
 		return 0;
+	}
+	return h->mm[h->pos++];
+}
+
+static unsigned long mid_read_bytes(void *dest, unsigned long sz, MIDHANDLE *h)
+{
+	if (sz > h->sz || h->pos > h->sz - sz) {
+		h->err = EOF;
+		return 0;
+	}
+	memcpy(dest, h->mm + h->pos, sz);
+	h->pos += sz;
+	return sz;
 }
 
 static int mid_read_delta(MIDHANDLE *h)
@@ -782,14 +741,12 @@ BOOL CSoundFile::TestMID(const BYTE *lpStream, DWORD dwMemLength)
 {
 	char id[5];
 	MIDHANDLE h;
-	MMFILE mm;
 	if (dwMemLength < 14) return FALSE;
-	mm.mm = (char *)lpStream;
-	mm.sz = dwMemLength;
-	mm.err = 0;
-	h.mmf = &mm;
-	mmfseek(h.mmf,0,SEEK_SET);
-	mmreadSBYTES(id, 4, h.mmf);
+	h.mm = lpStream;
+	h.sz = dwMemLength;
+	h.pos = 0;
+	h.err = 0;
+	mid_read_bytes(id, 4, &h);
 	id[4] = '\0';
 	return !strcmp(id,"MThd") && mid_read_long(&h) == 6;
 }
@@ -1197,7 +1154,6 @@ BOOL CSoundFile::ReadMID(const BYTE *lpStream, DWORD dwMemLength)
 {
 	static int avoid_reentry = 0;
 	MIDHANDLE *h;
-	MMFILE mm;
 	int ch, dmulti, maxtempo, panlow, panhigh, numchans, numtracks;
 	MIDTRACK *ttp;
 	uint32_t t, numpats;
@@ -1213,23 +1169,21 @@ BOOL CSoundFile::ReadMID(const BYTE *lpStream, DWORD dwMemLength)
 	if( !TestMID(lpStream, dwMemLength) ) goto ErrorExit;
 	h = MID_Init();
 	if( !h ) goto ErrorExit;
-	h->mmf = &mm;
-	mm.mm = (char *)lpStream;
-	mm.sz = dwMemLength;
-	mm.pos = 0;
-	mm.err = 0;
+	h->mm = lpStream;
+	h->sz = dwMemLength;
+	h->err = 0;
 	h->debug = getenv(ENV_MMMID_DEBUG);
 	h->verbose = getenv(ENV_MMMID_VERBOSE);
 	pat_resetsmp();
 	pat_init_patnames();
 
-	mmfseek(h->mmf,8,SEEK_SET);
-	h->midiformat	= mid_read_short(h);
+	h->pos = 8;
+	h->midiformat = mid_read_short(h);
 	h->miditracks = mid_read_short(h);
 	h->resolution = mid_read_short(h);
-	if (mm.err) goto ErrorCleanup;
+	if (h->err) goto ErrorCleanup;
 
-	// at this point the h->mmf is positioned at first miditrack
+	// at this point the h->pos is positioned at first miditrack
 	if( h->midiformat == 0 ) h->miditracks = 1;
 	if( h->resolution & 0x8000 )
 		h->divider = ((h->resolution & 0x7f00)>>8)*(h->resolution & 0xff);
@@ -1280,9 +1234,7 @@ BOOL CSoundFile::ReadMID(const BYTE *lpStream, DWORD dwMemLength)
 	}
 	for( t=0; t<(uint32_t)h->miditracks; t++ ) {
 		if( h->verbose ) printf("Parsing track %d\n", t+1);
-		if (h->mmf->pos < dwMemLength - 4) {
-			mmreadSBYTES(buf,4,h->mmf);
-		} else {
+		if (mid_read_bytes(buf,4,h) < 4) {
 			buf[0] = '\0'; // make sure start is \0
 		}
 		buf[4] = '\0';
@@ -1291,11 +1243,11 @@ BOOL CSoundFile::ReadMID(const BYTE *lpStream, DWORD dwMemLength)
 			goto ErrorCleanup;
 		}
 		miditracklen = mid_read_long(h);
-		if (mm.err || mm.sz < miditracklen) continue;
+		if (h->err || h->sz < miditracklen) continue;
 		runningstatus = 0;
 		if( t && h->midiformat == 1 ) mid_rewind_tracks(h); // tracks sound simultaneously
 		while( miditracklen > 0 ) {
-			if (mm.err) break;
+			if (h->err) break;
 			miditracklen -= mid_read_delta(h);
 			midibyte[0] = mid_read_byte(h);
 			miditracklen--;
@@ -1414,7 +1366,7 @@ BOOL CSoundFile::ReadMID(const BYTE *lpStream, DWORD dwMemLength)
 								t, (long)(h->tracktime), midibyte[0]);
 							while( midibyte[0] != 0xf7 ) {
 								midibyte[0] = mid_read_byte(h);
-								if (mm.err) break;
+								if (h->err) break;
 								miditracklen--;
 								if( h->debug ) printf(" %02X", midibyte[0]);
 							}
@@ -1436,7 +1388,7 @@ BOOL CSoundFile::ReadMID(const BYTE *lpStream, DWORD dwMemLength)
 								t, (long)(h->tracktime), metalen);
 							while( metalen > 0 ) {
 								midibyte[1] = mid_read_byte(h);
-								if (mm.err) break;
+								if (h->err) break;
 								metalen--;
 								miditracklen--;
 								if( h->debug ) printf(" %02X", midibyte[1]);
@@ -1449,14 +1401,14 @@ BOOL CSoundFile::ReadMID(const BYTE *lpStream, DWORD dwMemLength)
 							metalen = h->deltatime;
 							if( metalen > 31 ) metalen = 31;
 							if( metalen ) {
-								if (!mmreadSBYTES(buf, metalen, h->mmf)) break;
+								if (!mid_read_bytes(buf, metalen, h)) break;
 								miditracklen -= metalen;
 							}
 							buf[metalen] = '\0';
 							metalen = h->deltatime - metalen;
 							while( metalen > 0 ) {
 								midibyte[1] = mid_read_byte(h);
-								if (mm.err) break;
+								if (h->err) break;
 								metalen--;
 								miditracklen--;
 							}
@@ -1505,8 +1457,8 @@ BOOL CSoundFile::ReadMID(const BYTE *lpStream, DWORD dwMemLength)
 					break;
 			}
 			if( miditracklen < 1 && (runningstatus != 0xff || midibyte[0] != 0x2f) ) {
-				delta = mmftell(h->mmf);
-				if (!mmreadSBYTES(buf,4,h->mmf)) break;
+				delta = h->pos;
+				if (!mid_read_bytes(buf,4,h)) break;
 				buf[4] = '\0';
 				if( strcmp(buf,"MTrk") ) {
 					miditracklen = 0x7fffffff;
@@ -1514,7 +1466,7 @@ BOOL CSoundFile::ReadMID(const BYTE *lpStream, DWORD dwMemLength)
 				}
 				else
 					mid_message("Meta event not at end of track, %s bytes left in track", "no");
-				mmfseek(h->mmf,delta,SEEK_SET);
+				h->pos = delta;
 			}
 		}
 	}
