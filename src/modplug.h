@@ -13,8 +13,8 @@ extern "C" {
 
 #define LIBMODPLUG_MAJOR		0L
 #define LIBMODPLUG_MINOR		8L
-#define LIBMODPLUG_REVISION		9L
-#define LIBMODPLUG_PATCH		1L
+#define LIBMODPLUG_REVISION		10L
+#define LIBMODPLUG_PATCH		0L
 #define LIBMODPLUG_VERSION		\
     ((LIBMODPLUG_MAJOR   <<24) |	\
      (LIBMODPLUG_MINOR   <<16) |	\
@@ -78,6 +78,9 @@ MODPLUG_EXPORT int ModPlug_GetLength(ModPlugFile* file);
  * note that seeking is not very exact in some mods -- especially those for which
  * ModPlug_GetLength() does not report the full length. */
 MODPLUG_EXPORT void ModPlug_Seek(ModPlugFile* file, int millisecond);
+
+/* Get the absolute playing position in song, in milliseconds. */
+MODPLUG_EXPORT int ModPlug_Tell(ModPlugFile* file);
 
 enum _ModPlug_Flags
 {
