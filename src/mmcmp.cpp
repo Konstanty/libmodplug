@@ -13,8 +13,8 @@ BOOL PP20_Unpack(LPCBYTE *ppMemFile, LPDWORD pdwMemLength);
 #pragma pack(1)
 typedef struct MMCMPFILEHEADER
 {
-	char id[8];	// "ziRCONia"
-	WORD hdrsize;
+	char id[8]; /* string 'ziRCONia' */
+	WORD hdrsize; /* sizeof MMCMPHEADER */
 } MMCMPFILEHEADER, *LPMMCMPFILEHEADER;
 
 typedef struct MMCMPHEADER
@@ -45,7 +45,7 @@ typedef struct MMCMPSUBBLOCK
 } MMCMPSUBBLOCK, *LPMMCMPSUBBLOCK;
 #pragma pack()
 
-// make sure of structure sizes
+/* make sure of structure sizes */
 typedef int chk_MMCMPFILEHEADER[(sizeof(struct MMCMPFILEHEADER) == 10) * 2 - 1];
 typedef int chk_MMCMPHEADER[(sizeof(struct MMCMPHEADER) == 14) * 2 - 1];
 typedef int chk_MMCMPBLOCK[(sizeof(struct MMCMPBLOCK) == 20) * 2 - 1];
@@ -70,7 +70,6 @@ typedef struct MMCMPBITBUFFER
 
 
 DWORD MMCMPBITBUFFER::GetBits(UINT nBits)
-//---------------------------------------
 {
 	DWORD d;
 	if (!nBits) return 0;
@@ -154,7 +153,6 @@ static BOOL MMCMP_IsDstBlockValid(const MMCMPSUBBLOCK *psub, DWORD dstlen)
 
 
 BOOL MMCMP_Unpack(LPCBYTE *ppMemFile, LPDWORD pdwMemLength)
-//---------------------------------------------------------
 {
 	DWORD dwMemLength;
 	LPCBYTE lpMemFile;
@@ -210,6 +208,16 @@ BOOL MMCMP_Unpack(LPCBYTE *ppMemFile, LPDWORD pdwMemLength)
 			goto err;
 		if (dwMemPos + 20 + pblk->sub_blk*8 >= dwMemLength)
 			goto err;
+		if (pblk->flags & MMCMP_COMP) {
+			if (pblk->flags & MMCMP_16BIT) {
+				if (pblk->num_bits >= 16)
+					goto err;
+			}
+			else {
+				if (pblk->num_bits >=  8)
+					goto err;
+			}
+		}
 
 		dwSubPos = dwMemPos + 20;
 		dwMemPos += 20 + pblk->sub_blk*8;
@@ -218,9 +226,8 @@ BOOL MMCMP_Unpack(LPCBYTE *ppMemFile, LPDWORD pdwMemLength)
 		Log(" pksize=%d unpksize=%d", pblk->pk_size, pblk->unpk_size);
 		Log(" tt_entries=%d num_bits=%d\n", pblk->tt_entries, pblk->num_bits);
 #endif
-		// Data is not packed
 		if (!(pblk->flags & MMCMP_COMP))
-		{
+		{ /* Data is not packed */
 			UINT i=0;
 			while (1) {
 #ifdef MMCMP_LOG
@@ -234,10 +241,9 @@ BOOL MMCMP_Unpack(LPCBYTE *ppMemFile, LPDWORD pdwMemLength)
 				memcpy(tmp1+20,lpMemFile+dwSubPos+i*8,8);
 				swap_subblock(psubblk);
 			}
-		} else
-		// Data is 16-bit packed
-		if (pblk->flags & MMCMP_16BIT && pblk->num_bits < 16)
-		{
+		}
+		else if (pblk->flags & MMCMP_16BIT)
+		{ /* Data is 16-bit packed */
 			MMCMPBITBUFFER bb;
 			LPBYTE pDest = pBuffer + psubblk->unpk_pos;
 			DWORD dwSize = psubblk->unpk_size;
@@ -311,9 +317,9 @@ BOOL MMCMP_Unpack(LPCBYTE *ppMemFile, LPDWORD pdwMemLength)
 					pDest = pBuffer + psubblk->unpk_pos;
 				}
 			}
-		} else if (pblk->num_bits < 8)
-		// Data is 8-bit packed
-		{
+		}
+		else
+		{ /* Data is 8-bit packed */
 			MMCMPBITBUFFER bb;
 			LPBYTE pDest = pBuffer + psubblk->unpk_pos;
 			DWORD dwSize = psubblk->unpk_size;
@@ -377,25 +383,19 @@ BOOL MMCMP_Unpack(LPCBYTE *ppMemFile, LPDWORD pdwMemLength)
 					pDest = pBuffer + psubblk->unpk_pos;
 				}
 			}
-		} else
-		{
-			goto err;
 		}
 	}
 	*ppMemFile = pBuffer;
 	*pdwMemLength = dwFileSize;
 	return TRUE;
 
-    err:
+  err:
 	free(pBuffer);
 	return FALSE;
 }
 
 
-//////////////////////////////////////////////////////////////////////////////
-//
-// PowerPack PP20 Unpacker
-//
+/* PowerPack PP20 Unpacker */
 
 /* Code from Heikki Orsila's amigadepack 0.02
  * based on code by Stuart Caie <kyzer@4u.net>
