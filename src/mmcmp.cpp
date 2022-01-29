@@ -206,6 +206,8 @@ BOOL MMCMP_Unpack(LPCBYTE *ppMemFile, LPDWORD pdwMemLength)
 
 		if (!pblk->unpk_size || !pblk->pk_size || !pblk->sub_blk)
 			goto err;
+		if (pblk->pk_size <= pblk->tt_entries)
+			goto err;
 		if (dwMemPos + 20 + pblk->sub_blk*8 >= dwMemLength)
 			goto err;
 
@@ -539,6 +541,7 @@ BOOL PP20_Unpack(LPCBYTE *ppMemFile, LPDWORD pdwMemLength)
 		free(pBuffer);
 		return FALSE;
 	}
+
 	*ppMemFile = pBuffer;
 	*pdwMemLength = dwDstLen;
 	return TRUE;
