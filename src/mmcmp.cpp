@@ -395,107 +395,147 @@ BOOL MMCMP_Unpack(LPCBYTE *ppMemFile, LPDWORD pdwMemLength)
 // PowerPack PP20 Unpacker
 //
 
-typedef struct _PPBITBUFFER
+/* Code from Heikki Orsila's amigadepack 0.02
+ * based on code by Stuart Caie <kyzer@4u.net>
+ * This software is in the Public Domain
+ *
+ * Modified for xmp by Claudio Matsuoka, 08/2007
+ * - merged mld's checks from the old depack sources. Original credits:
+ *   - corrupt file and data detection
+ *     (thanks to Don Adan and Dirk Stoecker for help and infos)
+ *   - implemeted "efficiency" checks
+ *   - further detection based on code by Georg Hoermann
+ *
+ * Modified for xmp by Claudio Matsuoka, 05/2013
+ * - decryption code removed
+ *
+ * Modified for libmodplug by O. Sezer, Apr. 2015
+ */
+
+#define PP_READ_BITS(nbits, var) do {                          \
+  bit_cnt = (nbits);                                           \
+  while (bits_left < bit_cnt) {                                \
+    if (buf_src < src) return 0; /* out of source bits */      \
+    bit_buffer |= (*--buf_src << bits_left);                   \
+    bits_left += 8;                                            \
+  }                                                            \
+  (var) = 0;                                                   \
+  bits_left -= bit_cnt;                                        \
+  while (bit_cnt--) {                                          \
+    (var) = ((var) << 1) | (bit_buffer & 1);                   \
+    bit_buffer >>= 1;                                          \
+  }                                                            \
+} while(0)
+
+#define PP_BYTE_OUT(byte) do {                                 \
+  if (out <= dest) return 0; /* output overflow */             \
+  *--out = (byte);                                             \
+  written++;                                                   \
+} while (0)
+
+static BOOL ppDecrunch(LPCBYTE src, LPBYTE dest,
+                       LPCBYTE offset_lens,
+                       DWORD src_len, DWORD dest_len,
+                       BYTE skip_bits)
 {
-	UINT bitcount;
-	ULONG bitbuffer;
-	LPCBYTE pStart;
-	LPCBYTE pSrc;
+  DWORD bit_buffer, x, todo, offbits, offset, written;
+  LPCBYTE buf_src;
+  LPBYTE out, dest_end;
+  BYTE bits_left, bit_cnt;
 
-	ULONG GetBits(UINT n);
-} PPBITBUFFER;
+  /* set up input and output pointers */
+  buf_src = src + src_len;
+  out = dest_end = dest + dest_len;
 
+  written = 0;
+  bit_buffer = 0;
+  bits_left = 0;
 
-ULONG PPBITBUFFER::GetBits(UINT n)
-{
-	ULONG result = 0;
+  /* skip the first few bits */
+  PP_READ_BITS(skip_bits, x);
 
-	for (UINT i=0; i<n; i++)
-	{
-		if (!bitcount)
-		{
-			bitcount = 8;
-			if (pSrc != pStart) pSrc--;
-			bitbuffer = *pSrc;
-		}
-		result = (result<<1) | (bitbuffer&1);
-		bitbuffer >>= 1;
-		bitcount--;
-	}
-	return result;
+  /* while there are input bits left */
+  while (written < dest_len) {
+    PP_READ_BITS(1, x);
+    if (x == 0) {
+      /* 1bit==0: literal, then match. 1bit==1: just match */
+      todo = 1; do { PP_READ_BITS(2, x); todo += x; } while (x == 3);
+      while (todo--) { PP_READ_BITS(8, x); PP_BYTE_OUT(x); }
+
+      /* should we end decoding on a literal, break out of the main loop */
+      if (written == dest_len) break;
+    }
+
+    /* match: read 2 bits for initial offset bitlength / match length */
+    PP_READ_BITS(2, x);
+    offbits = offset_lens[x];
+    todo = x+2;
+    if (x == 3) {
+      PP_READ_BITS(1, x);
+      if (x==0) offbits = 7;
+      PP_READ_BITS(offbits, offset);
+      do { PP_READ_BITS(3, x); todo += x; } while (x == 7);
+    }
+    else {
+      PP_READ_BITS(offbits, offset);
+    }
+    if ((out + offset) >= dest_end) return 0; /* match overflow */
+    while (todo--) { x = out[offset]; PP_BYTE_OUT(x); }
+  }
+
+  /* all output bytes written without error */
+  return 1;
+  /* return (src == buf_src) ? 1 : 0; */
 }
-
-
-static BOOL PP20_DoUnpack(const BYTE *pSrc, UINT nSrcLen, BYTE *pDst, UINT nDstLen)
-{
-	PPBITBUFFER BitBuffer;
-	ULONG nBytesLeft;
-
-	BitBuffer.pStart = pSrc + 4;
-	BitBuffer.pSrc = pSrc + nSrcLen - 4;
-	BitBuffer.bitbuffer = 0;
-	BitBuffer.bitcount = 0;
-	BitBuffer.GetBits(pSrc[nSrcLen-1]);
-	nBytesLeft = nDstLen;
-	while (nBytesLeft > 0)
-	{
-		if (!BitBuffer.GetBits(1))
-		{
-			UINT n = 1;
-			while (n < nBytesLeft)
-			{
-				UINT code = BitBuffer.GetBits(2);
-				n += code;
-				if (code != 3) break;
-			}
-			for (UINT i=0; i<n; i++)
-			{
-				pDst[--nBytesLeft] = (BYTE)BitBuffer.GetBits(8);
-			}
-			if (!nBytesLeft) break;
-		}
-		{
-			UINT n = BitBuffer.GetBits(2)+1;
-			if(n < 1 || n-1 >= nSrcLen) return FALSE; //can this ever happen?
-			UINT nbits = pSrc[n-1];
-			UINT nofs;
-			if (n==4)
-			{
-				nofs = BitBuffer.GetBits( (BitBuffer.GetBits(1)) ? nbits : 7 );
-				while (n < nBytesLeft)
-				{
-					UINT code = BitBuffer.GetBits(3);
-					n += code;
-					if (code != 7) break;
-				}
-			} else
-			{
-				nofs = BitBuffer.GetBits(nbits);
-			}
-			for (UINT i=0; i<=n; i++)
-			{
-				pDst[nBytesLeft-1] = (nBytesLeft+nofs < nDstLen) ? pDst[nBytesLeft+nofs] : 0;
-				if (!--nBytesLeft) break;
-			}
-		}
-	}
-	return TRUE;
-}
-
 
 BOOL PP20_Unpack(LPCBYTE *ppMemFile, LPDWORD pdwMemLength)
 {
 	DWORD dwMemLength = *pdwMemLength;
 	LPCBYTE lpMemFile = *ppMemFile;
 	DWORD dwDstLen;
+	BYTE tmp[4], skip;
 	LPBYTE pBuffer;
 
-	if ((!lpMemFile) || (dwMemLength < 256) || (memcmp(lpMemFile,"PP20",4) != 0)) return FALSE;
-	dwDstLen = (lpMemFile[dwMemLength-4]<<16) | (lpMemFile[dwMemLength-3]<<8) | (lpMemFile[dwMemLength-2]);
+	if ((!lpMemFile) || (dwMemLength < 256) || (memcmp(lpMemFile,"PP20",4) != 0))
+		return FALSE;
+	if (dwMemLength & 3) /* file length should be a multiple of 4 */
+		return FALSE;
+
+	/* PP FORMAT:
+	 *      1 longword identifier           'PP20' or 'PX20'
+	 *     [1 word checksum (if 'PX20')     $ssss]
+	 *      1 longword efficiency           $eeeeeeee
+	 *      X longwords crunched file       $cccccccc,$cccccccc,...
+	 *      1 longword decrunch info        'decrlen' << 8 | '8 bits other info'
+	 */
+
+	memcpy(tmp,&lpMemFile[dwMemLength-4],4);
+	dwDstLen = (tmp[0]<<16) | (tmp[1]<<8) | tmp[2];
+	skip = tmp[3];
+
+	/* original pp20 only support efficiency
+	 * from 9 9 9 9 up to 9 10 12 13, afaik,
+	 * but the xfd detection code says this...
+	 *
+	 * move.l 4(a0),d0
+	 * cmp.b #9,d0
+	 * blo.b .Exit
+	 * and.l #$f0f0f0f0,d0
+	 * bne.s .Exit
+	 */
+	memcpy(tmp,&lpMemFile[4],4);
+	if ((tmp[0] < 9) || (tmp[0] & 0xf0)) return FALSE;
+	if ((tmp[1] < 9) || (tmp[1] & 0xf0)) return FALSE;
+	if ((tmp[2] < 9) || (tmp[2] & 0xf0)) return FALSE;
+	if ((tmp[3] < 9) || (tmp[3] & 0xf0)) return FALSE;
+
 	//Log("PP20 detected: Packed length=%d, Unpacked length=%d\n", dwMemLength, dwDstLen);
-	if ((dwDstLen < 512) || (dwDstLen > 0x400000) || (dwDstLen > 16*dwMemLength)) return FALSE;
-	if ((pBuffer = (LPBYTE)GlobalAllocPtr(GHND, (dwDstLen + 31) & ~15)) == NULL) return FALSE;
-	if (!PP20_DoUnpack(lpMemFile+4, dwMemLength-4, pBuffer, dwDstLen)) {
+	if ((dwDstLen < 512) || (dwDstLen > 0x400000) || (dwDstLen > 16*dwMemLength))
+		return FALSE;
+	if ((pBuffer = (LPBYTE)GlobalAllocPtr(GHND, (dwDstLen + 31) & ~15)) == NULL)
+		return FALSE;
+
+	if (!ppDecrunch(lpMemFile+8, pBuffer, tmp, dwMemLength-12, dwDstLen, skip)) {
 		free(pBuffer);
 		return FALSE;
 	}
