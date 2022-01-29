@@ -179,11 +179,15 @@ BOOL MMCMP_Unpack(LPCBYTE *ppMemFile, LPDWORD pdwMemLength)
 	swap_mfh(pmfh);
 	swap_mmh(pmmh);
 
-	if ((memcmp(pmfh->id,"ziRCONia",8) != 0) || (pmfh->hdrsize != 14)
-	 || (!pmmh->nblocks) || (pmmh->filesize < 16) || (pmmh->filesize > 0x8000000)
-	 || (pmmh->blktable >= dwMemLength) || (pmmh->blktable + 4*pmmh->nblocks > dwMemLength)) return FALSE;
+	if ((memcmp(pmfh->id,"ziRCONia",8) != 0) || (pmfh->hdrsize != 14))
+		return FALSE;
+	if ((!pmmh->nblocks) || (pmmh->filesize < 16) || (pmmh->filesize > 0x8000000) ||
+	    (pmmh->blktable >= dwMemLength) || (pmmh->blktable + 4*pmmh->nblocks > dwMemLength)) {
+		return FALSE;
+	}
 	dwFileSize = pmmh->filesize;
-	if ((pBuffer = (LPBYTE)GlobalAllocPtr(GHND, (dwFileSize + 31) & ~15)) == NULL) return FALSE;
+	if ((pBuffer = (LPBYTE)GlobalAllocPtr(GHND, (dwFileSize + 31) & ~15)) == NULL)
+		return FALSE;
 	pblk_table = (const DWORD *)(lpMemFile+pmmh->blktable);
 	for (UINT nBlock=0; nBlock<pmmh->nblocks; nBlock++)
 	{
@@ -192,7 +196,8 @@ BOOL MMCMP_Unpack(LPCBYTE *ppMemFile, LPDWORD pdwMemLength)
 		LPMMCMPBLOCK pblk;
 		LPMMCMPSUBBLOCK psubblk;
 
-		if (dwMemPos + 20 >= dwMemLength) goto err;
+		if (dwMemPos + 20 >= dwMemLength)
+			goto err;
 		memcpy(tmp1,lpMemFile+dwMemPos,28);
 		pblk = (LPMMCMPBLOCK)(tmp1);
 		psubblk = (LPMMCMPSUBBLOCK)(tmp1+20);
@@ -219,7 +224,8 @@ BOOL MMCMP_Unpack(LPCBYTE *ppMemFile, LPDWORD pdwMemLength)
 #ifdef MMCMP_LOG
 				Log("  Unpacked sub-block %d: offset %d, size=%d\n", i, psubblk->unpk_pos, psubblk->unpk_size);
 #endif
-				if (!MMCMP_IsDstBlockValid(psubblk, dwFileSize)) goto err;
+				if (!MMCMP_IsDstBlockValid(psubblk, dwFileSize))
+					goto err;
 				memcpy(pBuffer+psubblk->unpk_pos, lpMemFile+dwMemPos, psubblk->unpk_size);
 				dwMemPos += psubblk->unpk_size;
 				if (++i == pblk->sub_blk) break;
@@ -243,14 +249,14 @@ BOOL MMCMP_Unpack(LPCBYTE *ppMemFile, LPDWORD pdwMemLength)
 			if (pblk->flags & MMCMP_ABS16) Log("ABS16 ");
 			Log("\n");
 #endif
+			if (!MMCMP_IsDstBlockValid(psubblk, dwFileSize))
+				goto err;
 			bb.bitcount = 0;
 			bb.bitbuffer = 0;
 			bb.pSrc = lpMemFile+dwMemPos+pblk->tt_entries;
 			bb.pEnd = lpMemFile+dwMemPos+pblk->pk_size;
 			while (1)
 			{
-				if (!MMCMP_IsDstBlockValid(psubblk, dwFileSize)) goto err;
-
 				UINT newval = 0x10000;
 				DWORD d = bb.GetBits(numbits+1);
 
@@ -297,6 +303,8 @@ BOOL MMCMP_Unpack(LPCBYTE *ppMemFile, LPDWORD pdwMemLength)
 					dwPos = 0;
 					memcpy(tmp1+20,lpMemFile+dwSubPos+subblk*8,8);
 					swap_subblock(psubblk);
+					if (!MMCMP_IsDstBlockValid(psubblk, dwFileSize))
+						goto err;
 					dwSize = psubblk->unpk_size;
 					pDest = pBuffer + psubblk->unpk_pos;
 				}
@@ -312,14 +320,14 @@ BOOL MMCMP_Unpack(LPCBYTE *ppMemFile, LPDWORD pdwMemLength)
 			UINT subblk = 0, oldval = 0;
 			LPCBYTE ptable = lpMemFile+dwMemPos;
 
+			if (!MMCMP_IsDstBlockValid(psubblk, dwFileSize))
+				goto err;
 			bb.bitcount = 0;
 			bb.bitbuffer = 0;
 			bb.pSrc = lpMemFile+dwMemPos+pblk->tt_entries;
 			bb.pEnd = lpMemFile+dwMemPos+pblk->pk_size;
 			while (1)
 			{
-				if (!MMCMP_IsDstBlockValid(psubblk, dwFileSize)) goto err;
-
 				UINT newval = 0x100;
 				DWORD d = bb.GetBits(numbits+1);
 
@@ -361,6 +369,8 @@ BOOL MMCMP_Unpack(LPCBYTE *ppMemFile, LPDWORD pdwMemLength)
 					dwPos = 0;
 					memcpy(tmp1+20,lpMemFile+dwSubPos+subblk*8,8);
 					swap_subblock(psubblk);
+					if (!MMCMP_IsDstBlockValid(psubblk, dwFileSize))
+						goto err;
 					dwSize = psubblk->unpk_size;
 					pDest = pBuffer + psubblk->unpk_pos;
 				}
