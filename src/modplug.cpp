@@ -81,6 +81,11 @@ namespace ModPlug
 	}
 }
 
+long ModPlug_GetVersion(void)
+{
+	return LIBMODPLUG_VERSION;
+}
+
 ModPlugFile* ModPlug_Load(const void* data, int size)
 {
 	ModPlugFile* result = new ModPlugFile;
