@@ -514,6 +514,7 @@ BOOL PP20_Unpack(LPCBYTE *ppMemFile, LPDWORD pdwMemLength)
 	memcpy(tmp,&lpMemFile[dwMemLength-4],4);
 	dwDstLen = (tmp[0]<<16) | (tmp[1]<<8) | tmp[2];
 	skip = tmp[3];
+	if (skip > 32) return 0;
 
 	/* original pp20 only support efficiency
 	 * from 9 9 9 9 up to 9 10 12 13, afaik,
