@@ -372,6 +372,7 @@ void pat_init_patnames(void)
 		strcat(pathforpat, "/instruments");
 	}
 	strncpy(cfgsources[0], timiditycfg, PATH_MAX - 1);
+	cfgsources[0][PATH_MAX - 1] = '\0';
 	nsources = 1;
 
 	for( i=0; i<MAXSMP; i++ )	midipat[i][0] = '\0';
@@ -993,8 +994,6 @@ static void pat_setpat_inst(WaveHeader *hw, INSTRUMENTHEADER *d, int smp)
 static void PATinst(INSTRUMENTHEADER *d, int smp, int gm)
 {
 	WaveHeader hw;
-	char s[32];
-	memset(s,0,32);
 	if( pat_readpat_attr(gm-1, &hw, 0) ) {
 		pat_setpat_inst(&hw, d, smp);
 	}
@@ -1020,17 +1019,12 @@ static void PATinst(INSTRUMENTHEADER *d, int smp, int gm)
 		hw.reserved[sizeof(hw.reserved) - 1] = '\0';
 		pat_setpat_inst(&hw, d, smp);
 	}
-	if( hw.reserved[0] )
-		strncpy(s, hw.reserved, 32);
-	else
-		strncpy(s, midipat[gm-1], 32);
-	s[31] = '\0';
-	memset(d->name, 0, 32);
-	strcpy((char *)d->name, s);
-	strncpy(s, midipat[gm-1], 12);
-	s[11] = '\0';
-	memset(d->filename, 0, 12);
-	strcpy((char *)d->filename, s);
+	/* strncpy 0-inits the entire field. */
+	strncpy((char *)d->name, hw.reserved[0] ? hw.reserved : midipat[gm-1], 32);
+	d->name[31] = '\0';
+
+	strncpy((char *)d->filename, midipat[gm-1], 12);
+	d->filename[11] = '\0';
 }
 
 static void pat_setpat_attr(WaveHeader *hw, MODINSTRUMENT *q)
@@ -1057,11 +1051,18 @@ static void pat_setpat_attr(WaveHeader *hw, MODINSTRUMENT *q)
 static void PATsample(CSoundFile *cs, MODINSTRUMENT *q, int smp, int gm)
 {
 	WaveHeader hw;
-	char s[256];
+	char s[PATH_MAX + 32];
 	sprintf(s, "%d:%s", smp-1, midipat[gm-1]);
 	s[31] = '\0';
-	memset(cs->m_szNames[smp], 0, 32);
-	strncpy(cs->m_szNames[smp], s, 32-1);
+
+#if defined(__GNUC__) && __GNUC__ >= 8
+/* GCC's warning is broken and ignores the manual termination in this case. */
+#pragma GCC diagnostic ignored "-Wstringop-truncation"
+#endif
+	/* strncpy 0-inits the entire field. */
+	strncpy(cs->m_szNames[smp], s, 32);
+	cs->m_szNames[smp][31] = '\0';
+
 	q->nGlobalVol = 64;
 	q->nPan       = 128;
 	q->uFlags     = CHN_16BIT;
