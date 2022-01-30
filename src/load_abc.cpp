@@ -28,6 +28,9 @@
 #include <stdlib.h>
 #include <time.h>
 #include <string.h>
+#ifdef HAVE_STRINGS_H
+#include <strings.h>
+#endif
 #include <math.h>
 #include <ctype.h>
 #ifndef _WIN32
