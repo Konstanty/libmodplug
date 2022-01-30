@@ -19,7 +19,7 @@ AC_C_BIGENDIAN
 
 LT_INIT([win32-dll disable-static])
 
-AC_CHECK_HEADERS([inttypes.h stdint.h malloc.h])
+AC_CHECK_HEADERS([inttypes.h stdint.h malloc.h strings.h])
 
 CXXFLAGS="$CXXFLAGS -fno-exceptions -Wall -ffast-math -fno-common -D_REENTRANT"
 
