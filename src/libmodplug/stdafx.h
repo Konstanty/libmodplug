@@ -137,6 +137,12 @@ inline void ProcessPlugins(int n) { (void)n; }
 # else
 #   define MODPLUG_EXPORT __declspec(dllimport)			/* using libmodplug dll for windows */
 # endif
+#elif defined(__OS2__) && defined(__WATCOMC__)
+# if defined(MODPLUG_BUILD) && defined(__SW_BD)		/* building libmodplug as a dll for os/2 */
+#   define MODPLUG_EXPORT __declspec(dllexport)
+# else
+#   define MODPLUG_EXPORT					/* using dll or static libmodplug for os/2 */
+# endif
 #elif defined(MODPLUG_BUILD) && defined(SYM_VISIBILITY)
 #   define MODPLUG_EXPORT __attribute__((visibility("default")))
 #else
