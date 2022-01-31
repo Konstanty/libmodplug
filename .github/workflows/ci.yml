@@ -1,6 +1,6 @@
 on: [push, pull_request]
 
-name: CMake
+name: Builds
 
 jobs:
   cmake-build:
@@ -19,3 +19,23 @@ jobs:
 
     - name: Build
       run: cmake --build ${{github.workspace}}/build --config ${{ matrix.build_type }}
+
+  autotools-build:
+    name: Autotools ${{ matrix.os }} ${{ matrix.build_type }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: ["ubuntu-latest"]
+        build_type: ["install", "install-strip"]
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Autoreconf
+      run: |
+        autoreconf --install "${{github.workspace}}"
+    - name: Make
+      run: |
+        ./configure --prefix=${{github.workspace}}/build 
+        make
+        make ${{ matrix.build_type }}
