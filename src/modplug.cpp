@@ -81,6 +81,11 @@ namespace ModPlug
 	}
 }
 
+long ModPlug_GetVersion(void)
+{
+	return LIBMODPLUG_VERSION;
+}
+
 ModPlugFile* ModPlug_Load(const void* data, int size)
 {
 	ModPlugFile* result = new ModPlugFile;
@@ -263,6 +268,21 @@ void ModPlug_Seek(ModPlugFile* file, int millisecond)
 		postime = (float)maxpos / (float)maxtime;
 
 	file->mSoundFile.SetCurrentPos((int)(millisecond * postime));
+}
+
+int ModPlug_Tell(ModPlugFile *file)
+{
+	int currentPos = (int)file->mSoundFile.GetCurrentPos();
+	int maxpos;
+	int maxtime = (int)file->mSoundFile.GetSongTime() * 1000;
+	float postime;
+	maxpos = (int)file->mSoundFile.GetMaxPosition();
+	postime = 0.0f;
+	if (maxtime != 0.0f)
+	    postime = (float)maxpos / (float)maxtime;
+	if (postime == 0.0f)
+	    return 0;
+	return (int) ((float)currentPos / postime);
 }
 
 void ModPlug_GetSettings(ModPlug_Settings* settings)
