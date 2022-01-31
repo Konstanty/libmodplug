@@ -1,0 +1,41 @@
+on: [push, pull_request]
+
+name: Builds
+
+jobs:
+  cmake-build:
+    name: CMake ${{ matrix.os }} ${{ matrix.build_type }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: ["ubuntu-latest", "windows-latest", "macos-latest"]
+        build_type: ["Debug", "Release"]
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Configure CMake
+      run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
+
+    - name: Build
+      run: cmake --build ${{github.workspace}}/build --config ${{ matrix.build_type }}
+
+  autotools-build:
+    name: Autotools ${{ matrix.os }} ${{ matrix.build_type }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: ["ubuntu-latest"]
+        build_type: ["install", "install-strip"]
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Autoreconf
+      run: |
+        autoreconf --install "${{github.workspace}}"
+    - name: Make
+      run: |
+        ./configure --prefix=${{github.workspace}}/build 
+        make
+        make ${{ matrix.build_type }}
