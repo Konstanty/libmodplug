@@ -514,6 +514,12 @@ BOOL CSoundFile::ReadAMS2(LPCBYTE lpStream, DWORD dwMemLength)
 				MODCOMMAND *m = Patterns[ipat] + row * m_nChannels;
 				UINT byte1 = psrc[pos++];
 				UINT ch = byte1 & 0x1F;
+				if (byte1 == 0xff)
+				{
+					row++;
+					continue;
+				}
+
 				// Read Note + Instr
 				if (!(byte1 & 0x40))
 				{
