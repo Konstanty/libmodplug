@@ -520,6 +520,7 @@ BOOL CSoundFile::ReadAMS2(LPCBYTE lpStream, DWORD dwMemLength)
 			{
 				MODCOMMAND *m = Patterns[ipat] + row * m_nChannels;
 				UINT byte1 = psrc[pos++];
+				UINT byte2;
 				UINT ch = byte1 & 0x1F;
 				if (byte1 == 0xff)
 				{
@@ -530,36 +531,38 @@ BOOL CSoundFile::ReadAMS2(LPCBYTE lpStream, DWORD dwMemLength)
 				// Read Note + Instr
 				if (!(byte1 & 0x40))
 				{
-					UINT byte2 = psrc[pos++];
+					byte2 = psrc[pos++];
 					UINT note = byte2 & 0x7F;
 					if (note) m[ch].note = (note > 1) ? (note-1) : 0xFF;
 					m[ch].instr = psrc[pos++];
-					// Read Effect
-					while (byte2 & 0x80)
+				} else {
+					byte2 = 0x80; /* row contains atleast one effect, so trigged the first parse */
+				}
+				// Read Effect
+				while (byte2 & 0x80)
+				{
+					byte2 = psrc[pos++];
+					if (byte2 & 0x40)
 					{
-						byte2 = psrc[pos++];
-						if (byte2 & 0x40)
+						m[ch].volcmd = VOLCMD_VOLUME;
+						m[ch].vol = byte2 & 0x3F;
+					} else
+					{
+						UINT command = byte2 & 0x3F;
+						UINT param = psrc[pos++];
+						if (command == 0x0C)
 						{
 							m[ch].volcmd = VOLCMD_VOLUME;
-							m[ch].vol = byte2 & 0x3F;
+							m[ch].vol = param / 2;
+						} else
+						if (command < 0x10)
+						{
+							m[ch].command = command;
+							m[ch].param = param;
+							ConvertModCommand(&m[ch]);
 						} else
 						{
-							UINT command = byte2 & 0x3F;
-							UINT param = psrc[pos++];
-							if (command == 0x0C)
-							{
-								m[ch].volcmd = VOLCMD_VOLUME;
-								m[ch].vol = param / 2;
-							} else
-							if (command < 0x10)
-							{
-								m[ch].command = command;
-								m[ch].param = param;
-								ConvertModCommand(&m[ch]);
-							} else
-							{
-								// TODO: AMS effects
-							}
+							// TODO: AMS effects
 						}
 					}
 				}
