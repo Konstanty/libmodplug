@@ -152,6 +152,13 @@ BOOL CSoundFile::ReadAMS(LPCBYTE lpStream, DWORD dwMemLength)
 		while ((row < PatternSize[iPat]) && (i+2 < len))
 		{
 			BYTE b0 = p[i++];
+
+			if (b0 == 0xff)
+			{
+				row++;
+				continue;
+			}
+
 			BYTE b1 = p[i++];
 			BYTE b2 = 0;
 			UINT ch = b0 & 0x3F;
