@@ -86,6 +86,12 @@ typedef struct _PSMSAMPLE
 
 #pragma pack()
 
+DWORD read_DWORD(LPCBYTE lpStream){
+	DWORD s;
+	memcpy(&s,lpStream,sizeof(s));
+	return bswapLE32(s);
+}
+
 void swap_PSMSAMPLE(PSMSAMPLE* p){
 	p->smpid = bswapLE32(p->smpid);
 	p->length = bswapLE32(p->length);
@@ -215,7 +221,7 @@ BOOL CSoundFile::ReadPSM(LPCBYTE lpStream, DWORD dwMemLength)
 	m_nChannels = pSong->channels;
 	// Valid song header -> convert attached chunks
 	{
-		DWORD dwSongEnd = dwSongPos + 8 + *(DWORD *)(lpStream+dwSongPos+4);
+		DWORD dwSongEnd = dwSongPos + 8 + read_DWORD(lpStream+dwSongPos+4);
 		dwMemPos = dwSongPos + 8 + 11; // sizeof(PSMCHUNK)+sizeof(PSMSONGHDR)
 		while (dwMemPos + 8 < dwSongEnd)
 		{
@@ -235,10 +241,10 @@ BOOL CSoundFile::ReadPSM(LPCBYTE lpStream, DWORD dwMemLength)
 					{
 						BOOL bFound = FALSE;
 						pos -= 5;
-						DWORD dwName = *(DWORD *)(pdata+pos);
+						DWORD dwName = read_DWORD(pdata+pos);
 						for (UINT i=0; i<nPatterns; i++)
 						{
-							DWORD dwPatName = ((const PSMPATTERN *)(lpStream+patptrs[i]+8))->name;
+							DWORD dwPatName = read_DWORD(lpStream+patptrs[i]+12);
 							if (dwName == dwPatName)
 							{
 								bFound = TRUE;
@@ -256,10 +262,10 @@ BOOL CSoundFile::ReadPSM(LPCBYTE lpStream, DWORD dwMemLength)
 					UINT iOrd = 0;
 					while ((pos+5<len) && (iOrd < MAX_ORDERS))
 					{
-						DWORD dwName = *(DWORD *)(pdata+pos);
+						DWORD dwName = read_DWORD(pdata+pos);
 						for (UINT i=0; i<nPatterns; i++)
 						{
-							DWORD dwPatName = ((const PSMPATTERN *)(lpStream+patptrs[i]+8))->name;
+							DWORD dwPatName = read_DWORD(lpStream+patptrs[i]+12);
 							if (dwName == dwPatName)
 							{
 								Order[iOrd++] = i;
