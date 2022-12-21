@@ -1198,7 +1198,7 @@ BOOL CSoundFile::ReadMID(const BYTE *lpStream, DWORD dwMemLength)
 	if (h->miditracks == 0) goto ErrorCleanup;
 
 	p = (BYTE *)getenv(ENV_MMMID_SPEED);
-	if( p && isdigit(*p) && p[0] != '0' && p[1] == '\0' ) {
+	if( p && isdigit(static_cast<unsigned char>(*p)) && p[0] != '0' && p[1] == '\0' ) {
 		// transform speed
 		t = *p - '0';
 		h->speed *= t;
