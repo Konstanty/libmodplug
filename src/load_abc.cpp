@@ -2351,7 +2351,7 @@ BOOL CSoundFile::TestABC(const BYTE *lpStream, DWORD dwMemLength)
 // =====================================================================================
 static ABCHANDLE *ABC_Init(void)
 {
-	static char buf[40];
+	static char buf[43];
 	ABCHANDLE   *retval;
 	char *p;
 	retval = (ABCHANDLE *)calloc(1,sizeof(ABCHANDLE));
