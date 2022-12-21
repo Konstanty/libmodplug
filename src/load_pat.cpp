@@ -392,31 +392,31 @@ void pat_init_patnames(void)
 			_mm_fgets(mmcfg, line, PATH_MAX);
 			while( !_mm_feof(mmcfg) ) {
 			p = line;
-			while ( isspace(*p) ) p ++;
-			if( isdigit(p[0]) ) {
+			while ( isspace(static_cast<unsigned char>(*p)) ) p ++;
+			if( isdigit(static_cast<unsigned char>(p[0])) ) {
 				// get pat number
 				i = atoi(p);
-				while ( isdigit(*p) ) p ++;
-				while ( isspace(*p) ) p ++;
+				while ( isdigit(static_cast<unsigned char>(*p)) ) p ++;
+				while ( isspace(static_cast<unsigned char>(*p)) ) p ++;
 				// get pat file name
 				if( *p && i < MAXSMP && i >= 0 && *p != '#' ) {
 					q = isdrumset ? midipat[pat_gm_drumnr(i)-1] : midipat[i];
 					pfnlen = 0;
-					while( *p && !isspace(*p) && *p != '#' && pfnlen < 128 ) {
+					while( *p && !isspace(static_cast<unsigned char>(*p)) && *p != '#' && pfnlen < 128 ) {
 						pfnlen ++;
 						*q++ = *p++;
 					}
-					if( isblank(*p) && *(p+1) != '#' && pfnlen < 128 ) {
+					if( isblank(static_cast<unsigned char>(*p)) && *(p+1) != '#' && pfnlen < 128 ) {
 						*q++ = ':'; pfnlen ++;
-						while( isspace(*p) ) {
-							while( isspace(*p) ) p++;
+						while( isspace(static_cast<unsigned char>(*p)) ) {
+							while( isspace(static_cast<unsigned char>(*p)) ) p++;
 							if ( *p == '#' ) { // comment
 
-							} else while( *p && !isspace(*p) && pfnlen < 128 ) {
+							} else while( *p && !isspace(static_cast<unsigned char>(*p)) && pfnlen < 128 ) {
 								pfnlen ++;
 								*q++ = *p++;
 							}
-							if( isspace(*p) ) { *q++ = ' '; pfnlen++; }
+							if( isspace(static_cast<unsigned char>(*p)) ) { *q++ = ' '; pfnlen++; }
 						}
 					}
 					*q++ = '\0';
@@ -429,11 +429,11 @@ void pat_init_patnames(void)
 			}
 			else if( !strncmp(p,"dir",3) )  {
 				p += 3;
-				while ( isspace(*p) ) p ++;
+				while ( isspace(static_cast<unsigned char>(*p)) ) p ++;
 				q = p + strlen(p);
 				if(q > p) {
 					--q;
-					while ( q > p && isspace(*q) ) *(q--) = 0;
+					while ( q > p && isspace(static_cast<unsigned char>(*q)) ) *(q--) = 0;
 					strncpy(pathforpat, p, PATH_MAX - 1);
 					pathforpat[PATH_MAX - 1] = 0;
 				}
@@ -441,9 +441,9 @@ void pat_init_patnames(void)
 			else if( !strncmp(p,"source",6) && nsources < 5 ) {
 				q = cfgsources[nsources];
 				p += 6;
-				while ( isspace(*p) ) p ++;
+				while ( isspace(static_cast<unsigned char>(*p)) ) p ++;
 				pfnlen = 0;
-				while ( *p && *p != '#' && !isspace(*p) && pfnlen < 128 ) {
+				while ( *p && *p != '#' && !isspace(static_cast<unsigned char>(*p)) && pfnlen < 128 ) {
 					pfnlen ++;
 					*q++ = *p++;
 				}
@@ -857,7 +857,7 @@ static void PAT_ReadPatterns(MODCOMMAND *pattern[], WORD psize[], PATHANDLE *h, 
 					i = tt2 - 16 * ((h->samples - 1 - ch) & 3);
 					if( tt1 < i ) {
 						t = t % 64;
-						if( isalpha(tune[t]) ) {
+						if( isalpha(static_cast<unsigned char>(tune[t])) ) {
 							n   = pat_modnote(pat_note(tune[t]));
 							ins = ch + 1;
 							vol = 40;
