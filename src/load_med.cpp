@@ -755,9 +755,9 @@ BOOL CSoundFile::ReadMed(const BYTE *lpStream, DWORD dwMemLength)
 				{
 					while (trktagofs < dwMemLength - 8)
 					{
-						DWORD ntag = bswapBE32(*(DWORD *)(lpStream + trktagofs));
+						DWORD ntag = READ_BE32(lpStream + trktagofs);
 						if (ntag == MMDTAG_END) break;
-						DWORD tagdata = bswapBE32(*(DWORD *)(lpStream + trktagofs + 4));
+						DWORD tagdata = READ_BE32(lpStream + trktagofs + 4);
 						switch(ntag)
 						{
 						case MMDTAG_TRK_NAMELEN:	trknamelen = tagdata; break;
@@ -894,7 +894,7 @@ BOOL CSoundFile::ReadMed(const BYTE *lpStream, DWORD dwMemLength)
 					DWORD cmdexttable = bswapBE32(pbi->cmdexttable);
 					if (cmdexttable < dwMemLength - 4)
 					{
-						cmdexttable = bswapBE32(*(DWORD *)(lpStream + cmdexttable));
+						cmdexttable = READ_BE32(lpStream + cmdexttable);
 						if ((cmdexttable) && (cmdexttable <= dwMemLength - lines*tracks))
 						{
 							pcmdext = (BYTE *)(lpStream + cmdexttable);
