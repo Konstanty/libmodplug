@@ -5,6 +5,7 @@
  *          Adam Goode       <adam@evdebs.org> (endian and char fixes for PPC)
 */
 
+#include <stddef.h>
 #include "stdafx.h"
 #include "sndfile.h"
 
@@ -266,7 +267,7 @@ typedef struct tagMMD0EXP
 
 
 
-static void MedConvert(MODCOMMAND *p, const MMD0SONGHEADER *pmsh)
+static void MedConvert(MODCOMMAND *p, BYTE flags, BYTE flags2)
 //---------------------------------------------------------------
 {
 	UINT command = p->command;
@@ -284,7 +285,7 @@ static void MedConvert(MODCOMMAND *p, const MMD0SONGHEADER *pmsh)
 	case 0x0A:	if (param & 0xF0) param &= 0xF0; command = CMD_VOLUMESLIDE; if (!param) command = 0; break;
 	case 0x0B:	command = CMD_POSITIONJUMP; break;
 	case 0x0C:	command = CMD_VOLUME;
-				if (pmsh->flags & MMD_FLAG_VOLHEX)
+				if (flags & MMD_FLAG_VOLHEX)
 				{
 					if (param < 0x80)
 					{
@@ -307,7 +308,7 @@ static void MedConvert(MODCOMMAND *p, const MMD0SONGHEADER *pmsh)
 		// F.01 - F.F0: Set tempo/speed
 		if (param <= 0xF0)
 		{
-			if (pmsh->flags & MMD_FLAG_8CHANNEL)
+			if (flags & MMD_FLAG_8CHANNEL)
 			{
 				param = (param > 10) ? 99 : bpmvals[param-1];
 			} else
@@ -317,7 +318,7 @@ static void MedConvert(MODCOMMAND *p, const MMD0SONGHEADER *pmsh)
 				command = CMD_SPEED;
 			} else
 			// Old tempo
-			if (!(pmsh->flags2 & MMD_FLAG2_BPM))
+			if (!(flags2 & MMD_FLAG2_BPM))
 			{
 				param = _muldiv(param, 5*715909, 2*474326);
 			}
@@ -475,132 +476,131 @@ static void MedConvert(MODCOMMAND *p, const MMD0SONGHEADER *pmsh)
 BOOL CSoundFile::ReadMed(const BYTE *lpStream, DWORD dwMemLength)
 //---------------------------------------------------------------
 {
-	const MEDMODULEHEADER *pmmh;
-	const MMD0SONGHEADER *pmsh;
-	const MMD2SONGHEADER *pmsh2;
-	const MMD0EXP *pmex;
+	const BYTE *pmsh, *pmex, *psample, *pdwTable;
 	DWORD dwBlockArr, dwSmplArr, dwExpData, wNumBlocks;
-	LPDWORD pdwTable;
 	CHAR version;
+	BYTE flags, flags2;
 	UINT deftempo;
 	int playtransp = 0;
 
 	if ((!lpStream) || (dwMemLength < 0x200)) return FALSE;
-	pmmh = (MEDMODULEHEADER *)lpStream;
-	if (((pmmh->id & 0x00FFFFFF) != 0x444D4D) || (!pmmh->song)) return FALSE;
+
 	// Check for 'MMDx'
-	DWORD dwSong = bswapBE32(pmmh->song);
+	if (memcmp(lpStream,"MMD",3) != 0) return FALSE;
+	DWORD dwSong = READ_BE32(lpStream + offsetof(MEDMODULEHEADER,song));
+	if (!dwSong) return FALSE;
 	if ((dwSong >= dwMemLength) || (dwSong + sizeof(MMD0SONGHEADER) >= dwMemLength)) return FALSE;
-	version = (signed char)((pmmh->id >> 24) & 0xFF);
+	version = lpStream[3];
 	if ((version < '0') || (version > '3')) return FALSE;
 #ifdef MED_LOG
-	Log("\nLoading MMD%c module (flags=0x%02X)...\n", version, bswapBE32(pmmh->mmdflags));
-	Log("  modlen   = %d\n", bswapBE32(pmmh->modlen));
-	Log("  song     = 0x%08X\n", bswapBE32(pmmh->song));
-	Log("  psecnum  = %d\n", bswapBE16(pmmh->psecnum));
-	Log("  pseq     = %d\n", bswapBE16(pmmh->pseq));
-	Log("  blockarr = 0x%08X\n", bswapBE32(pmmh->blockarr));
-	Log("  mmdflags = 0x%08X\n", bswapBE32(pmmh->mmdflags));
-	Log("  smplarr  = 0x%08X\n", bswapBE32(pmmh->smplarr));
-	Log("  reserved = 0x%08X\n", bswapBE32(pmmh->reserved));
-	Log("  expdata  = 0x%08X\n", bswapBE32(pmmh->expdata));
-	Log("  reserved2= 0x%08X\n", bswapBE32(pmmh->reserved2));
-	Log("  pstate   = %d\n", bswapBE16(pmmh->pstate));
-	Log("  pblock   = %d\n", bswapBE16(pmmh->pblock));
-	Log("  pline    = %d\n", bswapBE16(pmmh->pline));
-	Log("  pseqnum  = %d\n", bswapBE16(pmmh->pseqnum));
-	Log("  actplayline=%d\n", bswapBE16(pmmh->actplayline));
-	Log("  counter  = %d\n", pmmh->counter);
-	Log("  extra_songs = %d\n", pmmh->extra_songs);
+	Log("\nLoading MMD%c module (flags=0x%02X)...\n", version, READ_BE32(lpStream+offsetof(MEDMODULEHEADER,mmdflags)));
+	Log("  modlen   = %d\n", READ_BE32(lpStream+offsetof(MEDMODULEHEADER,modlen)));
+	Log("  song     = 0x%08X\n", READ_BE32(lpStream+offsetof(MEDMODULEHEADER,song)));
+	Log("  psecnum  = %d\n", READ_BE16(lpStream+offsetof(MEDMODULEHEADER,psecnum)));
+	Log("  pseq     = %d\n", READ_BE16(lpStream+offsetof(MEDMODULEHEADER,pseq)));
+	Log("  blockarr = 0x%08X\n", READ_BE32(lpStream+offsetof(MEDMODULEHEADER,blockarr)));
+	Log("  mmdflags = 0x%08X\n", READ_BE32(lpStream+offsetof(MEDMODULEHEADER,mmdflags)));
+	Log("  smplarr  = 0x%08X\n", READ_BE32(lpStream+offsetof(MEDMODULEHEADER,smplarr)));
+	Log("  reserved = 0x%08X\n", READ_BE32(lpStream+offsetof(MEDMODULEHEADER,reserved)));
+	Log("  expdata  = 0x%08X\n", READ_BE32(lpStream+offsetof(MEDMODULEHEADER,expdata)));
+	Log("  reserved2= 0x%08X\n", READ_BE32(lpStream+offsetof(MEDMODULEHEADER,reserved2)));
+	Log("  pstate   = %d\n", READ_BE16(lpStream+offsetof(MEDMODULEHEADER,pstate)));
+	Log("  pblock   = %d\n", READ_BE16(lpStream+offsetof(MEDMODULEHEADER,pblock)));
+	Log("  pline    = %d\n", READ_BE16(lpStream+offsetof(MEDMODULEHEADER,pline)));
+	Log("  pseqnum  = %d\n", READ_BE16(lpStream+offsetof(MEDMODULEHEADER,pseqnum)));
+	Log("  actplayline=%d\n", READ_BE16(lpStream+offsetof(MEDMODULEHEADER,actplayline)));
+	Log("  counter  = %d\n", *(lpStream+offsetof(MEDMODULEHEADER,counter)));
+	Log("  extra_songs = %d\n", *(lpStream+offsetof(MEDMODULEHEADER,extra_songs)));
 	Log("\n");
 #endif
 	m_nType = MOD_TYPE_MED;
 	m_nSongPreAmp = 0x20;
-	dwBlockArr = bswapBE32(pmmh->blockarr);
-	dwSmplArr = bswapBE32(pmmh->smplarr);
-	dwExpData = bswapBE32(pmmh->expdata);
+	dwBlockArr = READ_BE32(lpStream + offsetof(MEDMODULEHEADER,blockarr));
+	dwSmplArr  = READ_BE32(lpStream + offsetof(MEDMODULEHEADER,smplarr));
+	dwExpData  = READ_BE32(lpStream + offsetof(MEDMODULEHEADER,expdata));
 	if ((dwExpData) && (dwExpData < dwMemLength - sizeof(MMD0EXP)))
-		pmex = (MMD0EXP *)(lpStream+dwExpData);
+		pmex = lpStream + dwExpData;		/* MMD0EXP */
 	else
 		pmex = NULL;
-	pmsh = (MMD0SONGHEADER *)(lpStream + dwSong);
-	pmsh2 = (MMD2SONGHEADER *)pmsh;
+	pmsh = lpStream + dwSong; /* MMD0SONGHEADER / MMD2SONGHEADER */
+	flags  = *(pmsh + offsetof(MMD0SONGHEADER,flags));
+	flags2 = *(pmsh + offsetof(MMD0SONGHEADER,flags2));
 #ifdef MED_LOG
 	if (version < '2')
 	{
 		Log("MMD0 Header:\n");
-		Log("  numblocks  = %d\n", bswapBE16(pmsh->numblocks));
-		Log("  songlen    = %d\n", bswapBE16(pmsh->songlen));
+		Log("  numblocks  = %d\n", READ_BE16(pmsh + offsetof(MMD0SONGHEADER,numblocks)));
+		Log("  songlen    = %d\n", READ_BE16(pmsh + offsetof(MMD0SONGHEADER,songlen)));
 		Log("  playseq    = ");
-		for (UINT idbg1=0; idbg1<16; idbg1++) Log("%2d, ", pmsh->playseq[idbg1]);
+		for (UINT idbg1=0; idbg1<16; idbg1++) Log("%2d, ", (pmsh + offsetof(MMD0SONGHEADER,playseq))[idbg1]);
 		Log("...\n");
-		Log("  deftempo   = 0x%04X\n", bswapBE16(pmsh->deftempo));
-		Log("  playtransp = %d\n", (signed char)pmsh->playtransp);
-		Log("  flags(1,2) = 0x%02X, 0x%02X\n", pmsh->flags, pmsh->flags2);
-		Log("  tempo2     = %d\n", pmsh->tempo2);
+		Log("  deftempo   = 0x%04X\n", READ_BE16(pmsh + offsetof(MMD0SONGHEADER,deftempo)));
+		Log("  playtransp = %d\n", (signed char) *(pmsh + offsetof(MMD0SONGHEADER,playtransp)));
+		Log("  flags(1,2) = 0x%02X, 0x%02X\n", *(pmsh + offsetof(MMD0SONGHEADER,flags)), *(pmsh + offsetof(MMD0SONGHEADER,flags2)));
+		Log("  tempo2     = %d\n", *(pmsh + offsetof(MMD0SONGHEADER,tempo2)));
 		Log("  trkvol     = ");
-		for (UINT idbg2=0; idbg2<16; idbg2++) Log("0x%02X, ", pmsh->trkvol[idbg2]);
+		for (UINT idbg2=0; idbg2<16; idbg2++) Log("0x%02X, ", (pmsh + offsetof(MMD0SONGHEADER,trkvol))[idbg2]);
 		Log("...\n");
-		Log("  mastervol  = 0x%02X\n", pmsh->mastervol);
-		Log("  numsamples = %d\n", pmsh->numsamples);
+		Log("  mastervol  = 0x%02X\n", *(pmsh + offsetof(MMD0SONGHEADER,mastervol)));
+		Log("  numsamples = %d\n", *(pmsh + offsetof(MMD0SONGHEADER,numsamples)));
 	} else
 	{
 		Log("MMD2 Header:\n");
-		Log("  numblocks  = %d\n", bswapBE16(pmsh2->numblocks));
-		Log("  numsections= %d\n", bswapBE16(pmsh2->numsections));
-		Log("  playseqptr = 0x%04X\n", bswapBE32(pmsh2->playseqtable));
-		Log("  sectionptr = 0x%04X\n", bswapBE32(pmsh2->sectiontable));
-		Log("  trackvols  = 0x%04X\n", bswapBE32(pmsh2->trackvols));
-		Log("  numtracks  = %d\n", bswapBE16(pmsh2->numtracks));
-		Log("  numpseqs   = %d\n", bswapBE16(pmsh2->numpseqs));
-		Log("  trackpans  = 0x%04X\n", bswapBE32(pmsh2->trackpans));
-		Log("  flags3     = 0x%08X\n", bswapBE32(pmsh2->flags3));
-		Log("  voladj     = %d\n", bswapBE16(pmsh2->voladj));
-		Log("  channels   = %d\n", bswapBE16(pmsh2->channels));
-		Log("  echotype   = %d\n", pmsh2->mix_echotype);
-		Log("  echodepth  = %d\n", pmsh2->mix_echodepth);
-		Log("  echolen    = %d\n", bswapBE16(pmsh2->mix_echolen));
-		Log("  stereosep  = %d\n", (signed char)pmsh2->mix_stereosep);
-		Log("  deftempo   = 0x%04X\n", bswapBE16(pmsh2->deftempo));
-		Log("  playtransp = %d\n", (signed char)pmsh2->playtransp);
-		Log("  flags(1,2) = 0x%02X, 0x%02X\n", pmsh2->flags, pmsh2->flags2);
-		Log("  tempo2     = %d\n", pmsh2->tempo2);
-		Log("  mastervol  = 0x%02X\n", pmsh2->mastervol);
-		Log("  numsamples = %d\n", pmsh->numsamples);
+		Log("  numblocks  = %d\n", READ_BE16(pmsh + offsetof(MMD2SONGHEADER,numblocks)));
+		Log("  numsections= %d\n", READ_BE16(pmsh + offsetof(MMD2SONGHEADER,numsections)));
+		Log("  playseqptr = 0x%04X\n", READ_BE32(pmsh + offsetof(MMD2SONGHEADER,playseqtable)));
+		Log("  sectionptr = 0x%04X\n", READ_BE32(pmsh + offsetof(MMD2SONGHEADER,sectiontable)));
+		Log("  trackvols  = 0x%04X\n", READ_BE32(pmsh + offsetof(MMD2SONGHEADER,trackvols)));
+		Log("  numtracks  = %d\n", READ_BE16(pmsh + offsetof(MMD2SONGHEADER,numtracks)));
+		Log("  numpseqs   = %d\n", READ_BE16(pmsh + offsetof(MMD2SONGHEADER,numpseqs)));
+		Log("  trackpans  = 0x%04X\n", READ_BE32(pmsh + offsetof(MMD2SONGHEADER,trackpans)));
+		Log("  flags3     = 0x%08X\n", READ_BE32(pmsh + offsetof(MMD2SONGHEADER,flags3)));
+		Log("  voladj     = %d\n", READ_BE16(pmsh + offsetof(MMD2SONGHEADER,voladj)));
+		Log("  channels   = %d\n", READ_BE16(pmsh + offsetof(MMD2SONGHEADER,channels)));
+		Log("  echotype   = %d\n", *(pmsh + offsetof(MMD2SONGHEADER,mix_echotype)));
+		Log("  echodepth  = %d\n", *(pmsh + offsetof(MMD2SONGHEADER,mix_echodepth)));
+		Log("  echolen    = %d\n", READ_BE16(pmsh + offsetof(MMD2SONGHEADER,mix_echolen)));
+		Log("  stereosep  = %d\n", (signed char) *(pmsh + offsetof(MMD2SONGHEADER,mix_stereosep)));
+		Log("  deftempo   = 0x%04X\n", READ_BE16(pmsh + offsetof(MMD2SONGHEADER,deftempo)));
+		Log("  playtransp = %d\n", (signed char) *(pmsh + offsetof(MMD2SONGHEADER,playtransp)));
+		Log("  flags(1,2) = 0x%02X, 0x%02X\n", *(pmsh + offsetof(MMD2SONGHEADER,flags)), *(pmsh + offsetof(MMD2SONGHEADER,flags2)));
+		Log("  tempo2     = %d\n", *(pmsh + offsetof(MMD2SONGHEADER,tempo2)));
+		Log("  mastervol  = 0x%02X\n", *(pmsh + offsetof(MMD2SONGHEADER,mastervol)));
+		Log("  numsamples = %d\n", *(pmsh + offsetof(MMD2SONGHEADER,numsamples)));
 	}
 	Log("\n");
 #endif
-	wNumBlocks = bswapBE16(pmsh->numblocks);
+	wNumBlocks = READ_BE16(pmsh + offsetof(MMD0SONGHEADER,numblocks));
 	m_nChannels = 4;
-	m_nSamples = pmsh->numsamples;
+	m_nSamples = *(pmsh + offsetof(MMD0SONGHEADER,numsamples));
 	if (m_nSamples > 63) m_nSamples = 63;
 	// Tempo
 	m_nDefaultTempo = 125;
-	deftempo = bswapBE16(pmsh->deftempo);
+	deftempo = READ_BE16(pmsh + offsetof(MMD0SONGHEADER,deftempo));
 	if (!deftempo) deftempo = 125;
-	if (pmsh->flags2 & MMD_FLAG2_BPM)
+	if (flags2 & MMD_FLAG2_BPM)
 	{
-		UINT tempo_tpl = (pmsh->flags2 & MMD_FLAG2_BMASK) + 1;
+		UINT tempo_tpl = (flags2 & MMD_FLAG2_BMASK) + 1;
 		if (!tempo_tpl) tempo_tpl = 4;
 		deftempo *= tempo_tpl;
 		deftempo /= 4;
 	#ifdef MED_LOG
-		Log("newtempo: %3d bpm (bpm=%3d lpb=%2d)\n", deftempo, bswapBE16(pmsh->deftempo), (pmsh->flags2 & MMD_FLAG2_BMASK)+1);
+		Log("newtempo: %3d bpm (bpm=%3d lpb=%2d)\n", deftempo, READ_BE16(pmsh + offsetof(MMD0SONGHEADER,deftempo)), (flags2 & MMD_FLAG2_BMASK)+1);
 	#endif
 	} else
 	{
-		if (pmsh->flags & MMD_FLAG_8CHANNEL && deftempo > 0 && deftempo <= 10)
+		if (flags & MMD_FLAG_8CHANNEL && deftempo > 0 && deftempo <= 10)
 		{
 			deftempo = bpmvals[deftempo-1];
 		} else {
 			deftempo = _muldiv(deftempo, 5*715909, 2*474326);
 		}
 	#ifdef MED_LOG
-		Log("oldtempo: %3d bpm (bpm=%3d)\n", deftempo, bswapBE16(pmsh->deftempo));
+		Log("oldtempo: %3d bpm (bpm=%3d)\n", deftempo, READ_BE16(pmsh + offsetof(MMD0SONGHEADER,deftempo)));
 	#endif
 	}
 	// Speed
-	m_nDefaultSpeed = pmsh->tempo2;
+	m_nDefaultSpeed = *(pmsh + offsetof(MMD0SONGHEADER,tempo2));
 	if (!m_nDefaultSpeed) m_nDefaultSpeed = 6;
 	if (deftempo < 0x21) deftempo = 0x21;
 	if (deftempo > 255)
@@ -614,39 +614,40 @@ BOOL CSoundFile::ReadMed(const BYTE *lpStream, DWORD dwMemLength)
 	}
 	m_nDefaultTempo = deftempo;
 	// Reading Samples
-	for (UINT iSHdr=0; iSHdr<m_nSamples; iSHdr++)
+	psample = pmsh;
+	for (UINT iSHdr=0; iSHdr<m_nSamples; iSHdr++, psample += sizeof(MMD0SAMPLE))
 	{
 		MODINSTRUMENT *pins = &Ins[iSHdr+1];
-		pins->nLoopStart = bswapBE16(pmsh->sample[iSHdr].rep) << 1;
-		pins->nLoopEnd = pins->nLoopStart + (bswapBE16(pmsh->sample[iSHdr].replen) << 1);
-		pins->nVolume = (pmsh->sample[iSHdr].svol << 2);
+		pins->nLoopStart = READ_BE16(psample + offsetof(MMD0SAMPLE,rep)) << 1;
+		pins->nLoopEnd = pins->nLoopStart + (READ_BE16(psample + offsetof(MMD0SAMPLE,replen)) << 1);
+		pins->nVolume = *(psample + offsetof(MMD0SAMPLE,svol)) << 2;
 		pins->nGlobalVol = 64;
 		if (pins->nVolume > 256) pins->nVolume = 256;
-		pins->RelativeTone = -12 * pmsh->sample[iSHdr].strans;
+		pins->RelativeTone = -12 * (signed char) *(psample + offsetof(MMD0SAMPLE,strans));
 		pins->nPan = 128;
 		if (pins->nLoopEnd) pins->uFlags |= CHN_LOOP;
 	}
 	// Common Flags
-	if (!(pmsh->flags & 0x20)) m_dwSongFlags |= SONG_FASTVOLSLIDES;
+	if (!(flags & 0x20)) m_dwSongFlags |= SONG_FASTVOLSLIDES;
 	// Reading play sequence
 	if (version < '2')
 	{
-		UINT nbo = pmsh->songlen >> 8;
+		UINT nbo = READ_BE16(pmsh + offsetof(MMD0SONGHEADER,songlen));
 		if (nbo >= MAX_ORDERS) nbo = MAX_ORDERS-1;
 		if (!nbo) nbo = 1;
-		memcpy(Order, pmsh->playseq, nbo);
-		playtransp = pmsh->playtransp;
+		memcpy(Order, pmsh + offsetof(MMD0SONGHEADER,playseq), nbo);
+		playtransp = (signed char) *(pmsh + offsetof(MMD0SONGHEADER,playtransp));
 	} else
 	{
 		UINT nOrders, nSections;
-		UINT nTrks = bswapBE16(pmsh2->numtracks);
+		UINT nTrks = READ_BE16(pmsh + offsetof(MMD2SONGHEADER,numtracks));
 		if ((nTrks >= 4) && (nTrks <= 32)) m_nChannels = nTrks;
-		DWORD playseqtable = bswapBE32(pmsh2->playseqtable);
-		UINT numplayseqs = bswapBE16(pmsh2->numpseqs);
+		DWORD playseqtable = READ_BE32(pmsh + offsetof(MMD2SONGHEADER,playseqtable));
+		UINT numplayseqs = READ_BE16(pmsh + offsetof(MMD2SONGHEADER,numpseqs));
 		if (!numplayseqs) numplayseqs = 1;
 		nOrders = 0;
-		nSections = bswapBE16(pmsh2->numsections);
-		DWORD sectiontable = bswapBE32(pmsh2->sectiontable);
+		nSections = READ_BE16(pmsh + offsetof(MMD2SONGHEADER,numsections));
+		DWORD sectiontable = READ_BE32(pmsh + offsetof(MMD2SONGHEADER,sectiontable));
 		if ((!nSections) || (!sectiontable) || (sectiontable >= dwMemLength-2)) nSections = 1;
 		nOrders = 0;
 		for (UINT iSection=0; iSection<nSections; iSection++)
@@ -664,19 +665,19 @@ BOOL CSoundFile::ReadMed(const BYTE *lpStream, DWORD dwMemLength)
 
 			if ((playseqtable) && (playseqtable < dwMemLength - 4) && ((nplayseq+1)*4 < dwMemLength - playseqtable))
 			{
-				pseq = bswapBE32(((LPDWORD)(lpStream+playseqtable))[nplayseq]);
+				pseq = READ_BE32(lpStream + playseqtable + nplayseq * sizeof(DWORD));
 			}
 			if ((pseq) && dwMemLength > sizeof(MMD2PLAYSEQ) &&
 				(pseq < dwMemLength - sizeof(MMD2PLAYSEQ)))
 			{
-				const MMD2PLAYSEQ *pmps = (MMD2PLAYSEQ *)(lpStream + pseq);
-				if (!m_szNames[0][0]) memcpy(m_szNames[0], pmps->name, 31);
-				UINT n = bswapBE16(pmps->length);
-				if (n < (dwMemLength - (pseq + sizeof(*pmps)) + sizeof(pmps->seq)) / sizeof(pmps->seq[0]))
+				const BYTE *pmps = lpStream + pseq; /* MMD2PLAYSEQ */
+				if (!m_szNames[0][0]) memcpy(m_szNames[0], pmps, 31);
+				UINT n = READ_BE16(pmps + offsetof(MMD2PLAYSEQ,length));
+				if (n < (dwMemLength - (pseq + sizeof(MMD2PLAYSEQ)) + 512*sizeof(WORD)) / sizeof(WORD)) /* WORD seq[512] */
 				{
 					for (UINT i=0; i<n; i++)
 					{
-						UINT seqval = pmps->seq[i] >> 8;
+						UINT seqval = READ_BE16(pmps + offsetof(MMD2PLAYSEQ,seq) + i*sizeof(WORD));
 						if ((seqval < wNumBlocks) && (nOrders < MAX_ORDERS-1))
 						{
 							Order[nOrders++] = seqval;
@@ -685,23 +686,23 @@ BOOL CSoundFile::ReadMed(const BYTE *lpStream, DWORD dwMemLength)
 				}
 			}
 		}
-		playtransp = pmsh2->playtransp;
+		playtransp = (signed char) *(pmsh + offsetof(MMD2SONGHEADER,playtransp));
 		while (nOrders < MAX_ORDERS) Order[nOrders++] = 0xFF;
 	}
 	// Reading Expansion structure
 	if (pmex)
 	{
 		// Channel Split
-		if ((m_nChannels == 4) && (pmsh->flags & MMD_FLAG_8CHANNEL))
+		if ((m_nChannels == 4) && (flags & MMD_FLAG_8CHANNEL))
 		{
 			for (UINT i8ch=0; i8ch<4; i8ch++)
 			{
-				if (pmex->channelsplit[i8ch]) m_nChannels++;
+				if (*(pmex + offsetof(MMD0EXP,channelsplit) + i8ch)) m_nChannels++;
 			}
 		}
 		// Song Comments
-		uint32_t annotxt = bswapBE32(pmex->annotxt);
-		uint32_t annolen = bswapBE32(pmex->annolen);
+		uint32_t annotxt = READ_BE32(pmex + offsetof(MMD0EXP,annotxt));
+		uint32_t annolen = READ_BE32(pmex + offsetof(MMD0EXP,annolen));
 		if ((annotxt) && (annolen) && (annotxt + annolen > annotxt) // overflow checks.
 				&& (annotxt+annolen <= dwMemLength))
 		{
@@ -710,8 +711,8 @@ BOOL CSoundFile::ReadMed(const BYTE *lpStream, DWORD dwMemLength)
 			m_lpszSongComments[annolen] = 0;
 		}
 		// Song Name
-		uint32_t songname = bswapBE32(pmex->songname);
-		uint32_t songnamelen = bswapBE32(pmex->songnamelen);
+		uint32_t songname = READ_BE32(pmex + offsetof(MMD0EXP,songname));
+		uint32_t songnamelen = READ_BE32(pmex + offsetof(MMD0EXP,songnamelen));
 		if ((songname) && (songnamelen) && (songname+songnamelen > songname)
 				&& (songname+songnamelen <= dwMemLength))
 		{
@@ -720,12 +721,12 @@ BOOL CSoundFile::ReadMed(const BYTE *lpStream, DWORD dwMemLength)
 			m_szNames[0][31] = '\0';
 		}
 		// Sample Names
-		DWORD smpinfoex = bswapBE32(pmex->iinfo);
+		DWORD smpinfoex = READ_BE32(pmex + offsetof(MMD0EXP,iinfo));
 		if (smpinfoex)
 		{
-			DWORD iinfoptr = bswapBE32(pmex->iinfo);
-			UINT ientries = bswapBE16(pmex->i_ext_entries);
-			UINT ientrysz = bswapBE16(pmex->i_ext_entrsz);
+			DWORD iinfoptr = READ_BE32(pmex + offsetof(MMD0EXP,iinfo));
+			UINT ientries = READ_BE16(pmex + offsetof(MMD0EXP,i_ext_entries));
+			UINT ientrysz = READ_BE16(pmex + offsetof(MMD0EXP,i_ext_entrsz));
 
 			if ((iinfoptr) && (ientrysz < 256) &&
 			 (ientries*ientrysz < dwMemLength) &&
@@ -743,14 +744,14 @@ BOOL CSoundFile::ReadMed(const BYTE *lpStream, DWORD dwMemLength)
 			}
 		}
 		// Track Names
-		DWORD trackinfo_ofs = bswapBE32(pmex->trackinfo_ofs);
+		DWORD trackinfo_ofs = READ_BE32(pmex + offsetof(MMD0EXP,trackinfo_ofs));
 		if ((trackinfo_ofs) && (trackinfo_ofs < dwMemLength) && (m_nChannels * 4 < dwMemLength - trackinfo_ofs))
 		{
-			DWORD *ptrktags = (DWORD *)(lpStream + trackinfo_ofs);
-			for (UINT i=0; i<m_nChannels; i++)
+			const BYTE *ptrktags = lpStream + trackinfo_ofs;
+			for (UINT i=0; i<m_nChannels; i++, ptrktags += sizeof(DWORD))
 			{
 				DWORD trknameofs = 0, trknamelen = 0;
-				DWORD trktagofs = bswapBE32(ptrktags[i]);
+				DWORD trktagofs = READ_BE32(ptrktags);
 				if (trktagofs)
 				{
 					while (trktagofs < dwMemLength - 8)
@@ -777,18 +778,19 @@ BOOL CSoundFile::ReadMed(const BYTE *lpStream, DWORD dwMemLength)
 	}
 	// Reading samples
 	if (dwSmplArr > dwMemLength - 4*m_nSamples) return TRUE;
-	pdwTable = (LPDWORD)(lpStream + dwSmplArr);
-	for (UINT iSmp=0; iSmp<m_nSamples; iSmp++) if (pdwTable[iSmp])
+	pdwTable = lpStream + dwSmplArr;
+	for (UINT iSmp=0; iSmp<m_nSamples; iSmp++)
 	{
-		UINT dwPos = bswapBE32(pdwTable[iSmp]);
+		UINT dwPos = READ_BE32(pdwTable + iSmp*sizeof(DWORD));
+		if (!dwPos) continue;
 		if ((dwPos >= dwMemLength) || (dwPos + sizeof(MMDSAMPLEHEADER) >= dwMemLength)) continue;
-		MMDSAMPLEHEADER *psdh = (MMDSAMPLEHEADER *)(lpStream + dwPos);
-		UINT len = bswapBE32(psdh->length);
+		const BYTE *psdh = lpStream + dwPos; /* MMDSAMPLEHEADER */
+		UINT len = READ_BE32(psdh + offsetof(MMDSAMPLEHEADER,length));
 	#ifdef MED_LOG
-		Log("SampleData %d: stype=0x%02X len=%d\n", iSmp, bswapBE16(psdh->type), len);
+		Log("SampleData %d: stype=0x%02X len=%d\n", iSmp, READ_BE16(psdh + offsetof(MMDSAMPLEHEADER,type)), len);
 	#endif
 		if ((len > MAX_SAMPLE_LENGTH) || (dwPos + len + 6 > dwMemLength)) len = 0;
-		UINT flags = RS_PCM8S, stype = bswapBE16(psdh->type);
+		UINT sflags = RS_PCM8S, stype = READ_BE16(psdh + offsetof(MMDSAMPLEHEADER,type));
 		LPSTR psdata = (LPSTR)(lpStream + dwPos + 6);
 		UINT bLimit = dwMemLength - dwPos - 6;
 		if (stype & 0x80)
@@ -801,25 +803,25 @@ BOOL CSoundFile::ReadMed(const BYTE *lpStream, DWORD dwMemLength)
 			{
 				Ins[iSmp+1].uFlags |= CHN_16BIT;
 				len /= 2;
-				flags = (stype & 0x20) ? RS_STPCM16M : RS_PCM16M;
+				sflags = (stype & 0x20) ? RS_STPCM16M : RS_PCM16M;
 			} else
 			{
-				flags = (stype & 0x20) ? RS_STPCM8S : RS_PCM8S;
+				sflags = (stype & 0x20) ? RS_STPCM8S : RS_PCM8S;
 			}
 			if (stype & 0x20) len /= 2;
 		}
 		Ins[iSmp+1].nLength = len;
-		ReadSample(&Ins[iSmp+1], flags, psdata, bLimit);
+		ReadSample(&Ins[iSmp+1], sflags, psdata, bLimit);
 	}
 	// Reading patterns (blocks)
 	if (wNumBlocks > MAX_PATTERNS) wNumBlocks = MAX_PATTERNS;
 	if ((!dwBlockArr) || (dwMemLength < 4*wNumBlocks) ||
 		(dwBlockArr > dwMemLength - 4*wNumBlocks)) return TRUE;
-	pdwTable = (LPDWORD)(lpStream + dwBlockArr);
+	pdwTable = lpStream + dwBlockArr;
 	playtransp += (version == '3') ? 24 : 48;
 	for (UINT iBlk=0; iBlk<wNumBlocks; iBlk++)
 	{
-		UINT dwPos = bswapBE32(pdwTable[iBlk]);
+		UINT dwPos = READ_BE32(pdwTable + iBlk*sizeof(DWORD));
 		if ((!dwPos) || (dwPos >= dwMemLength) || (dwPos >= dwMemLength - 8)) continue;
 		UINT lines = 64, tracks = 4;
 		if (version == '0')
@@ -847,37 +849,37 @@ BOOL CSoundFile::ReadMed(const BYTE *lpStream, DWORD dwMemLength)
 					p->command = s[1] & 0x0F;
 					p->param = s[2];
 					// if (!iBlk) Log("%02X.%02X.%02X | ", s[0], s[1], s[2]);
-					MedConvert(p, pmsh);
+					MedConvert(p, flags, flags2);
 					p++;
 				}
 				//if (!iBlk) Log("\n");
 			}
 		} else
 		{
-			const MMD1BLOCK *pmb = (MMD1BLOCK *)(lpStream + dwPos);
+			const BYTE *pmb = lpStream + dwPos; /* MMD1BLOCK */
+			tracks = READ_BE16(pmb + 0);
+			lines  = READ_BE16(pmb + 2) + 1;
+			DWORD dwBlockInfo = READ_BE32(pmb + 4);
 		#ifdef MED_LOG
 			Log("MMD1BLOCK:   lines=%2d, tracks=%2d, offset=0x%04X\n",
-				bswapBE16(pmb->lines), bswapBE16(pmb->numtracks), bswapBE32(pmb->info));
+				lines, tracks, dwBlockInfo);
 		#endif
-			const MMD1BLOCKINFO *pbi = NULL;
 			BYTE *pcmdext = NULL;
-			lines = (pmb->lines >> 8) + 1;
-			tracks = pmb->numtracks >> 8;
 			if (!tracks) tracks = m_nChannels;
 			if ((Patterns[iBlk] = AllocatePattern(lines, m_nChannels)) == NULL) continue;
 			PatternSize[iBlk] = (WORD)lines;
-			DWORD dwBlockInfo = bswapBE32(pmb->info);
 			if ((dwBlockInfo) && (dwBlockInfo < dwMemLength - sizeof(MMD1BLOCKINFO)))
 			{
-				pbi = (MMD1BLOCKINFO *)(lpStream + dwBlockInfo);
+				const BYTE *pbi   = lpStream + dwBlockInfo; /* MMD1BLOCKINFO */
+				DWORD nameofs     = READ_BE32(pbi + 4);
+				DWORD namelen     = READ_BE32(pbi + 8);
+				DWORD cmdexttable = READ_BE32(pbi + 16);
 			#ifdef MED_LOG
 				Log("  BLOCKINFO: blockname=0x%04X namelen=%d pagetable=0x%04X &cmdexttable=0x%04X\n",
-					bswapBE32(pbi->blockname), bswapBE32(pbi->blocknamelen), bswapBE32(pbi->pagetable), bswapBE32(pbi->cmdexttable));
+					nameofs, namelen, READ_BE32(pbi + 12), cmdexttable);
 			#endif
-				if ((pbi->blockname) && (pbi->blocknamelen))
+				if (nameofs && namelen)
 				{
-					DWORD nameofs = bswapBE32(pbi->blockname);
-					UINT namelen = bswapBE32(pbi->blocknamelen);
 					if ((namelen < dwMemLength) && (nameofs < dwMemLength - namelen))
 					{
 						// SetPatternName expects a nul-terminated string.
@@ -889,9 +891,8 @@ BOOL CSoundFile::ReadMed(const BYTE *lpStream, DWORD dwMemLength)
 						SetPatternName(iBlk, blockname);
 					}
 				}
-				if (pbi->cmdexttable)
+				if (cmdexttable)
 				{
-					DWORD cmdexttable = bswapBE32(pbi->cmdexttable);
 					if (cmdexttable < dwMemLength - 4)
 					{
 						cmdexttable = READ_BE32(lpStream + cmdexttable);
@@ -922,7 +923,7 @@ BOOL CSoundFile::ReadMed(const BYTE *lpStream, DWORD dwMemLength)
 					p->command = s[2];
 					p->param = s[3];
 					if (pcmdext) p->vol = pcmdext[x];
-					MedConvert(p, pmsh);
+					MedConvert(p, flags, flags2);
 					p++;
 				}
 				if (pcmdext) pcmdext += tracks;
