@@ -187,7 +187,7 @@ static BOOL IsValidName(LPCSTR s, int length, CHAR minChar)
 
 static BOOL IsMagic(LPCSTR s1, LPCSTR s2)
 {
-	return ((*(DWORD *)s1) == (*(DWORD *)s2)) ? TRUE : FALSE;
+	return memcmp(s1, s2, 4) ? FALSE : TRUE;
 }
 
 BOOL CSoundFile::ReadMod(const BYTE *lpStream, DWORD dwMemLength)

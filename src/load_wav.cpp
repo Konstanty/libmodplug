@@ -118,10 +118,10 @@ BOOL CSoundFile::ReadWav(const BYTE *lpStream, DWORD dwMemLength)
 		{
 			int slsize = pfmt->bitspersample >> 3;
 			signed short *p = (signed short *)pins->pSample;
-			signed char *psrc = (signed char *)(lpStream+dwMemPos+8+nChn*slsize+slsize-2);
+			const BYTE *psrc = lpStream + dwMemPos + 8 + nChn*slsize + slsize - 2;
 			for (UINT i=0; i<len; i++)
 			{
-				p[i] = *((signed short *)psrc);
+				p[i] = (signed short) READ_LE16(psrc);
 				psrc += samplesize;
 			}
 			p[len+1] = p[len] = p[len-1];
@@ -185,7 +185,7 @@ BOOL IMAADPCMUnpack16(signed short *pdest, UINT nLen, LPBYTE psrc, DWORD dwBytes
 	while ((nPos < nLen) && (dwBytes > 4))
 	{
 		int nIndex;
-		value = *((short int *)psrc);
+		value = READ_LE16(psrc);
 		nIndex = psrc[2];
 		psrc += 4;
 		dwBytes -= 4;

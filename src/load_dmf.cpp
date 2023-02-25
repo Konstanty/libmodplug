@@ -106,7 +106,7 @@ BOOL CSoundFile::ReadDMF(const BYTE *lpStream, DWORD dwMemLength)
 #endif
 	while (dwMemPos < dwMemLength - 7)
 	{
-		DWORD id = *((LPDWORD)(lpStream+dwMemPos));
+		DWORD id = READ_LE32(lpStream+dwMemPos);
 
 		switch(id)
 		{
@@ -456,10 +456,10 @@ BOOL CSoundFile::ReadDMF(const BYTE *lpStream, DWORD dwMemLength)
 					#endif
 						break;
 					}
-					pksize = *((LPDWORD)(lpStream+dwPos));
+					pksize = READ_LE32(lpStream+dwPos);
 				#ifdef DMFLOG
 					Log("sample %d: pos=0x%X pksize=%d ", iSmp, dwPos, pksize);
-					Log("len=%d flags=0x%X [%08X]\n", Ins[iSmp].nLength, smplflags[ismpd], *((LPDWORD)(lpStream+dwPos+4)));
+					Log("len=%d flags=0x%X [%08X]\n", Ins[iSmp].nLength, smplflags[ismpd], READ_LE32(lpStream+dwPos+4));
 				#endif
 					dwPos += 4;
 					if (pksize > dwMemLength - dwPos)
