@@ -1,19 +1,52 @@
-cmake_minimum_required(VERSION 2.8.0)
+cmake_minimum_required(VERSION 2.8.12)
 
 project(libmodplug)
+
+set(VERSION "0.8.9.1")
+
+option(BUILD_SHARED_LIBS "Build Shared Library (DLL)" OFF)
+
 add_definitions(-DMODPLUG_BUILD)
 
 include (CheckFunctionExists)
 include (CheckIncludeFile)
+include (CheckCCompilerFlag)
+include (CheckCSourceCompiles)
+include (TestBigEndian)
+
+TEST_BIG_ENDIAN(WORDS_BIGENDIAN)
+if(WORDS_BIGENDIAN)
+  add_definitions(-DWORDS_BIGENDIAN=1)
+endif()
+
+if(CMAKE_COMPILER_IS_GNUCC OR CMAKE_C_COMPILER_ID MATCHES "Clang")
+  add_definitions(-Wall)
+  # check symbol visibility attributes
+  set(OLD_REQUIRED_FLAGS "${CMAKE_REQUIRED_FLAGS}")
+  if(NOT WIN32 AND NOT CYGWIN)
+    set(CMAKE_REQUIRED_FLAGS "${OLD_REQUIRED_FLAGS} -Werror")
+    check_c_source_compiles("int foo(void) __attribute__((visibility(\"default\")));
+                             int main(void) {return 0;}" HAVE_VISIBILITY_DEFAULT)
+    if(HAVE_VISIBILITY_DEFAULT)
+      check_c_compiler_flag(-fvisibility=hidden HAVE_VISIBILITY_HIDDEN)
+    endif()
+  endif()
+  set(CMAKE_REQUIRED_FLAGS "-Wl,--no-undefined")
+  check_c_compiler_flag("" HAVE_NO_UNDEFINED)
+  set(CMAKE_REQUIRED_FLAGS "${OLD_REQUIRED_FLAGS}")
+endif()
 
 include_directories(AFTER
   src
   src/libmodplug
   ${PROJECT_BINARY_DIR}
-  )
+)
 
-if (UNIX)
-  set (CMAKE_REQUIRED_LIBRARIES m)
+if(UNIX AND NOT APPLE)
+  find_library(MATH_LIB m)
+  if(MATH_LIB)
+    set(CMAKE_REQUIRED_LIBRARIES m)
+  endif()
 endif()
 
 if (WIN32)
@@ -21,58 +54,33 @@ if (WIN32)
   add_definitions(-DNOMINMAX)
 endif()
 
-if (WIN32 AND NOT (MINGW OR MSYS))
-  set(MSINTTYPES_PATH "$ENV{MSINTTYPES_PATH}" CACHE PATH "search path for inttypes.h and stdint.h")
-
-  find_path(STDINT_INCLUDE_DIR
-    stdint.h
-    PATHS
-    ${MSINTTYPES_PATH})
-
-  if (STDINT_INCLUDE_DIR)
-    add_definitions(-DHAVE_STDINT_H)
-    include_directories(AFTER "${STDINT_INCLUDE_DIR}")
-  endif()
-
-  find_path(INTTYPES_INCLUDE_DIR
-    inttypes.h
-    PATHS
-    ${MSINTTYPES_PATH})
-
-  if (INTTYPES_INCLUDE_DIR)
-    add_definitions(-DHAVE_INTTYPES_H)
-    include_directories(AFTER "${INTTYPES_INCLUDE_DIR}")
-  endif()
-
-  if (NOT STDINT_INCLUDE_DIR OR NOT INTTYPES_INCLUDE_DIR)
-    message(WARNING
-      "Compilation may fail if inttypes.h is not natively supported by the compiler."
-      "You can get inttypes.h from http://code.google.com/p/msinttypes/")
-  endif()
-else()
-  check_include_file("stdint.h" HAVE_STDINT)
-  if (HAVE_STDINT)
-    add_definitions(-DHAVE_STDINT_H)
-  endif()
+check_include_file("stdint.h" HAVE_STDINT_H)
+if (HAVE_STDINT_H)
+  add_definitions(-DHAVE_STDINT_H)
 endif()
 
-check_function_exists("setenv" HAVE_SETENV)
+check_include_file("strings.h" HAVE_STRINGS_H)
+if (HAVE_STRINGS_H)
+  add_definitions(-DHAVE_STRINGS_H)
+endif()
+
 check_function_exists("sinf" HAVE_SINF)
-
-# Allow the developer to select if Dynamic or Static libraries are built
-option(BUILD_SHARED_LIBS "Build Shared Library (DLL)" OFF)
-
-# Set the LIB_TYPE variable to STATIC
-set(LIB_TYPE STATIC)
+if(HAVE_SINF)
+  add_definitions(-DHAVE_SINF)
+endif()
 
 if (BUILD_SHARED_LIBS)
-  # User wants to build Dynamic Libraries,
-  # so change the LIB_TYPE variable to CMake keyword 'SHARED'
   set (LIB_TYPE SHARED)
-  add_definitions(-DDLL_EXPORT)
-else (BUILD_SHARED_LIBS)
+  if (WIN32 OR CYGWIN)
+    add_definitions(-DDLL_EXPORT)
+  elseif (HAVE_VISIBILITY_HIDDEN)
+    add_definitions(-fvisibility=hidden)
+    add_definitions("-DSYM_VISIBILITY")
+  endif()
+else ()
+  set(LIB_TYPE STATIC)
   add_definitions(-DMODPLUG_STATIC)
-endif (BUILD_SHARED_LIBS)
+endif()
 
 add_library(modplug ${LIB_TYPE}
   src/libmodplug/it_defs.h
@@ -116,30 +124,43 @@ add_library(modplug ${LIB_TYPE}
   src/sndfile.cpp
   src/sndmix.cpp
   src/tables.h
-  )
+)
+
+if (BUILD_SHARED_LIBS)
+  if(APPLE)
+    target_link_libraries(modplug -Wl,-undefined,error)
+    target_link_libraries(modplug -Wl,-compatibility_version,2.0.0)
+    target_link_libraries(modplug -Wl,-current_version,2.0.0)
+  else()
+    if(HAVE_NO_UNDEFINED)
+      target_link_libraries(modplug -Wl,--no-undefined)
+    endif()
+    set_target_properties(modplug PROPERTIES
+                                  VERSION 1.0.0 SOVERSION 1)
+  endif()
+  if(MATH_LIB)
+    target_link_libraries(modplug m)
+  endif()
+endif()
 
 # install the library:
-install(TARGETS modplug DESTINATION lib)
+include (GNUInstallDirs)
+install(TARGETS modplug
+        ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+)
 
-# incstall the headers:
+# install the headers:
 install(FILES
+  src/modplug.h
   src/libmodplug/it_defs.h
   src/libmodplug/sndfile.h
   src/libmodplug/stdafx.h
-  src/modplug.h
 
   DESTINATION
-  include/libmodplug
-  )
-
-set(VERSION "0.8.8.5")
-
-if(HAVE_SETENV)
-  add_definitions(-DHAVE_SETENV)
-endif(HAVE_SETENV)
-if(HAVE_SINF)
-  add_definitions(-DHAVE_SINF)
-endif(HAVE_SINF)
+  ${CMAKE_INSTALL_INCLUDEDIR}/libmodplug
+)
 
 if(WIN32)
   if(MSVC)
@@ -151,13 +172,13 @@ if(WIN32)
 else()
   set(LIBS_PRIVATE "-lstdc++ -lm")
 endif()
-  set(prefix "${CMAKE_INSTALL_PREFIX}")
-  set(exec_prefix "${CMAKE_INSTALL_PREFIX}")
-  set(libdir "${CMAKE_INSTALL_PREFIX}/lib")
-  set(includedir "${CMAKE_INSTALL_PREFIX}/include")
+  set(prefix ${CMAKE_INSTALL_PREFIX})
+  set(exec_prefix ${CMAKE_INSTALL_PREFIX})
+  set(libdir ${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR})
+  set(includedir ${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_INCLUDEDIR})
   configure_file(libmodplug.pc.in libmodplug.pc)
 
   # install pkg-config file:
   install(FILES "${PROJECT_BINARY_DIR}/libmodplug.pc"
-    DESTINATION lib/pkgconfig
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig
   )

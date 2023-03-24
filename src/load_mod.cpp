@@ -39,7 +39,9 @@ void CSoundFile::ConvertModCommand(MODCOMMAND *m) const
 	case 0x0D:	command = CMD_PATTERNBREAK; param = ((param >> 4) * 10) + (param & 0x0F); break;
 	case 0x0E:	command = CMD_MODCMDEX; break;
 	case 0x0F:	command = (param <= (UINT)((m_nType & (MOD_TYPE_XM|MOD_TYPE_MT2)) ? 0x1F : 0x20)) ? CMD_SPEED : CMD_TEMPO;
-				if ((param == 0xFF) && (m_nSamples == 15)) command = 0; break;
+			if((param == 0xFF) && (m_nSamples == 15))
+			    command = 0;
+			break;
 	// Extension for XM extended effects
 	case 'G' - 55:	command = CMD_GLOBALVOLUME; break;
 	case 'H' - 55:	command = CMD_GLOBALVOLSLIDE; if (param & 0xF0) param &= 0xF0; break;
@@ -145,7 +147,6 @@ WORD CSoundFile::ModSaveCommand(const MODCOMMAND *m, BOOL bXM) const
 	return (WORD)((command << 8) | (param));
 }
 
-
 #pragma pack(1)
 
 typedef struct _MODSAMPLE
@@ -184,11 +185,10 @@ static BOOL IsValidName(LPCSTR s, int length, CHAR minChar)
 	return TRUE;
 }
 
-BOOL IsMagic(LPCSTR s1, LPCSTR s2)
+static BOOL IsMagic(LPCSTR s1, LPCSTR s2)
 {
 	return ((*(DWORD *)s1) == (*(DWORD *)s2)) ? TRUE : FALSE;
 }
-
 
 BOOL CSoundFile::ReadMod(const BYTE *lpStream, DWORD dwMemLength)
 //---------------------------------------------------------------
@@ -208,6 +208,7 @@ BOOL CSoundFile::ReadMod(const BYTE *lpStream, DWORD dwMemLength)
 	if ((IsMagic(s, "M.K.")) || (IsMagic(s, "M!K!"))
 	 || (IsMagic(s, "M&K!")) || (IsMagic(s, "N.T."))) m_nChannels = 4; else
 	if ((IsMagic(s, "CD81")) || (IsMagic(s, "OKTA"))) m_nChannels = 8; else
+	if (IsMagic(s, "CD61")) m_nChannels = 6; else
 	if ((s[0]=='F') && (s[1]=='L') && (s[2]=='T') && (s[3]>='4') && (s[3]<='9')) m_nChannels = s[3] - '0'; else
 	if ((s[0]>='2') && (s[0]<='9') && (s[1]=='C') && (s[2]=='H') && (s[3]=='N')) m_nChannels = s[0] - '0'; else
 	if ((s[0]=='1') && (s[1]>='0') && (s[1]<='9') && (s[2]=='C') && (s[3]=='H')) m_nChannels = s[1] - '0' + 10; else

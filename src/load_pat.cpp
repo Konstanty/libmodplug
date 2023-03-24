@@ -31,38 +31,42 @@
 #include <stdlib.h>
 #include <time.h>
 #include <string.h>
+#ifdef HAVE_STRINGS_H
+#include <strings.h>
+#endif
 #include <math.h>
 #include <ctype.h>
+#include <limits.h> /* PATH_MAX */
 #ifndef _WIN32
-#include <limits.h> // for PATH_MAX
-#include <unistd.h> // for sleep
-#endif
-#ifndef PATH_MAX
-#define PATH_MAX 256
+#include <unistd.h>  /* sleep() */
 #endif
 
 #include "stdafx.h"
 #include "sndfile.h"
+#ifndef PATH_MAX
+#define PATH_MAX 256
+#endif
 
 #include "load_pat.h"
 
-#ifdef MSC_VER
+#if defined(_WIN32)||defined(__OS2__)
 #define DIRDELIM		'\\'
 #define TIMIDITYCFG	"C:\\TIMIDITY\\TIMIDITY.CFG"
 #define PATHFORPAT	"C:\\TIMIDITY\\INSTRUMENTS"
 #else
 #define DIRDELIM		'/'
-#define TIMIDITYCFG	"/usr/local/share/timidity/timidity.cfg"
-#define PATHFORPAT	"/usr/local/share/timidity/instruments"
+#define TIMIDITYCFG	"/etc/timidity.cfg" /*"/usr/share/timidity/timidity.cfg"*/
+#define PATHFORPAT	"/usr/share/timidity/instruments"
 #endif
 
 #define PAT_ENV_PATH2CFG			"MMPAT_PATH_TO_CFG"
 
 // 128 gm and 63 drum
 #define MAXSMP				191
+
 static char midipat[MAXSMP][PATH_MAX];
-static char pathforpat[PATH_MAX] = {};
-static char timiditycfg[PATH_MAX] = {};
+static char pathforpat[PATH_MAX];
+static char timiditycfg[PATH_MAX];
 
 #pragma pack(1)
 
@@ -188,7 +192,7 @@ int pat_numinstr(void)
 
 int pat_smptogm(int smp)
 {
-	if( smp < MAXSMP )
+	if( smp && smp < MAXSMP && pat_gm_used[smp - 1] < MAXSMP )
 		return pat_gm_used[smp - 1];
 	return 1;
 }
@@ -272,7 +276,7 @@ typedef float (*PAT_SAMPLE_FUN)(int);
 
 static PAT_SAMPLE_FUN pat_fun[] = { pat_sinus, pat_square, pat_sawtooth };
 
-#if defined(WIN32) && defined(_mm_free)
+#if defined(_WIN32) && defined(_mm_free)
 #undef _mm_free
 #endif
 
@@ -371,6 +375,7 @@ void pat_init_patnames(void)
 		strcat(pathforpat, "/instruments");
 	}
 	strncpy(cfgsources[0], timiditycfg, PATH_MAX - 1);
+	cfgsources[0][PATH_MAX - 1] = '\0';
 	nsources = 1;
 
 	for( i=0; i<MAXSMP; i++ )	midipat[i][0] = '\0';
@@ -386,10 +391,10 @@ void pat_init_patnames(void)
 			isdrumset = 0;
 			_mm_fgets(mmcfg, line, PATH_MAX);
 			while( !_mm_feof(mmcfg) ) {
-			if( isdigit(line[0]) || (isblank(line[0]) && isdigit(line[1])) ) {
-				p = line;
+			p = line;
+			while ( isspace(*p) ) p ++;
+			if( isdigit(p[0]) ) {
 				// get pat number
-				while ( isspace(*p) ) p ++;
 				i = atoi(p);
 				while ( isdigit(*p) ) p ++;
 				while ( isspace(*p) ) p ++;
@@ -417,10 +422,25 @@ void pat_init_patnames(void)
 					*q++ = '\0';
 				}
 			}
-			if( !strncmp(line,"drumset",7) ) isdrumset = 1;
-			if( !strncmp(line,"source",6) && nsources < 5 ) {
+			else if( !strncmp(p,"bank",4) ) isdrumset = 0;
+			else if( !strncmp(p,"drumset",7) ) isdrumset = 1;
+			else if( !strncmp(p,"soundfont",9) ) {
+				fprintf(stderr, "warning: soundfont directive unsupported!\n");
+			}
+			else if( !strncmp(p,"dir",3) )  {
+				p += 3;
+				while ( isspace(*p) ) p ++;
+				q = p + strlen(p);
+				if(q > p) {
+					--q;
+					while ( q > p && isspace(*q) ) *(q--) = 0;
+					strncpy(pathforpat, p, PATH_MAX - 1);
+					pathforpat[PATH_MAX - 1] = 0;
+				}
+			}
+			else if( !strncmp(p,"source",6) && nsources < 5 ) {
 				q = cfgsources[nsources];
-				p = &line[7];
+				p += 6;
 				while ( isspace(*p) ) p ++;
 				pfnlen = 0;
 				while ( *p && *p != '#' && !isspace(*p) && pfnlen < 128 ) {
@@ -458,9 +478,9 @@ void pat_init_patnames(void)
 
 static char *pat_build_path(char *fname, int pat)
 {
-	char *ps;
+	char *ps, *p;
 	char *patfile = midipat[pat];
-	int isabspath = (patfile[0] == '/');
+	int has_ext = 0, isabspath = (patfile[0] == '/');
 	if ( isabspath ) patfile ++;
 	ps = strrchr(patfile, ':');
 	if( ps ) {
@@ -468,7 +488,9 @@ static char *pat_build_path(char *fname, int pat)
 		strcpy(strrchr(fname, ':'), ".pat");
 		return ps;
 	}
-	sprintf(fname, "%s%c%s.pat", isabspath ? "" : pathforpat, DIRDELIM, patfile);
+	p = strrchr(patfile, '.');
+	if(p && !strcasecmp(p, ".pat")) has_ext = 1;
+	sprintf(fname, "%s%c%s%s", isabspath ? "" : pathforpat, DIRDELIM, patfile, has_ext ? "" : ".pat");
 	return 0;
 }
 
@@ -764,10 +786,7 @@ BOOL CSoundFile::TestPAT(const BYTE *lpStream, DWORD dwMemLength)
 // =====================================================================================
 static PATHANDLE *PAT_Init(void)
 {
-	PATHANDLE   *retval;
-	retval = (PATHANDLE *)calloc(1,sizeof(PATHANDLE));
-	if( !retval ) return NULL;
-	return retval;
+	return (PATHANDLE *)calloc(1,sizeof(PATHANDLE));
 }
 
 // =====================================================================================
@@ -995,8 +1014,6 @@ static void pat_setpat_inst(WaveHeader *hw, INSTRUMENTHEADER *d, int smp)
 static void PATinst(INSTRUMENTHEADER *d, int smp, int gm)
 {
 	WaveHeader hw;
-	char s[32];
-	memset(s,0,32);
 	if( pat_readpat_attr(gm-1, &hw, 0) ) {
 		pat_setpat_inst(&hw, d, smp);
 	}
@@ -1022,17 +1039,12 @@ static void PATinst(INSTRUMENTHEADER *d, int smp, int gm)
 		hw.reserved[sizeof(hw.reserved) - 1] = '\0';
 		pat_setpat_inst(&hw, d, smp);
 	}
-	if( hw.reserved[0] )
-		strncpy(s, hw.reserved, 32);
-	else
-		strncpy(s, midipat[gm-1], 32);
-	s[31] = '\0';
-	memset(d->name, 0, 32);
-	strcpy((char *)d->name, s);
-	strncpy(s, midipat[gm-1], 12);
-	s[11] = '\0';
-	memset(d->filename, 0, 12);
-	strcpy((char *)d->filename, s);
+	/* strncpy 0-inits the entire field. */
+	strncpy((char *)d->name, hw.reserved[0] ? hw.reserved : midipat[gm-1], 32);
+	d->name[31] = '\0';
+
+	strncpy((char *)d->filename, midipat[gm-1], 12);
+	d->filename[11] = '\0';
 }
 
 static void pat_setpat_attr(WaveHeader *hw, MODINSTRUMENT *q)
@@ -1059,11 +1071,18 @@ static void pat_setpat_attr(WaveHeader *hw, MODINSTRUMENT *q)
 static void PATsample(CSoundFile *cs, MODINSTRUMENT *q, int smp, int gm)
 {
 	WaveHeader hw;
-	char s[256];
+	char s[PATH_MAX + 32];
 	sprintf(s, "%d:%s", smp-1, midipat[gm-1]);
 	s[31] = '\0';
-	memset(cs->m_szNames[smp], 0, 32);
-	strncpy(cs->m_szNames[smp], s, 32-1);
+
+#if defined(__GNUC__) && __GNUC__ >= 8
+/* GCC's warning is broken and ignores the manual termination in this case. */
+#pragma GCC diagnostic ignored "-Wstringop-truncation"
+#endif
+	/* strncpy 0-inits the entire field. */
+	strncpy(cs->m_szNames[smp], s, 32);
+	cs->m_szNames[smp][31] = '\0';
+
 	q->nGlobalVol = 64;
 	q->nPan       = 128;
 	q->uFlags     = CHN_16BIT;

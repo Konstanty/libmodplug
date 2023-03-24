@@ -65,6 +65,7 @@ typedef struct tagS3MFILEHEADER
 } S3MFILEHEADER;
 #pragma pack()
 
+
 void CSoundFile::S3MConvert(MODCOMMAND *m, BOOL bIT) const
 //--------------------------------------------------------
 {
@@ -98,6 +99,7 @@ void CSoundFile::S3MConvert(MODCOMMAND *m, BOOL bIT) const
 	case 'X':	command = CMD_PANNING8; break;
 	case 'Y':	command = CMD_PANBRELLO; break;
 	case 'Z':	command = CMD_MIDI; break;
+	case '\\':  command = CMD_MIDI; break;
 	default:	command = 0;
 	}
 	m->command = command;
@@ -252,8 +254,10 @@ BOOL CSoundFile::ReadS3M(const BYTE *lpStream, DWORD dwMemLength)
 	UINT iord = psfh.ordnum;
 	if (iord<1) iord = 1;
 	if (iord > MAX_ORDERS) iord = MAX_ORDERS;
+	if (dwMemPos + iord + 1 >= dwMemLength) return FALSE;
 	if (iord)
 	{
+		if (dwMemPos + iord > dwMemLength) return FALSE;
 		memcpy(Order, lpStream+dwMemPos, iord);
 		dwMemPos += iord;
 	}
@@ -271,6 +275,7 @@ BOOL CSoundFile::ReadS3M(const BYTE *lpStream, DWORD dwMemLength)
 
 	if (nins+npat)
 	{
+		if (dwMemPos + 2*(nins+npat) >= dwMemLength) return FALSE;
 		memcpy(ptr, lpStream+dwMemPos, 2*(nins+npat));
 		dwMemPos += 2*(nins+npat);
 		for (UINT j = 0; j < (nins+npat); ++j) {
@@ -279,6 +284,7 @@ BOOL CSoundFile::ReadS3M(const BYTE *lpStream, DWORD dwMemLength)
 		if (psfh.panning_present == 252)
 		{
 			const BYTE *chnpan = lpStream+dwMemPos;
+			if (dwMemPos > dwMemLength - 32) return FALSE;
 			for (UINT i=0; i<32; i++) if (chnpan[i] & 0x20)
 			{
 				ChnSettings[i].nPan = ((chnpan[i] & 0x0F) << 4) + 8;
@@ -299,7 +305,7 @@ BOOL CSoundFile::ReadS3M(const BYTE *lpStream, DWORD dwMemLength)
 		}
 		S3MSAMPLESTRUCT pSmp;
 		memcpy(&pSmp, lpStream+nInd, 0x50);
-		memcpy(Ins[iSmp].name, &pSmp.dosname, 12);
+		memcpy(Ins[iSmp].name, pSmp.dosname, 12);
 		insflags[iSmp-1] = pSmp.flags;
 		inspack[iSmp-1] = pSmp.pack;
 		memcpy(m_szNames[iSmp], pSmp.name, 28);

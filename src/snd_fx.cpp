@@ -9,7 +9,7 @@
 #include "sndfile.h"
 #include "tables.h"
 
-#ifdef MSC_VER
+#ifdef _MSC_VER
 #pragma warning(disable:4244)
 #endif
 
@@ -23,7 +23,6 @@ DWORD CSoundFile::GetLength(BOOL bAdjust, BOOL bTotal)
 	UINT nMusicSpeed=m_nDefaultSpeed, nMusicTempo=m_nDefaultTempo, nNextRow=0;
 	UINT nMaxRow = 0, nMaxPattern = 0, nNextStartRow = 0;
 	LONG nGlbVol = m_nDefaultGlobalVolume, nOldGlbVolSlide = 0;
-	BYTE samples[MAX_CHANNELS];
 	BYTE instr[MAX_CHANNELS];
 	BYTE notes[MAX_CHANNELS];
 	BYTE vols[MAX_CHANNELS];
@@ -37,7 +36,6 @@ DWORD CSoundFile::GetLength(BOOL bAdjust, BOOL bTotal)
 	memset(patloop, 0, sizeof(patloop));
 	memset(oldparam, 0, sizeof(oldparam));
 	memset(chnvols, 64, sizeof(chnvols));
-	memset(samples, 0, sizeof(samples));
 	for (UINT icv=0; icv<m_nChannels; icv++)
 		chnvols[icv] = ChnSettings[icv].nVolume;
 	nMaxRow = m_nNextRow;
@@ -430,7 +428,14 @@ void CSoundFile::NoteChange(UINT nChn, int note, BOOL bPorta, BOOL bResetEnv)
 	if (note >= 0x80)	// 0xFE or invalid note => key off
 	{
 		// Key Off
-		KeyOff(nChn);
+		if (note < 0xFD && m_nType == MOD_TYPE_IT)
+		{
+			if (m_nInstruments)
+				pChn->dwFlags |= CHN_NOTEFADE;
+		} else
+		{
+			KeyOff(nChn);
+		}
 		// Note Cut
 		if (note == 0xFE)
 		{
@@ -703,7 +708,7 @@ void CSoundFile::CheckNNA(UINT nChn, UINT instr, int note, BOOL bForceCut)
 		UINT n = GetNNAChannel(nChn);
 		if (n)
 		{
-			MODCHANNEL *p = &Chn[n];
+			p = &Chn[n];
 			// Copy Channel
 			*p = *pChn;
 			p->dwFlags &= ~(CHN_VIBRATO|CHN_TREMOLO|CHN_PANBRELLO|CHN_MUTE|CHN_PORTAMENTO);

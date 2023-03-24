@@ -9,7 +9,7 @@
 #include "sndfile.h"
 #include <math.h>
 
-#ifdef MSC_VER
+#if defined(_MSC_VER) && defined(_M_IX86)
 #pragma bss_seg(".modplug")
 #endif
 
@@ -27,7 +27,7 @@ int MixRearBuffer[MIXBUFFERSIZE*2];
 float MixFloatBuffer[MIXBUFFERSIZE*2];
 #endif
 
-#ifdef MSC_VER
+#if defined(_MSC_VER) && defined(_M_IX86)
 #pragma bss_seg()
 #endif
 
@@ -287,8 +287,14 @@ CzWINDOWEDFIR sfir;
 // ----------------------------------------------------------------------------
 // MIXING MACROS
 // ----------------------------------------------------------------------------
+#if defined(__cplusplus) && (__cplusplus >= 201402L)
+#define REGISTER
+#else
+#define REGISTER register
+#endif
+
 #define SNDMIX_BEGINSAMPLELOOP8\
-	register MODCHANNEL * const pChn = pChannel;\
+	REGISTER MODCHANNEL * const pChn = pChannel;\
 	nPos = pChn->nPosLo;\
 	const signed char *p = (signed char *)(pChn->pCurrentSample+pChn->nPos);\
 	if (pChn->dwFlags & CHN_STEREO) p += pChn->nPos;\
@@ -296,7 +302,7 @@ CzWINDOWEDFIR sfir;
 	do {
 
 #define SNDMIX_BEGINSAMPLELOOP16\
-	register MODCHANNEL * const pChn = pChannel;\
+	REGISTER MODCHANNEL * const pChn = pChannel;\
 	nPos = pChn->nPosLo;\
 	const signed short *p = (signed short *)(pChn->pCurrentSample+(pChn->nPos*2));\
 	if (pChn->dwFlags & CHN_STEREO) p += pChn->nPos;\
@@ -1485,13 +1491,13 @@ UINT CSoundFile::CreateStereoMix(int count)
 	{
 		const LPMIXINTERFACE *pMixFuncTable;
 		MODCHANNEL * const pChannel = &Chn[ChnMix[nChn]];
-		UINT nFlags, nMasterCh;
+		UINT nFlags;//, nMasterCh
 		LONG nSmpCount;
 		int nsamples;
 		int *pbuffer;
 
 		if (!pChannel->pCurrentSample) continue;
-		nMasterCh = (ChnMix[nChn] < m_nChannels) ? ChnMix[nChn]+1 : pChannel->nMasterChn;
+		//nMasterCh = (ChnMix[nChn] < m_nChannels) ? ChnMix[nChn]+1 : pChannel->nMasterChn;
 		pOfsR = &gnDryROfsVol;
 		pOfsL = &gnDryLOfsVol;
 		nFlags = 0;
@@ -1606,12 +1612,12 @@ UINT CSoundFile::CreateStereoMix(int count)
 }
 
 
-#ifdef MSC_VER
+#ifdef _MSC_VER
 #pragma warning (disable:4100)
 #endif
 
 // Clip and convert to 8 bit
-#ifdef MSC_VER
+#if defined(_MSC_VER) && defined(_M_IX86)
 __declspec(naked) DWORD MPPASMCALL X86_Convert32To8(LPVOID lp16, int *pBuffer, DWORD lSampleCount, LPLONG lpMin, LPLONG lpMax)
 //------------------------------------------------------------------------------
 {
@@ -1700,8 +1706,7 @@ DWORD MPPASMCALL X86_Convert32To8(LPVOID lp8, int *pBuffer, DWORD lSampleCount, 
 }
 #endif //MSC_VER, else
 
-
-#ifdef MSC_VER
+#if defined(_MSC_VER) && defined(_M_IX86)
 // Clip and convert to 16 bit
 __declspec(naked) DWORD MPPASMCALL X86_Convert32To16(LPVOID lp16, int *pBuffer, DWORD lSampleCount, LPLONG lpMin, LPLONG lpMax)
 //------------------------------------------------------------------------------
@@ -1794,7 +1799,7 @@ DWORD MPPASMCALL X86_Convert32To16(LPVOID lp16, int *pBuffer, DWORD lSampleCount
 }
 #endif //MSC_VER, else
 
-#ifdef MSC_VER
+#if defined(_MSC_VER) && defined(_M_IX86)
 // Clip and convert to 24 bit
 __declspec(naked) DWORD MPPASMCALL X86_Convert32To24(LPVOID lp16, int *pBuffer, DWORD lSampleCount, LPLONG lpMin, LPLONG lpMax)
 //------------------------------------------------------------------------------
@@ -1887,13 +1892,13 @@ DWORD MPPASMCALL X86_Convert32To24(LPVOID lp16, int *pBuffer, DWORD lSampleCount
 			vumax = n;
 		p = n >> (8-MIXING_ATTENUATION) ; // 24-bit signed
 #ifdef WORDS_BIGENDIAN
-		buf[i*3+0] = p & 0xFF0000 >> 24;
-		buf[i*3+1] = p & 0x00FF00 >> 16 ;
-		buf[i*3+2] = p & 0x0000FF ;
+		buf[i*3+0] = (p >> 16) & 0xFF;
+		buf[i*3+1] = (p >> 8)  & 0xFF;
+		buf[i*3+2] = (p >> 0)  & 0xFF;
 #else
-		buf[i*3+0] = p & 0x0000FF ;
-		buf[i*3+1] = p & 0x00FF00 >> 16;
-		buf[i*3+2] = p & 0xFF0000 >> 24;
+		buf[i*3+0] = (p >> 0)  & 0xFF;
+		buf[i*3+1] = (p >> 8)  & 0xFF;
+		buf[i*3+2] = (p >> 16) & 0xFF;
 #endif
 	}
 	*lpMin = vumin;
@@ -1902,7 +1907,7 @@ DWORD MPPASMCALL X86_Convert32To24(LPVOID lp16, int *pBuffer, DWORD lSampleCount
 }
 #endif
 
-#ifdef MSC_VER
+#if defined(_MSC_VER) && defined(_M_IX86)
 // Clip and convert to 32 bit
 __declspec(naked) DWORD MPPASMCALL X86_Convert32To32(LPVOID lp16, int *pBuffer, DWORD lSampleCount, LPLONG lpMin, LPLONG lpMax)
 //------------------------------------------------------------------------------
@@ -1992,7 +1997,7 @@ DWORD MPPASMCALL X86_Convert32To32(LPVOID lp16, int *pBuffer, DWORD lSampleCount
 #endif
 
 
-#ifdef MSC_VER
+#if defined(_MSC_VER) && defined(_M_IX86)
 void MPPASMCALL X86_InitMixBuffer(int *pBuffer, UINT nSamples)
 //------------------------------------------------------------
 {
@@ -2034,7 +2039,7 @@ void MPPASMCALL X86_InitMixBuffer(int *pBuffer, UINT nSamples)
 #endif
 
 
-#ifdef MSC_VER
+#if defined(_MSC_VER) && defined(_M_IX86)
 __declspec(naked) void MPPASMCALL X86_InterleaveFrontRear(int *pFrontBuf, int *pRearBuf, DWORD nSamples)
 //------------------------------------------------------------------------------
 {
@@ -2079,7 +2084,7 @@ void MPPASMCALL X86_InterleaveFrontRear(int *pFrontBuf, int *pRearBuf, DWORD nSa
 #endif
 
 
-#ifdef MSC_VER
+#if defined(_MSC_VER) && defined(_M_IX86)
 VOID MPPASMCALL X86_MonoFromStereo(int *pMixBuf, UINT nSamples)
 //-------------------------------------------------------------
 {
@@ -2116,7 +2121,7 @@ VOID MPPASMCALL X86_MonoFromStereo(int *pMixBuf, UINT nSamples)
 #define OFSDECAYMASK	0xFF
 
 
-#ifdef MSC_VER
+#if defined(_MSC_VER) && defined(_M_IX86)
 void MPPASMCALL X86_StereoFill(int *pBuffer, UINT nSamples, LPLONG lpROfs, LPLONG lpLOfs)
 //------------------------------------------------------------------------------
 {
@@ -2217,7 +2222,7 @@ void MPPASMCALL X86_StereoFill(int *pBuffer, UINT nSamples, LPLONG lpROfs, LPLON
 }
 #endif
 
-#ifdef MSC_VER
+#if defined(_MSC_VER) && defined(_M_IX86)
 void MPPASMCALL X86_EndChannelOfs(MODCHANNEL *pChannel, int *pBuffer, UINT nSamples)
 //------------------------------------------------------------------------------
 {
@@ -2291,7 +2296,7 @@ void MPPASMCALL X86_EndChannelOfs(MODCHANNEL *pChannel, int *pBuffer, UINT nSamp
 #define MIXING_LIMITMAX		(0x08100000)
 #define MIXING_LIMITMIN		(-MIXING_LIMITMAX)
 
-#ifdef MSC_VER
+#if defined(_MSC_VER) && defined(_M_IX86)
 __declspec(naked) UINT MPPASMCALL X86_AGC(int *pBuffer, UINT nSamples, UINT nAGC)
 //------------------------------------------------------------------------------
 {
@@ -2327,7 +2332,6 @@ agcupdate:
 	jmp agcrecover
 	}
 }
-
 #pragma warning (default:4100)
 #else
 // Version for GCC
@@ -2378,11 +2382,9 @@ void CSoundFile::ProcessAGC(int count)
 }
 
 
-
 void CSoundFile::ResetAGC()
 //-------------------------
 {
 	gnAGC = AGC_UNITY;
 }
-
 #endif // NO_AGC

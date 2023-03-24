@@ -27,31 +27,39 @@
 
 #ifdef _WIN32
 
-#ifdef MSC_VER
+#ifdef _MSC_VER
 #pragma warning (disable:4201)
 #pragma warning (disable:4514)
 #endif
 
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
-#include <windowsx.h>
-#include <mmsystem.h>
+#include <mmsystem.h> /* for WAVE_FORMAT_PCM */
 #include <stdio.h>
 #include <malloc.h>
+#if defined(_MSC_VER) && (_MSC_VER < 1600)
+typedef signed char    int8_t;
+typedef signed short   int16_t;
+typedef signed int     int32_t;
+typedef unsigned char  uint8_t;
+typedef unsigned short uint16_t;
+typedef unsigned int   uint32_t;
+#else
 #include <stdint.h>
+#endif
 
-#define srandom(_seed)  srand(_seed)
-#define random()        rand()
-#define sleep(_ms)      Sleep(_ms)
+#define sleep(_ms)      Sleep(_ms * 1000)
 
-inline void ProcessPlugins(int n) {}
+inline void ProcessPlugins(int n) { (void)n; }
 
 #undef strcasecmp
 #undef strncasecmp
 #define strcasecmp(a,b)     _stricmp(a,b)
 #define strncasecmp(a,b,c)  _strnicmp(a,b,c)
 
+#if defined(_MSC_VER) || defined(__MINGW32__)
 #define HAVE_SINF 1
+#endif
 
 #ifndef isblank
 #define isblank(c) ((c) == ' ' || (c) == '\t')
@@ -80,19 +88,13 @@ typedef uint32_t* LPDWORD;
 typedef uint16_t WORD;
 typedef uint8_t BYTE;
 typedef uint8_t* LPBYTE;
-typedef bool BOOL;
+typedef bool BOOL; /* FIXME: must be 'int' */
 typedef char* LPSTR;
 typedef void* LPVOID;
 typedef uint16_t* LPWORD;
 typedef const char* LPCSTR;
 typedef void* PVOID;
 typedef void VOID;
-
-inline LONG MulDiv (long a, long b, long c)
-{
-/*if (!c) return 0;*/
-  return ((uint64_t) a * (uint64_t) b ) / c;
-}
 
 #define LPCTSTR LPCSTR
 #define lstrcpyn strncpy
@@ -102,17 +104,7 @@ inline LONG MulDiv (long a, long b, long c)
 
 #define WAVE_FORMAT_PCM 1
 
-#define  GHND   0
-#define GlobalFreePtr(p) free((void *)(p))
-inline int8_t * GlobalAllocPtr(unsigned int, size_t size)
-{
-  int8_t * p = (int8_t *) malloc(size);
-
-  if (p != NULL) memset(p, 0, size);
-  return p;
-}
-
-inline void ProcessPlugins(int n) {}
+inline void ProcessPlugins(int n) { (void)n; }
 
 #ifndef FALSE
 #define FALSE	false
@@ -131,6 +123,12 @@ inline void ProcessPlugins(int n) {}
 #   define MODPLUG_EXPORT
 # else
 #   define MODPLUG_EXPORT __declspec(dllimport)			/* using libmodplug dll for windows */
+# endif
+#elif defined(__OS2__) && defined(__WATCOMC__)
+# if defined(MODPLUG_BUILD) && defined(__SW_BD)		/* building libmodplug as a dll for os/2 */
+#   define MODPLUG_EXPORT __declspec(dllexport)
+# else
+#   define MODPLUG_EXPORT					/* using dll or static libmodplug for os/2 */
 # endif
 #elif defined(MODPLUG_BUILD) && defined(SYM_VISIBILITY)
 #   define MODPLUG_EXPORT __attribute__((visibility("default")))
