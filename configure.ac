@@ -91,6 +91,17 @@ MODPLUG_LIBRARY_VERSION=1:0:0
 
 AC_SUBST(MODPLUG_LIBRARY_VERSION)
 
+case "${host_os}" in
+	cygwin*|mingw*)
+		LIBS_PRIVATE="-lstdc++"
+		;;
+	*)
+		LIBS_PRIVATE="-lstdc++ -lm"
+		;;
+esac
+
+AC_SUBST(LIBS_PRIVATE)
+
 AC_CONFIG_FILES([Makefile
 	  src/Makefile
 	  libmodplug.pc])
