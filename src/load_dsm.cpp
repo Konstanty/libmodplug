@@ -129,8 +129,12 @@ BOOL CSoundFile::ReadDSM(LPCBYTE lpStream, DWORD dwMemLength)
 		// Reading Patterns
 		if (ppatt->id_PATT == DSMID_PATT)
 		{
+			// Patterns[] and PatternSize[] only hold MAX_PATTERNS entries
+			if (nPat >= MAX_PATTERNS) break;
 			dwMemPos += 8;
-			if (dwMemPos + ppatt->patt_len >= dwMemLength) break;
+			// dwMemPos < dwMemLength here, so the subtraction is safe, while
+			// adding patt_len wraps for a large DWORD and passes the check
+			if (ppatt->patt_len >= dwMemLength - dwMemPos) break;
 			DWORD dwPos = dwMemPos;
 			dwMemPos += ppatt->patt_len;
 			MODCOMMAND *m = AllocatePattern(64, m_nChannels);
@@ -209,7 +213,8 @@ BOOL CSoundFile::ReadDSM(LPCBYTE lpStream, DWORD dwMemLength)
 		// Reading Samples
 		if ((nSmp <= m_nSamples) && (pins->id_INST == DSMID_INST))
 		{
-			if (dwMemPos + pins->inst_len >= dwMemLength - 8) break;
+			// same wrap as patt_len above; dwMemPos < dwMemLength - 8 here
+			if (pins->inst_len >= dwMemLength - 8 - dwMemPos) break;
 			DWORD dwPos = dwMemPos + sizeof(DSMINST);
 			dwMemPos += 8 + pins->inst_len;
 			memcpy(m_szNames[nSmp], pins->samplename, 28);
