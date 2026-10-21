@@ -495,7 +495,10 @@ BOOL CSoundFile::ReadAMS2(LPCBYTE lpStream, DWORD dwMemLength)
 		dwMemPos += 4;
 		if ((ipat < MAX_PATTERNS) && (packedlen < dwMemLength-dwMemPos) && (numrows >= 8))
 		{
-			if ((patnamlen) && (patnamlen < MAX_PATTERNNAME))
+			// the name is read from dwMemPos+3, but only dwMemPos+4 is
+			// known to be inside the buffer at this point
+			if ((patnamlen) && (patnamlen < MAX_PATTERNNAME)
+			 && (dwMemPos+3+patnamlen <= dwMemLength))
 			{
 				char s[MAX_PATTERNNAME]; // changed from CHAR
 				memcpy(s, lpStream+dwMemPos+3, patnamlen);
@@ -517,6 +520,8 @@ BOOL CSoundFile::ReadAMS2(LPCBYTE lpStream, DWORD dwMemLength)
 				// Read Note + Instr
 				if (!(byte1 & 0x40))
 				{
+					// note and instrument are two further bytes
+					if (pos+2 > packedlen) break;
 					UINT byte2 = psrc[pos++];
 					UINT note = byte2 & 0x7F;
 					if (note) m[ch].note = (note > 1) ? (note-1) : 0xFF;
@@ -524,6 +529,7 @@ BOOL CSoundFile::ReadAMS2(LPCBYTE lpStream, DWORD dwMemLength)
 					// Read Effect
 					while (byte2 & 0x80)
 					{
+						if (pos+1 > packedlen) break;
 						byte2 = psrc[pos++];
 						if (byte2 & 0x40)
 						{
@@ -532,6 +538,7 @@ BOOL CSoundFile::ReadAMS2(LPCBYTE lpStream, DWORD dwMemLength)
 						} else
 						{
 							UINT command = byte2 & 0x3F;
+							if (pos+1 > packedlen) break;
 							UINT param = psrc[pos++];
 							if (command == 0x0C)
 							{
