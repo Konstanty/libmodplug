@@ -213,8 +213,9 @@ BOOL CSoundFile::ReadDSM(LPCBYTE lpStream, DWORD dwMemLength)
 		// Reading Samples
 		if ((nSmp <= m_nSamples) && (pins->id_INST == DSMID_INST))
 		{
-			// same wrap as patt_len above; dwMemPos < dwMemLength - 8 here
-			if (pins->inst_len >= dwMemLength - 8 - dwMemPos) break;
+			// underflow/overflow checks
+			if (dwMemLength - dwMemPos < sizeof(DSMINST)) break;
+			if (pins->inst_len >= dwMemLength - sizeof(DSMINST) - dwMemPos) break;
 			DWORD dwPos = dwMemPos + sizeof(DSMINST);
 			dwMemPos += 8 + pins->inst_len;
 			memcpy(m_szNames[nSmp], pins->samplename, 28);
