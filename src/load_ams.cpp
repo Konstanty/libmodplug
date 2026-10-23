@@ -118,7 +118,7 @@ BOOL CSoundFile::ReadAMS(LPCBYTE lpStream, DWORD dwMemLength)
 	}
 	// Read Song Comments
 	if (dwMemPos + 2 > dwMemLength) return TRUE;
-	tmp = *((WORD *)(lpStream+dwMemPos));
+	tmp = READ_LE16(lpStream+dwMemPos);
 	dwMemPos += 2;
 	if (tmp >= dwMemLength || dwMemPos > dwMemLength - tmp) return TRUE;
 	if (tmp)
@@ -133,14 +133,14 @@ BOOL CSoundFile::ReadAMS(LPCBYTE lpStream, DWORD dwMemLength)
 	if (2*pfh->orders >= dwMemLength || dwMemPos > dwMemLength - 2*pfh->orders) return TRUE;
 	for (UINT iOrd=0; iOrd<pfh->orders; iOrd++, dwMemPos += 2)
 	{
-		UINT n = *((WORD *)(lpStream+dwMemPos));
+		UINT n = READ_LE16(lpStream+dwMemPos);
 		Order[iOrd] = (BYTE)n;
 	}
 	// Read Patterns
 	for (UINT iPat=0; iPat<pfh->patterns; iPat++)
 	{
 		if (dwMemPos + 4 >= dwMemLength) return TRUE;
-		UINT len = *((DWORD *)(lpStream + dwMemPos));
+		UINT len = READ_LE32(lpStream + dwMemPos);
 		dwMemPos += 4;
 		if ((len >= dwMemLength) || (dwMemPos > dwMemLength - len)) return TRUE;
 		PatternSize[iPat] = 64;
@@ -466,7 +466,7 @@ BOOL CSoundFile::ReadAMS2(LPCBYTE lpStream, DWORD dwMemLength)
 			if (dwMemPos + chnnamlen + 256 >= dwMemLength) return TRUE;
 		}
 		// packed comments (ignored)
-		UINT songtextlen = *((LPDWORD)(lpStream+dwMemPos));
+		UINT songtextlen = READ_LE32(lpStream+dwMemPos);
 		dwMemPos += songtextlen;
 		if (dwMemPos + 256 >= dwMemLength) return TRUE;
 	}
@@ -487,7 +487,7 @@ BOOL CSoundFile::ReadAMS2(LPCBYTE lpStream, DWORD dwMemLength)
 	for (UINT ipat=0; ipat<psh->patterns; ipat++)
 	{
 		if (dwMemPos+8 >= dwMemLength) return TRUE;
-		UINT packedlen = *((LPDWORD)(lpStream+dwMemPos));
+		UINT packedlen = READ_LE32(lpStream+dwMemPos);
 		UINT numrows = 1 + (UINT)(lpStream[dwMemPos+4]);
 		//UINT patchn = 1 + (UINT)(lpStream[dwMemPos+5] & 0x1F);
 		//UINT patcmds = 1 + (UINT)(lpStream[dwMemPos+5] >> 5);
@@ -579,7 +579,7 @@ static BOOL AMSUnpackCheck(const BYTE *lpStream, DWORD dwMemLength, MODINSTRUMEN
 // -----------------------------------------------------------------------------------
 {
 	if (dwMemLength < 9) return FALSE;
-	DWORD packedbytes = *((DWORD *)(lpStream + 4));
+	DWORD packedbytes = READ_LE32(lpStream + 4);
 
 	DWORD samplebytes = ins->nLength;
 	if (samplebytes > MAX_SAMPLE_LENGTH) samplebytes = MAX_SAMPLE_LENGTH;

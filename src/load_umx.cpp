@@ -9,6 +9,7 @@
  * Retrieves the offset, size and object type directly from umx.
 */
 
+#include <stddef.h>
 #include "stdafx.h"
 #include "sndfile.h"
 
@@ -42,8 +43,10 @@ struct upkg_hdr {
 	DWORD guid[4];
 	LONG generation_count;
 #define UPKG_HDR_SIZE 64			/* 64 bytes up until here */
-	/*struct _genhist *gen;*/
+	struct _genhist *gen;
 };
+/* compile time assert for upkg_hdr size */
+typedef int _check_hdrsize[2 * (offsetof(struct upkg_hdr, gen) == UPKG_HDR_SIZE) - 1];
 
 #define UMUSIC_IT	0
 #define UMUSIC_S3M	1
@@ -249,21 +252,18 @@ static int probe_umx   (const BYTE *membase, LONG memlen,
 	return t;
 }
 
-static int probe_header (void *header)
+static int probe_header (struct upkg_hdr *hdr, const BYTE *src)
 {
-	struct upkg_hdr *hdr;
-	unsigned char *p;
-	DWORD *swp;
-	int i;
+	hdr->tag           = READ_LE32(src +  0);
+	hdr->file_version  = READ_LE32(src +  4);
+	hdr->pkg_flags     = READ_LE32(src +  8);
+	hdr->name_count    = READ_LE32(src + 12);
+	hdr->name_offset   = READ_LE32(src + 16);
+	hdr->export_count  = READ_LE32(src + 20);
+	hdr->export_offset = READ_LE32(src + 24);
+	hdr->import_count  = READ_LE32(src + 28);
+	hdr->import_offset = READ_LE32(src + 32);
 
-	/* byte swap the header - all members are 32 bit LE values */
-	p = (unsigned char *) header;
-	swp = (DWORD *) header;
-	for (i = 0; i < UPKG_HDR_SIZE/4; i++, p += 4) {
-		swp[i] = p[0] | (p[1] << 8) | (p[2] << 16) | (p[3] << 24);
-	}
-
-	hdr = (struct upkg_hdr *) header;
 	if (hdr->tag != UPKG_HDR_TAG) {
 		return -1;
 	}
@@ -300,13 +300,12 @@ static int probe_header (void *header)
 static int process_upkg (const BYTE *membase, LONG memlen,
 			 LONG *ofs, LONG *objsize)
 {
-	char header[UPKG_HDR_SIZE];
+	struct upkg_hdr header;
 
-	memcpy(header, membase, UPKG_HDR_SIZE);
-	if (probe_header(header) < 0)
+	if (probe_header(&header, membase) < 0)
 		return -1;
 
-	return probe_umx(membase, memlen, (struct upkg_hdr *)header, ofs, objsize);
+	return probe_umx(membase, memlen, &header, ofs, objsize);
 }
 
 BOOL CSoundFile::ReadUMX(const BYTE *lpStream, DWORD dwMemLength)

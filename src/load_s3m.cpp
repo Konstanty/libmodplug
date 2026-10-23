@@ -341,7 +341,7 @@ BOOL CSoundFile::ReadS3M(const BYTE *lpStream, DWORD dwMemLength)
 	{
 		UINT nInd = ((DWORD)ptr[nins+iPat]) << 4;
 		if (nInd + 0x40 > dwMemLength) continue;
-		WORD len = bswapLE16(*((WORD *)(lpStream+nInd)));
+		WORD len = READ_LE16(lpStream+nInd);
 		nInd += 2;
 		PatternSize[iPat] = 64;
 		if ((!len) || (nInd + len > dwMemLength - 6)

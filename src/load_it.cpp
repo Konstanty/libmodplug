@@ -259,7 +259,7 @@ BOOL CSoundFile::ReadIT(const BYTE *lpStream, DWORD dwMemLength)
 	// Reading IT Extra Info
 	if (dwMemPos + 2 < dwMemLength)
 	{
-		UINT nflt = bswapLE16(*((WORD *)(lpStream + dwMemPos)));
+		UINT nflt = READ_LE16(lpStream + dwMemPos);
 		dwMemPos += 2;
 		if (dwMemPos + nflt * 8 < dwMemLength) dwMemPos += nflt * 8;
 	}
@@ -273,9 +273,9 @@ BOOL CSoundFile::ReadIT(const BYTE *lpStream, DWORD dwMemLength)
 		}
 	}
 	// Read pattern names: "PNAM"
-	if ((dwMemPos + 8 < dwMemLength) && (bswapLE32(*((DWORD *)(lpStream+dwMemPos))) == 0x4d414e50))
+	if ((dwMemPos + 8 < dwMemLength) && (READ_LE32(lpStream+dwMemPos) == 0x4d414e50))
 	{
-		UINT len = bswapLE32(*((DWORD *)(lpStream+dwMemPos+4)));
+		UINT len = READ_LE32(lpStream+dwMemPos+4);
 		dwMemPos += 8;
 		if ((dwMemPos + len <= dwMemLength) && (len <= MAX_PATTERNS*MAX_PATTERNNAME) && (len >= MAX_PATTERNNAME))
 		{
@@ -291,9 +291,9 @@ BOOL CSoundFile::ReadIT(const BYTE *lpStream, DWORD dwMemLength)
 	// 4-channels minimum
 	m_nChannels = 4;
 	// Read channel names: "CNAM"
-	if ((dwMemPos + 8 < dwMemLength) && (bswapLE32(*((DWORD *)(lpStream+dwMemPos))) == 0x4d414e43))
+	if ((dwMemPos + 8 < dwMemLength) && (READ_LE32(lpStream+dwMemPos) == 0x4d414e43))
 	{
-		UINT len = bswapLE32(*((DWORD *)(lpStream+dwMemPos+4)));
+		UINT len = READ_LE32(lpStream+dwMemPos+4);
 		dwMemPos += 8;
 		if ((dwMemPos + len <= dwMemLength) && (len <= 64*MAX_CHANNELNAME))
 		{
@@ -319,8 +319,8 @@ BOOL CSoundFile::ReadIT(const BYTE *lpStream, DWORD dwMemLength)
 	{
 		memset(chnmask, 0, sizeof(chnmask));
 		if ((!patpos[patchk]) || ((DWORD)patpos[patchk] >= dwMemLength - 4)) continue;
-		UINT len = bswapLE16(*((WORD *)(lpStream+patpos[patchk])));
-		UINT rows = bswapLE16(*((WORD *)(lpStream+patpos[patchk]+2)));
+		UINT len = READ_LE16(lpStream+patpos[patchk]);
+		UINT rows = READ_LE16(lpStream+patpos[patchk]+2);
 		if ((rows < 4) || (rows > 256)) continue;
 		if (8+len > dwMemLength || patpos[patchk] > dwMemLength - (8+len)) continue;
 		UINT i = 0;
@@ -451,8 +451,8 @@ BOOL CSoundFile::ReadIT(const BYTE *lpStream, DWORD dwMemLength)
 			continue;
 		}
 
-		UINT len = bswapLE16(*((WORD *)(lpStream+patpos[npat])));
-		UINT rows = bswapLE16(*((WORD *)(lpStream+patpos[npat]+2)));
+		UINT len = READ_LE16(lpStream+patpos[npat]);
+		UINT rows = READ_LE16(lpStream+patpos[npat]+2);
 		if ((rows < 4) || (rows > 256)) continue;
 		if (8+len > dwMemLength || patpos[npat] > dwMemLength - (8+len)) continue;
 		PatternSize[npat] = rows;
@@ -1233,7 +1233,7 @@ DWORD ITUnpack8Bit(signed char *pSample, DWORD dwLen, LPBYTE lpMemFile, DWORD dw
 		if (!wCount)
 		{
 			wCount = 0x8000;
-		//	wHdr = bswapLE16(*((LPWORD)pSrc));
+		//	wHdr = READ_LE16(pSrc);
 			pSrc += 2;
 			bLeft = 9;
 			bTemp = bTemp2 = 0;
@@ -1320,7 +1320,7 @@ DWORD ITUnpack16Bit(signed char *pSample, DWORD dwLen, LPBYTE lpMemFile, DWORD d
 		if (!wCount)
 		{
 			wCount = 0x4000;
-		//	wHdr = bswapLE16(*((LPWORD)pSrc));
+		//	wHdr = READ_LE16(pSrc);
 			pSrc += 2;
 			bLeft = 17;
 			wTemp = wTemp2 = 0;
@@ -1482,13 +1482,13 @@ UINT CSoundFile::LoadMixPlugins(const void *pData, UINT nLen)
 		DWORD nPluginSize;
 		UINT nPlugin;
 
-		nPluginSize = bswapLE32(*(DWORD *)(p+nPos+4));
+		nPluginSize = READ_LE32(p+nPos+4);
 		if (nPluginSize > nLen-nPos-8) break;;
-		if ((bswapLE32(*(DWORD *)(p+nPos))) == 0x58464843)
+		if (READ_LE32(p+nPos) == 0x58464843)
 		{
 			for (UINT ch=0; ch<64; ch++) if (ch*4 < nPluginSize)
 			{
-				ChnSettings[ch].nMixPlugin = bswapLE32(*(DWORD *)(p+nPos+8+ch*4));
+				ChnSettings[ch].nMixPlugin = READ_LE32(p+nPos+8+ch*4);
 			}
 		} else
 		{
@@ -1500,7 +1500,7 @@ UINT CSoundFile::LoadMixPlugins(const void *pData, UINT nLen)
 			nPlugin = (p[nPos+2]-'0')*10 + (p[nPos+3]-'0');
 			if ((nPlugin < MAX_MIXPLUGINS) && (nPluginSize >= sizeof(SNDMIXPLUGININFO)+4))
 			{
-				DWORD dwExtra = bswapLE32(*(DWORD *)(p+nPos+8+sizeof(SNDMIXPLUGININFO)));
+				DWORD dwExtra = READ_LE32(p+nPos+8+sizeof(SNDMIXPLUGININFO));
 				m_MixPlugins[nPlugin].Info = *(const SNDMIXPLUGININFO *)(p+nPos+8);
 				m_MixPlugins[nPlugin].Info.dwPluginId1 = bswapLE32(m_MixPlugins[nPlugin].Info.dwPluginId1);
 				m_MixPlugins[nPlugin].Info.dwPluginId2 = bswapLE32(m_MixPlugins[nPlugin].Info.dwPluginId2);

@@ -225,7 +225,7 @@ BOOL CSoundFile::ReadMT2(LPCBYTE lpStream, DWORD dwMemLength)
 	m_szNames[0][31] = 0;
 	dwMemPos = sizeof(MT2FILEHEADER);
 	if (dwMemPos+2 > dwMemLength) return TRUE;
-	nDrumDataLen = *(WORD *)(lpStream + dwMemPos);
+	nDrumDataLen = READ_LE16(lpStream + dwMemPos);
 	dwDrumDataPos = dwMemPos + 2;
 	if (nDrumDataLen >= 2) pdd = (MT2DRUMSDATA *)(lpStream+dwDrumDataPos);
 	dwMemPos += 2 + nDrumDataLen;
@@ -236,9 +236,9 @@ BOOL CSoundFile::ReadMT2(LPCBYTE lpStream, DWORD dwMemLength)
 	Log("Drum Data: %d bytes @%04X\n", nDrumDataLen, dwDrumDataPos);
 #endif
 	if (dwMemPos >= dwMemLength-12) return TRUE;
-	if (!*(DWORD *)(lpStream+dwMemPos)) dwMemPos += 4;
-	if (!*(DWORD *)(lpStream+dwMemPos)) dwMemPos += 4;
-	nExtraDataLen = *(DWORD *)(lpStream+dwMemPos);
+	if (!READ_LE32(lpStream+dwMemPos)) dwMemPos += 4;
+	if (!READ_LE32(lpStream+dwMemPos)) dwMemPos += 4;
+	nExtraDataLen = READ_LE32(lpStream+dwMemPos);
 	dwExtraDataPos = dwMemPos + 4;
 	dwMemPos += 4;
 #ifdef MT2DEBUG
@@ -247,8 +247,8 @@ BOOL CSoundFile::ReadMT2(LPCBYTE lpStream, DWORD dwMemLength)
 	if (dwMemPos + nExtraDataLen >= dwMemLength) return TRUE;
 	while (dwMemPos+8 < dwExtraDataPos + nExtraDataLen)
 	{
-		DWORD dwId = *(DWORD *)(lpStream+dwMemPos);
-		DWORD dwLen = *(DWORD *)(lpStream+dwMemPos+4);
+		DWORD dwId = READ_LE32(lpStream+dwMemPos);
+		DWORD dwLen = READ_LE32(lpStream+dwMemPos+4);
 		dwMemPos += 8;
 		if (dwLen >= dwMemLength || dwMemPos > dwMemLength - dwLen) return TRUE;
 #ifdef MT2DEBUG
@@ -374,7 +374,7 @@ BOOL CSoundFile::ReadMT2(LPCBYTE lpStream, DWORD dwMemLength)
 		for (UINT iDrm=0; iDrm<pdd->wDrumPatterns; iDrm++)
 		{
 			if (dwMemPos > dwMemLength-2) return TRUE;
-			UINT nLines = *(WORD *)(lpStream+dwMemPos);
+			UINT nLines = READ_LE16(lpStream+dwMemPos);
 		#ifdef MT2DEBUG
 			if (nLines != 64) Log("Drum Pattern %d: %d Lines @%04X\n", iDrm, nLines, dwMemPos);
 		#endif
@@ -401,7 +401,7 @@ BOOL CSoundFile::ReadMT2(LPCBYTE lpStream, DWORD dwMemLength)
 				if (pma->dwFlags & (1 << iEnv))
 				{
 				#ifdef MT2DEBUG
-					UINT nPoints = *(DWORD *)(lpStream+dwMemPos);
+					UINT nPoints = READ_LE32(lpStream+dwMemPos);
 					Log("  Env[%d/%d] %04X @%04X: %d points\n", iAuto, nAutoCount, 1 << iEnv, dwMemPos-8, nPoints);
 				#endif
 					dwMemPos += 260;
@@ -656,7 +656,7 @@ BOOL CSoundFile::ReadMT2(LPCBYTE lpStream, DWORD dwMemLength)
 		} else
 		if (dwMemPos < dwMemLength-4)
 		{
-			UINT nNameLen = *(DWORD *)(lpStream+dwMemPos);
+			UINT nNameLen = READ_LE32(lpStream+dwMemPos);
 			dwMemPos += nNameLen + 16;
 		}
 		if (dwMemPos >= dwMemLength-4) break;

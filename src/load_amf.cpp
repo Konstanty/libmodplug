@@ -56,7 +56,7 @@ VOID AMF_Unpack(MODCOMMAND *pPat, const BYTE *pTrack, UINT nRows, UINT nChannels
 //-------------------------------------------------------------------------------
 {
 	UINT lastinstr = 0;
-	UINT nTrkSize = bswapLE16(*(USHORT *)pTrack);
+	UINT nTrkSize = READ_LE16(pTrack);
 	nTrkSize += (UINT)pTrack[2] << 16;
 	pTrack += 3;
 	while (nTrkSize--)
@@ -203,9 +203,9 @@ BOOL CSoundFile::ReadAMF(LPCBYTE lpStream, const DWORD dwMemLength)
 			psmp->nGlobalVol = 64;
 			if (psmp->nVolume > 0x40) psmp->nVolume = 0x40;
 			psmp->nVolume <<= 2;
-			psmp->nLength = bswapLE32(*((LPDWORD)(lpStream+dwMemPos+25)));
-			psmp->nLoopStart = bswapLE32(*((LPDWORD)(lpStream+dwMemPos+29)));
-			psmp->nLoopEnd = psmp->nLoopStart + bswapLE32(*((LPDWORD)(lpStream+dwMemPos+33)));
+			psmp->nLength = READ_LE32(lpStream+dwMemPos+25);
+			psmp->nLoopStart = READ_LE32(lpStream+dwMemPos+29);
+			psmp->nLoopEnd = psmp->nLoopStart + READ_LE32(lpStream+dwMemPos+33);
 			if ((psmp->nLoopEnd > psmp->nLoopStart) && (psmp->nLoopEnd <= psmp->nLength))
 			{
 				psmp->uFlags = CHN_LOOP;
@@ -319,7 +319,7 @@ BOOL CSoundFile::ReadAMF(LPCBYTE lpStream, const DWORD dwMemLength)
 			if (pfh->version >= 14)
 			{
 				if (dwMemPos + m_nChannels * sizeof(USHORT) + 2 > dwMemLength) return FALSE;
-				PatternSize[iOrd] = bswapLE16(*(USHORT *)(lpStream+dwMemPos));
+				PatternSize[iOrd] = READ_LE16(lpStream+dwMemPos);
 				dwMemPos += 2;
 			} else
 			{
@@ -348,12 +348,12 @@ BOOL CSoundFile::ReadAMF(LPCBYTE lpStream, const DWORD dwMemLength)
 		pins->nVolume = psh->volume * 4;
 		if (pfh->version >= 11)
 		{
-			pins->nLoopStart = bswapLE32(*(DWORD *)(lpStream+dwMemPos));
-			pins->nLoopEnd = bswapLE32(*(DWORD *)(lpStream+dwMemPos+4));
+			pins->nLoopStart = READ_LE32(lpStream+dwMemPos);
+			pins->nLoopEnd = READ_LE32(lpStream+dwMemPos+4);
 			dwMemPos += 8;
 		} else
 		{
-			pins->nLoopStart = bswapLE16(*(WORD *)(lpStream+dwMemPos));
+			pins->nLoopStart = READ_LE16(lpStream+dwMemPos);
 			pins->nLoopEnd = pins->nLength;
 			dwMemPos += 2;
 		}
@@ -383,7 +383,7 @@ BOOL CSoundFile::ReadAMF(LPCBYTE lpStream, const DWORD dwMemLength)
 	memset(pTrackData, 0, sizeof(BYTE *) * realtrackcnt);
 	for (UINT iTrack=0; iTrack<realtrackcnt; iTrack++) if (dwMemPos <= dwMemLength - 3)
 	{
-		UINT nTrkSize = bswapLE16(*(USHORT *)(lpStream+dwMemPos));
+		UINT nTrkSize = READ_LE16(lpStream+dwMemPos);
 		nTrkSize += (UINT)lpStream[dwMemPos+2] << 16;
 		if (dwMemPos + nTrkSize * 3 + 3 <= dwMemLength)
 		{
