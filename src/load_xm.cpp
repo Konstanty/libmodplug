@@ -518,6 +518,11 @@ BOOL CSoundFile::ReadXM(const BYTE *lpStream, DWORD dwMemLength)
 			if (dwMemPos >= dwMemLength) break;
 		}
 	}
+	// SECURITY: sample sizes are attacker-controlled; the loop above can
+	// leave dwMemPos past the end of the buffer (or wrapped). Every tail
+	// parser below (TEXT, MIDI, mix plugins) trusts dwMemPos, so clamp once
+	// here rather than guarding each site against integer overflow.
+	if (dwMemPos > dwMemLength) dwMemPos = dwMemLength;
 	// Read song comments: "TEXT"
 	if ((dwMemPos + 8 < dwMemLength) && (READ_LE32(lpStream+dwMemPos) == 0x74786574))
 	{
