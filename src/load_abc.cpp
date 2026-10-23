@@ -3194,6 +3194,10 @@ static void abc_add_drum(ABCHANDLE *h, uint32_t tracktime, uint32_t bartime)
 	}
 }
 
+// A crafted file can stretch the gchord gap to millions of bars, and the
+// loop in abc_add_gchord() allocates an event per step. CVE-2026-108577.
+#define ABC_MAX_GCHORD_BARS 256
+
 static int abc_gchord_steps(const char *gch)
 {
 	const char *p;
@@ -3230,15 +3234,20 @@ static void abc_add_gchord(ABCHANDLE *h, uint32_t tracktime, uint32_t bartime)
 	}
 	if( etime > tracktime ) return;
 	modbarticks = h->barticks ? h->barticks : 1;
+	if( (tracktime - etime) / modbarticks > ABC_MAX_GCHORD_BARS ) return;
 	if( etime < bartime ) rtime = h->barticks - ((bartime - etime) % modbarticks);
 	else rtime = (etime - bartime) % modbarticks;
 	stime = ctime * steps;
 	rtime *= steps;
 	rtime += stime;
-	gsteps = strlen(h->gchord);
+	// gchord holds (note, length) pairs; stepping per character runs g past
+	// the terminating NUL and, for a long gchord, past the 80 byte array.
+	gsteps = strlen(h->gchord) / 2;
+	if( !gsteps ) return;
 	g = 0;
 	while( rtime > stime ) {
 		glen = h->gchord[2*g+1] - '0';
+		if( glen < 1 ) return;	// malformed: rtime would never reach stime
 		rtime -= ctime * glen;
 		if( ++g == gsteps ) g = 0;
 	}
@@ -3247,6 +3256,7 @@ static void abc_add_gchord(ABCHANDLE *h, uint32_t tracktime, uint32_t bartime)
 	while( rtime < stime ) {
 		gnote = h->gchord[2*g];
 		glen  = h->gchord[2*g+1] - '0';
+		if( glen < 1 || !strchr("bcfghijGHIJz", gnote) ) return;	// no progress
 		if( ++g == gsteps ) g = 0;
 		switch(gnote) {
 			case 'b':
