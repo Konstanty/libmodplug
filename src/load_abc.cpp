@@ -3135,6 +3135,10 @@ static int abc_drum_steps(const char *dch)
 	return i;
 }
 
+// A crafted file can stretch the gap this function has to fill to
+// millions of bars, and every step below allocates an event.
+#define ABC_MAX_DRUM_BARS 256
+
 static void abc_add_drum(ABCHANDLE *h, uint32_t tracktime, uint32_t bartime)
 {
 	ABCEVENT *e;
@@ -3143,20 +3147,29 @@ static void abc_add_drum(ABCHANDLE *h, uint32_t tracktime, uint32_t bartime)
 	int i, g, steps, gnote, gsteps, nnum;
 	steps = abc_drum_steps(h->drum);
 	ctime = h->barticks;
+	// barticks is 0 until an M: field is seen, and a meter whose divisor
+	// rounds the bar to zero ticks leaves it 0; the modulo below would
+	// divide by zero. abc_add_gchord() guards this already.
+	if( !ctime ) return;
 	// look up the last event in tpr drumtrack
 	tp = abc_locate_track(h, h->tpr->v, DRUMPOS);
 	e = tp->tail;
 	etime = e? e->tracktick: bartime;
 	if( etime > tracktime ) return;
+	if( (tracktime - etime) / ctime > ABC_MAX_DRUM_BARS ) return;
 	if( etime < bartime ) rtime = h->barticks - ((bartime - etime) % h->barticks);
 	else rtime = (etime - bartime) % h->barticks;
 	stime = ctime*steps;
 	rtime *= steps;
 	rtime += stime;
 	gsteps = strlen(h->drum)/2;
+	// with gsteps 0 the wrap below never fires and g walks off the array
+	if( !gsteps ) return;
 	g = 0;
 	while( rtime > stime ) {
-		rtime -= ctime*(h->drum[g*2+1] - '0');
+		i = h->drum[g*2+1] - '0';
+		if( i < 1 ) return;	// malformed: rtime would never reach stime
+		rtime -= ctime * i;
 		if( ++g == gsteps ) g = 0;
 	}
 	stime = (tracktime - etime) * steps;
@@ -3169,6 +3182,7 @@ static void abc_add_drum(ABCHANDLE *h, uint32_t tracktime, uint32_t bartime)
 	while( rtime < stime ) {
 		gnote = h->drum[g*2];
 		i = h->drum[g*2+1] - '0';
+		if( i < 1 || (gnote != 'd' && gnote != 'z') ) return;	// no progress
 		if( gnote=='d') {
 			tp->instr = pat_gm_drumnr(h->drumins[g]-1);
 			nnum      = pat_gm_drumnote(h->drumins[g]);
