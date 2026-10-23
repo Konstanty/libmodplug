@@ -363,7 +363,7 @@ BOOL CSoundFile::ProcessRow()
 				// End of song ?
 				if ((m_nPattern == 0xFF) || (m_nCurrentPattern >= MAX_ORDERS))
 				{
-					//if (!m_nRepeatCount)
+					if (!m_nRepeatCount)
 						return FALSE;     //never repeat entire song
 					if (!m_nRestartPos)
 					{
@@ -396,7 +396,7 @@ BOOL CSoundFile::ProcessRow()
 							}
 						}
 					}
-//					if (m_nRepeatCount > 0) m_nRepeatCount--;
+					if (m_nRepeatCount > 0) m_nRepeatCount--;
 					m_nCurrentPattern = m_nRestartPos;
 					m_nRow = 0;
 					if ((Order[m_nCurrentPattern] >= MAX_PATTERNS) || (!Patterns[Order[m_nCurrentPattern]])) return FALSE;
