@@ -147,6 +147,9 @@ BOOL CSoundFile::ReadDSM(LPCBYTE lpStream, DWORD dwMemLength)
 				UINT flag = lpStream[dwPos++];
 				if (flag)
 				{
+					UINT need = ((flag & 0x80) ? 1 : 0) + ((flag & 0x40) ? 1 : 0)
+					          + ((flag & 0x20) ? 1 : 0) + ((flag & 0x10) ? 2 : 0);
+					if (dwPos + need > dwMemPos) break;
 					UINT ch = (flag & 0x0F) % m_nChannels;
 					if (flag & 0x80)
 					{
