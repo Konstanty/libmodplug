@@ -230,7 +230,7 @@ BOOL CSoundFile::ReadFAR(const BYTE *lpStream, DWORD dwMemLength)
 	MODINSTRUMENT *pins = &Ins[1];
 	for (UINT ismp=0; ismp<64; ismp++, pins++) if (samplemap[ismp >> 3] & (1 << (ismp & 7)))
 	{
-		if (dwMemPos + sizeof(FARSAMPLE) > dwMemLength) return TRUE;
+		if ((dwMemPos >= dwMemLength) || (sizeof(FARSAMPLE) > dwMemLength - dwMemPos)) return TRUE;
 		const FARSAMPLE *pfs = reinterpret_cast<const FARSAMPLE*>(lpStream + dwMemPos);
 		dwMemPos += sizeof(FARSAMPLE);
 		m_nSamples = ismp + 1;
@@ -257,6 +257,7 @@ BOOL CSoundFile::ReadFAR(const BYTE *lpStream, DWORD dwMemLength)
 			ReadSample(pins, (pins->uFlags & CHN_16BIT) ? RS_PCM16S : RS_PCM8S,
 						(LPSTR)(lpStream+dwMemPos), dwMemLength - dwMemPos);
 		}
+		if (length > dwMemLength - dwMemPos) return TRUE;
 		dwMemPos += length;
 	}
 	return TRUE;
