@@ -42,6 +42,12 @@ typedef struct MDLPATTERNDATA
 } MDLPATTERNDATA;
 
 
+// II block: an instrument is a 34 byte header (number, sample count,
+// 32 byte name) followed by one 14 byte entry per sample
+#define MDL_INSTR_SIZE		34u
+#define MDL_INSTSMP_SIZE	14u
+
+
 void ConvertMDLCommand(MODCOMMAND *m, UINT eff, UINT data)
 //--------------------------------------------------------
 {
@@ -185,7 +191,8 @@ BOOL CSoundFile::ReadMDL(const BYTE *lpStream, DWORD dwMemLength)
 	LPCBYTE pvolenv, ppanenv, ppitchenv;
 	UINT nvolenv, npanenv, npitchenv;
 
-	if ((!lpStream) || (dwMemLength < 1024)) return FALSE;
+	// 102 = file header (5) + block header (6) + info block (91)
+	if ((!lpStream) || (dwMemLength < 102)) return FALSE;
 	if ((pmsh->id != 0x4C444D44) || ((pmsh->version & 0xF0) > 0x10)) return FALSE;
 	const UINT hdrLen = (pmsh->version>0)? 59 : 57;
 	memset(patterntracks, 0, sizeof(patterntracks));
@@ -212,7 +219,7 @@ BOOL CSoundFile::ReadMDL(const BYTE *lpStream, DWORD dwMemLength)
 		{
 		// IN: infoblock
 		case 0x4E49:
-			if (blocklen < sizeof(MDLINFOBLOCK)) break;
+			if (blocklen < sizeof(MDLINFOBLOCK) - sizeof(pmib->seq)) break;
 			pmib = (const MDLINFOBLOCK *)(lpStream+dwMemPos);
 			memcpy(m_szNames[0], pmib->songname, 32);
 			m_szNames[0][31] = 0;
@@ -267,6 +274,7 @@ BOOL CSoundFile::ReadMDL(const BYTE *lpStream, DWORD dwMemLength)
 					PatternSize[i] = pmpd->lastrow+1;
 					if (m_nChannels < pmpd->channels) m_nChannels = pmpd->channels;
 					ch = pmpd->channels;
+					dwPos += 18;
 				}
 
 				if (2 * ch >= dwMemLength - dwPos) break;
@@ -290,7 +298,7 @@ BOOL CSoundFile::ReadMDL(const BYTE *lpStream, DWORD dwMemLength)
 		case 0x4949:
 			ninstruments = lpStream[dwMemPos];
 			dwPos = dwMemPos+1;
-			if (blocklen < sizeof(INSTRUMENTHEADER)*ninstruments + 1) break;
+			if (blocklen < MDL_INSTR_SIZE*ninstruments + 1) break;
 
 			for (i=0; i<ninstruments; i++)
 			{
@@ -303,14 +311,14 @@ BOOL CSoundFile::ReadMDL(const BYTE *lpStream, DWORD dwMemLength)
 					if ((Headers[nins] = new INSTRUMENTHEADER) == NULL) break;
 					INSTRUMENTHEADER *penv = Headers[nins];
 					memset(penv, 0, sizeof(INSTRUMENTHEADER));
-					if (dwPos > dwMemLength - 34) break;
+					if (dwPos > dwMemLength - MDL_INSTR_SIZE) break;
 					memcpy(penv->name, lpStream+dwPos+2, 32);
 					penv->nGlobalVol = 64;
 					penv->nPPC = 5*12;
-					if (34 + 14u*lpStream[dwPos+1] > dwMemLength - dwPos) break;
+					if (MDL_INSTR_SIZE + MDL_INSTSMP_SIZE*lpStream[dwPos+1] > dwMemLength - dwPos) break;
 					for (j=0; j<lpStream[dwPos+1]; j++)
 					{
-						const BYTE *ps = lpStream+dwPos+34+14*j;
+						const BYTE *ps = lpStream+dwPos+MDL_INSTR_SIZE+MDL_INSTSMP_SIZE*j;
 						while ((note < (UINT)(ps[1]+12)) && (note < NOTE_MAX))
 						{
 							penv->NoteMap[note] = note+1;
@@ -343,7 +351,7 @@ BOOL CSoundFile::ReadMDL(const BYTE *lpStream, DWORD dwMemLength)
 						}
 					}
 				}
-				dwPos += 34 + 14*lpStream[dwPos+1];
+				dwPos += MDL_INSTR_SIZE + MDL_INSTSMP_SIZE*lpStream[dwPos+1];
 				if (dwPos > dwMemLength - 2) break;
 			}
 			for (j=1; j<=m_nInstruments; j++) if (!Headers[j])
@@ -370,13 +378,16 @@ BOOL CSoundFile::ReadMDL(const BYTE *lpStream, DWORD dwMemLength)
 		// IS: Sample Infoblock
 		case 0x5349:
 			nsamples = lpStream[dwMemPos];
-			i = blocklen / hdrLen;
+			// block is 1 count byte + nsamples headers
+			i = (blocklen) ? (blocklen - 1) / hdrLen : 0;
 			if (i< nsamples) nsamples = i;
 			dwPos = dwMemPos+1;
 			for (i=0; i<nsamples; i++, dwPos += hdrLen)
 			{
 				UINT nins = lpStream[dwPos];
 				if ((nins >= MAX_SAMPLES) || (!nins)) continue;
+				// sample data already loaded: keep its length/flags
+				if (Ins[nins].pSample) continue;
 				if (m_nSamples < nins) m_nSamples = nins;
 				MODINSTRUMENT *pins = &Ins[nins];
 				memcpy(m_szNames[nins], lpStream+dwPos+1, 32);
@@ -417,6 +428,7 @@ BOOL CSoundFile::ReadMDL(const BYTE *lpStream, DWORD dwMemLength)
 					dwPos += ReadSample(pins, flags, (LPCSTR)pp, dwMemLength - dwPos);
 				} else
 				{
+					if (dwMemLength - dwPos < 4) break;
 					DWORD dwLen = pp[0] | (pp[1] << 8) | (pp[2] << 16) | (pp[3] << 24); pp += 4;
 					dwPos += 4;
 					if ((dwLen <= dwMemLength) && (dwPos <= dwMemLength - dwLen) && (dwLen > 4))
