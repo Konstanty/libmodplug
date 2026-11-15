@@ -553,7 +553,7 @@ BOOL CSoundFile::ReadIT(const BYTE *lpStream, DWORD dwMemLength)
 			// Reading command/param
 			if (chnmask[ch] & 8)
 			{
-				if (i > len - 2) break;
+				if (i + 1 >= len) break;
 				UINT cmd = p[i++];
 				UINT param = p[i++];
 				if (ch < m_nChannels)
