@@ -1511,9 +1511,11 @@ UINT CSoundFile::LoadMixPlugins(const void *pData, UINT nLen)
 				for (UINT j=0; j<4; j++) {
 				    m_MixPlugins[nPlugin].Info.dwReserved[j] = bswapLE32(m_MixPlugins[nPlugin].Info.dwReserved[j]);
 				}
+				delete [] (signed char*)m_MixPlugins[nPlugin].pPluginData;
+				m_MixPlugins[nPlugin].pPluginData = NULL;
+				m_MixPlugins[nPlugin].nPluginDataSize = 0;
 				if ((dwExtra) && (dwExtra <= nPluginSize-sizeof(SNDMIXPLUGININFO)-4))
 				{
-					m_MixPlugins[nPlugin].nPluginDataSize = 0;
 					m_MixPlugins[nPlugin].pPluginData = new signed char [dwExtra];
 					if (m_MixPlugins[nPlugin].pPluginData)
 					{
